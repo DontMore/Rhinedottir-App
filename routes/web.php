@@ -1,0 +1,81 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManagementStockController;
+use App\Http\Controllers\LogbookController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StockOpnameController;
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+// Route User
+Route::get('/', [AuthenticationController::class, 'login'])->name('login');
+Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
+Route::post('/login', [AuthenticationController::class, 'authenticate']);
+Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout')->middleware('admin');
+Route::delete('/user/{id}', [AuthenticationController::class, 'deleteUser'])->name('user.delete')->middleware('admin');
+// route user
+Route::get('/user-list', [AuthenticationController::class, 'userList'])->middleware('admin');
+Route::get('/register', [AuthenticationController::class, 'register'])->middleware('admin');;
+Route::get('/register-guest', [AuthenticationController::class, 'registerGuest'])->name('register.guest');
+Route::post('/register', [AuthenticationController::class, 'store']);
+Route::get('/users/edit/{id}', [AuthenticationController::class, 'editUser'])->name('user.edit')->middleware('auth');
+Route::put('/users/update/{id}', [AuthenticationController::class, 'updateUser'])->name('user.update')->middleware('auth');;
+
+
+// route dashboard
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('admin')->name('dashboard.index');
+
+// route management stock
+Route::get('/management-stock', [ManagementStockController::class, 'index'])->name('management-stock.index')->middleware('admin');
+Route::get('/add-reagen', [ManagementStockController::class, 'addReagen'])->middleware('admin');
+Route::post('/add-reagen', [ManagementStockController::class, 'addReagenStore'])->middleware('admin');
+Route::get('/add-stock-reagen/{noCatalog}', [ManagementStockController::class, 'addStockReagen'])->name('reagen.addstock')->middleware('admin');
+Route::get('/view/{noCatalog}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
+Route::get('/edit/{noCatalog}', [ManagementStockController::class, 'editReagen'])->name('data.edit')->middleware('admin');
+Route::post('/delete/{noCatalog}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
+Route::post('/update/{noCatalog}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');
+Route::post('/reagen/{noCatalog}', [ManagementStockController::class, 'getReagenData'])->middleware('admin');
+Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->middleware('admin');
+Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
+Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
+
+
+// route logbook
+Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index')->middleware('auth'); // Route untuk menampilkan data logbook
+Route::get('/take/{noCatalog}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');
+Route::get('/qrcode/{id}', [LogbookController::class, 'takeQRCode'])->name('qrcode')->middleware('auth');
+Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth');
+Route::get('/logbook-history/{noCatalog}', [LogbookController::class, 'logbookHistory'])->name('data.history')->middleware('auth');
+
+// route order
+Route::get('/order', [OrderController::class, 'index'])->name('order.index')->middleware('admin');
+Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->middleware('admin');
+Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->middleware('admin');
+Route::post('/order', [OrderController::class, 'store'])->middleware('admin')->name('orders.store');
+Route::get('/view-order/{id}', [OrderController::class, 'viewOrder'])->middleware('admin')->name('order.view');
+Route::post('/update-order/{id}', [OrderController::class, 'update'])->middleware('admin')->name('order.update');
+Route::delete('/order-delete/{id}', [OrderController::class, 'destroy'])->middleware('admin')->name('order.delete');
+Route::get('/reagen/{noCatalogUtama}', [OrderController::class, 'getReagenData'])->middleware('admin');
+
+
+// route report
+Route::get('/report', [ReportController::class, 'index'])->middleware('admin')->name('report.index');
+Route::get('/generate-pdf', [ReportController::class, 'generatePDF'])->name('report.print')->middleware('admin');
+
+// route stock opname
+Route::get('/stock-opname', [StockOpnameController::class, 'index'])->middleware('admin')->name('stock.index');
+Route::post('/update-quantities', [StockOpnameController::class, 'updateQuantities'])->name('update.quantities')->middleware('admin');
+Route::get('/generate-pdf-stock', [StockOpnameController::class, 'generateStock'])->name('stock.print')->middleware('admin');
+Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
+Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');

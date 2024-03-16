@@ -1,0 +1,20 @@
+.container-fluid-logbook {
+    padding: 20px;
+    background-color: #f8f9fa; /* Warna latar belakang yang lembut */
+}
+
+.reagent-details,
+.batch-details,
+.quantity-details {
+    margin-bottom: 20px;
+}
+
+.batch-details p {
+    margin-left: 20px; /* Memberikan indentasi untuk elemen Batch */
+}
+
+/* CSS untuk mempercantik formulir pencarian */
+.wrap {
+    position: relative;
+    display: inline-block;
+}

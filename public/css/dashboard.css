@@ -1,0 +1,24 @@
+
+  .reagen-varian {
+    background-color: #fda680;
+    color: white; /* Warna untuk card kolom 1 */
+    height: 100%;
+  }
+
+  .total-reagen {
+    background-color: #09d48e; /* Warna untuk card kolom 2 */
+    height: 100%;
+    color: white;
+  }
+
+  .quantity-in {
+    background-color: #03c0c2; /* Warna untuk card kolom 3 */
+    color: white;
+    height: 100%;
+  }
+
+  .reagen-out {
+    background-color: #fe7382; /* Warna untuk card kolom 4 */
+    color: white;
+    height: 100%;
+  }

@@ -1,0 +1,53 @@
+.sidebar {
+    height: 100vh;
+    position: fixed;
+    background-color: black;
+    padding: 5px;
+    width: 15%;
+}
+
+.user-name {
+    color: white;
+    margin-left: 5px;
+    height: 20vh;
+    display: flex;
+    align-items: center;
+}
+
+.btn-logout {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 20vh;
+    margin-left: 5px;
+}
+
+.menu a {
+    text-decoration: none;
+    margin-left: 5px;
+    color: white;
+}
+
+.menu {
+    width: 100%;
+    padding: 5px;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+/* CSS untuk menandai menu yang aktif */
+.menu.active {
+    background-color: white;
+    color: black;
+    /* Sesuaikan dengan tampilan yang Anda inginkan */
+  }
+
+.menu.active a {
+    color: black;
+    /* Sesuaikan dengan tampilan yang Anda inginkan */
+  }
+  
+
+.menu:hover {
+    background-color: #333; /* Warna latar belakang saat kursor berada di atas elemen */
+}
