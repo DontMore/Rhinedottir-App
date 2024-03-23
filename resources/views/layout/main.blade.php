@@ -8,7 +8,7 @@
             @include('partials.sidebar')
         </div>
 
-        <div class="col-md-10">
+        <div class="col-md-10 main-content">
             @yield('container')
         </div>
     </div>

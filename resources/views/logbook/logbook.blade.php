@@ -42,17 +42,17 @@
               </thead>
               <tbody>
                 @foreach($reagens as $index => $reagen)
-                  <tr>
+                    <tr>
                       <th scope="row">{{ $index + 1 }}</th>
-                      <td>{{ $reagen->noCatalog }}</td>
-                      <td>{{ $reagen->nameReagen }}</td>
+                      <td><a href="{{ route('data.history', ['noCatalog' => $reagen->noCatalog]) }}">{{ $reagen->noCatalog }}</a></td>
+                      <td><a href="{{ route('data.history', ['noCatalog' => $reagen->noCatalog]) }}">{{ $reagen->nameReagen }}</a></td>
                       <td>{{ $reagen->merk }}</td>
                       <td>
                         {{-- Check if stockOpname relationship exists --}}
                         @if($reagen->stockReagen)
                             {{ $reagen->stockReagen->quantity }}
                             @else
-                            No Stock Opname
+                            0
                         @endif
                       </td>
                       <td>

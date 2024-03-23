@@ -46,7 +46,10 @@
     color: black;
     /* Sesuaikan dengan tampilan yang Anda inginkan */
   }
-  
+
+.navbar-mobile{
+    display: none;
+}
 
 .menu:hover {
     background-color: #333; /* Warna latar belakang saat kursor berada di atas elemen */
@@ -56,5 +59,9 @@
     .sidebar {
       display: none;
     }
-  }
+
+    .navbar-mobile {
+        display: block;
+    }
+}
   

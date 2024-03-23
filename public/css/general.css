@@ -1,0 +1,8 @@
+.main-content {
+    padding: 5%;
+}
+
+table tbody tr td a {
+    text-decoration: none;
+    color: black;
+}
