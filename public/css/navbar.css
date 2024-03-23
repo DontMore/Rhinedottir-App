@@ -51,3 +51,10 @@
 .menu:hover {
     background-color: #333; /* Warna latar belakang saat kursor berada di atas elemen */
 }
+
+@media (max-width: 768px) {
+    .sidebar {
+      display: none;
+    }
+  }
+  
