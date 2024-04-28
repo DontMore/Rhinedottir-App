@@ -26,29 +26,30 @@ class AuthenticationController extends Controller
 
     public function store(Request $request)
     {
-    try {
-        $validatedData = $request->validate([
-            'name' => 'required',
-            'username' => 'required|unique:users',
-            'password' => 'required|min:6',
-            'repassword' => 'required|same:password',
-            'role' => 'required'
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required',
+                'username' => 'required|unique:users',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|min:6',
+                'repassword' => 'required|same:password',
+                'role' => 'required'
+            ]);
 
-        unset($validatedData['repassword']);
+            unset($validatedData['repassword']);
 
-        User::create($validatedData);
+            User::create($validatedData);
 
-        Alert::success('Success', 'User has been created successfully!');
+            Alert::success('Success', 'User has been created successfully!');
 
-        return redirect()->back()->with('success', 'User created successfully.');
-    } catch (ValidationException $e) {
-        $errorMessage = $e->validator->errors()->first();
-        // Menggunakan Alert::error untuk menampilkan alert error
-        Alert::error('Error', $errorMessage)->showConfirmButton('OK', '#3085d6');
+            return redirect()->back()->with('success', 'User created successfully.');
+        } catch (ValidationException $e) {
+            $errorMessage = $e->validator->errors()->first();
+            // Menggunakan Alert::error untuk menampilkan alert error
+            Alert::error('Error', $errorMessage)->showConfirmButton('OK', '#3085d6');
 
-        return redirect()->back()->withInput()->with('error', $errorMessage);
-    }
+            return redirect()->back()->withInput()->with('error', $errorMessage);
+        }
     }   
 
     // fungsi authentifikasi/login

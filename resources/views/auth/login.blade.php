@@ -47,6 +47,7 @@
                             <button type="submit" class="btn btn-primary btn-block">Login</button>
                         </form>
                         <div class="text-center mt-3">
+                            <a href="/kirim-email">Lupa Password</a> |
                             <a href="/register-guest">Pendaftaran</a>
                         </div>
                     </div>

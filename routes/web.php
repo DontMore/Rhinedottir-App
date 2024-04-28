@@ -8,6 +8,10 @@ use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockOpnameController;
+use App\Http\Controllers\MailController;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendEmail;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,13 +28,15 @@ Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('/login', [AuthenticationController::class, 'authenticate']);
 Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout')->middleware('admin');
 Route::delete('/user/{id}', [AuthenticationController::class, 'deleteUser'])->name('user.delete')->middleware('admin');
+
 // route user
 Route::get('/user-list', [AuthenticationController::class, 'userList'])->middleware('admin');
 Route::get('/register', [AuthenticationController::class, 'register'])->middleware('admin');;
 Route::get('/register-guest', [AuthenticationController::class, 'registerGuest'])->name('register.guest');
 Route::post('/register', [AuthenticationController::class, 'store']);
 Route::get('/users/edit/{id}', [AuthenticationController::class, 'editUser'])->name('user.edit')->middleware('auth');
-Route::put('/users/update/{id}', [AuthenticationController::class, 'updateUser'])->name('user.update')->middleware('auth');;
+Route::put('/users/update/{id}', [AuthenticationController::class, 'updateUser'])->name('user.update')->middleware('auth');
+Route::post('forgot-password', [MailController::class, 'sendResetLink'])->name('forgot.password');
 
 
 // route dashboard
@@ -49,7 +55,6 @@ Route::post('/reagen/{noCatalog}', [ManagementStockController::class, 'getReagen
 Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->middleware('admin');
 Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
 Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
-
 
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index')->middleware('auth'); // Route untuk menampilkan data logbook
@@ -79,3 +84,9 @@ Route::post('/update-quantities', [StockOpnameController::class, 'updateQuantiti
 Route::get('/generate-pdf-stock', [StockOpnameController::class, 'generateStock'])->name('stock.print')->middleware('admin');
 Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
 Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');
+
+//route email
+Route::get('kirim-email','App\Http\Controllers\MailController@index');
+Route::get('/reset-password', [MailController::class, 'resetPassword'])->name('password.reset');
+Route::get('/reset-password/{token}', [MailController::class, 'resetPassword'])->middleware('guest')->name('password.reset');
+Route::post('/reset-password',  [MailController::class, 'update'])->middleware('guest')->name('password.update');
