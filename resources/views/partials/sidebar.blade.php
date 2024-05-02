@@ -37,6 +37,7 @@
     <h5><span class="fa-regular fa-user mr-1"></span> {{ auth()->user()->name }}</h5>
   </div>
 
+  @can('admin')
   <!-- Menu Dashboard -->
   <div class="menu {{ request()->is('dashboard*') ? 'active' : '' }}">
     <a href="{{ route('dashboard.index') }}">
@@ -60,6 +61,7 @@
       Stock Opname
     </a>
   </div>
+  @endcan
 
   <!-- Menu Logbook -->
   <div class="mt-3 menu {{ request()->is('logbook*') ? 'active' : '' }}">
@@ -69,6 +71,7 @@
     </a>
   </div>
 
+  @can('admin')
   <!-- Menu Orders -->
   <div class="mt-3 menu {{ request()->is('order*') ? 'active' : '' }}">
     <a href="/order">
@@ -92,6 +95,7 @@
       Users
     </a>
   </div>
+  @endcan
 
 <!-- Menu Settings -->
 <div class="mt-3 menu {{ Route::currentRouteName() === 'user.edit' ? 'active' : '' }}">

@@ -6,3 +6,19 @@ table tbody tr td a {
     text-decoration: none;
     color: black;
 }
+
+@media (max-width: 768px) {
+    .search-logbook{
+        width: 100%;
+    }
+
+    .table-responsive-logbook {
+        font-size: 10px;
+    }
+
+    .table-responsive-logbook .btn {
+        padding: 5px 10px; /* Sesuaikan padding sesuai kebutuhan */
+        font-size: 10px; /* Sesuaikan ukuran font sesuai kebutuhan */
+        /* Tambahkan gaya lainnya sesuai kebutuhan */
+    }
+}

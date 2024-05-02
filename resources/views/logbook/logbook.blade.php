@@ -14,7 +14,7 @@
             <div class="wrap">
                 <div class="search mb-3">
                 <form class="search form-inline" action="{{ route('logbook.index') }}" method="GET">
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3 search-logbook">
                     <input type="text" class="form-control" name="keyword" aria-describedby="button-addon2" placeholder="Nama Reagen | Merk">
                     <button class="btn btn-outline-primary" type="submit" id="button-addon2">Search</button>
                     </div>
@@ -28,7 +28,7 @@
 
     </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-logbook">
           <table class="table table-sm table-hover">
               <thead>
                   <tr>

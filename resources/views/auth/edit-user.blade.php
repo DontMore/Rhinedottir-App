@@ -24,6 +24,11 @@
         </div>
 
         <div class="mb-3">
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+        </div>
+
+        <div class="mb-3">
             <label for="password" class="form-label">Password :</label>
             <input type="password" class="form-control" id="password" name="password">
         </div>
@@ -33,14 +38,16 @@
             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
         </div>
 
-        <div class="form-group">
+        @can('admin')
+        <div class="form-group mb-3">
             <label for="role">Role</label>
             <select class="form-control" id="role" name="role" required>
                 <option value="">Select a role</option>
                 <option value="Admin" {{ old('role', $user->role) == 'Admin' ? 'selected' : '' }}>Admin</option>
-                <option value="analis" {{ old('role', $user->role) == 'Analis' ? 'selected' : '' }}>Analis</option>
+                <option value="Analis" {{ old('role', $user->role) == 'Analis' ? 'selected' : '' }}>Analis</option>
             </select>
         </div>
+        @endcan
 
         <!-- Add more fields if needed -->
 

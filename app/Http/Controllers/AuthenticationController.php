@@ -105,33 +105,36 @@ class AuthenticationController extends Controller
         return view('auth.edit-user', compact('user'));
     }
 
-    public function updateUser(Request $request, $id)
+    // Method untuk menyimpan perubahan pada user
+    public function update(Request $request, $id)
     {
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'username' => 'required|string|max:255|unique:users,username,' . $id,
-        'password' => 'nullable|string|min:6|confirmed',
-        'role' => 'required|in:Admin,Analis',
-        // Add more validation rules if needed
-    ]);
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'password' => 'nullable|string|min:6|confirmed',
+            'role' => 'required|in:Admin,Analis',
+            // Add more validation rules if needed
+        ]);
 
-    $user = User::find($id);
-    $user->name = $request->input('name');
-    $user->username = $request->input('username');
-    $user->role = $request->input('role');
+        $user = User::find($id);
+        $user->name = $request->input('name');
+        $user->username = $request->input('username');
+        $user->email = $request->input('email');
+        $user->role = $request->input('role');
 
-    // Check if the password is not empty before updating
-    if ($request->filled('password')) {
-        $user->password = Hash::make($request->input('password'));
+        // Check if the password is not empty before updating
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->input('password')); // Gunakan bcrypt untuk mengenkripsi password
+        }
+
+        $user->save();
+
+        // Pemberitahuan sukses menggunakan SweetAlert
+        alert()->success('Success', 'User has been updated successfully!');
+
+        return redirect()->route('user.edit', ['id' => $id])->with('success', 'User updated successfully');
     }
-
-    $user->save();
-
-    Alert::success('Success', 'User has been updated successfully!');
-
-    return redirect()->route('user.edit', ['id' => $id])->with('success', 'User updated successfully'); 
-    }
-
 
     public function deleteUser($userId)
     {
