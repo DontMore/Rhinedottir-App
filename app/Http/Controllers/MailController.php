@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class MailController extends Controller
 {
@@ -59,8 +60,11 @@ class MailController extends Controller
             }
         );
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', __($status))
-            : back()->withErrors(['email' => [__($status)]]);
+        if ($status === Password::PASSWORD_RESET) {
+            Alert::success('Success', 'Password has been reset successfully');
+            return redirect()->route('login');
+        } else {
+            return back()->withErrors(['email' => [__($status)]]);
+        }
     }
 }

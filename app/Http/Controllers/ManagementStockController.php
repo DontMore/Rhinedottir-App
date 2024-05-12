@@ -31,12 +31,12 @@ class ManagementStockController extends Controller
             });
         }
     
-        // Ambil data sesuai dengan hasil query
-        $reagens = $query->get();
+        // Menambahkan pagination dengan batasan jumlah item per halaman
+        $reagens = $query->paginate(20); // 10 adalah jumlah item per halaman, sesuaikan sesuai kebutuhan
     
+        // Mengirim data reagens paginasi ke view
         return view('management-stock.management-stock', compact('reagens'));
     }
-    
 
     public function addReagen(){
         return view('management-stock.add-reagen');

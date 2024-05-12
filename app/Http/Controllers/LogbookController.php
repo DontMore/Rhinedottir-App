@@ -32,7 +32,7 @@ class LogbookController extends Controller
         }
     
         // Menambahkan pagination
-        $reagens = $query->paginate(10); // Mengatur jumlah item per halaman, misalnya 10
+        $reagens = $query->paginate(20); // Mengatur jumlah item per halaman, misalnya 10
     
         return view('logbook.logbook', compact('reagens'));
     }
