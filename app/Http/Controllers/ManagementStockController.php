@@ -66,7 +66,7 @@ class ManagementStockController extends Controller
         // Tambahkan pesan sukses ke dalam sesi
         Alert::success('Success!', 'Data has been added successfully');
 
-        return redirect()->route('management-stock');
+        return redirect()->route('management-stock.index');
     }
 
     // view data reagen
@@ -91,7 +91,7 @@ class ManagementStockController extends Controller
     {
         $data = Reagen::find($noCatalog);
         $data->delete();
-        return redirect()->route('management-stock');
+        return redirect()->route('management-stock.index');
     }
 
     // update data reagen
