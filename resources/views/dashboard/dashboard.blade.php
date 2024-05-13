@@ -16,7 +16,7 @@
       <!-- baris 1 kolom 2 -->
       <div class="card col m-1 total-reagen">
         <div class="card-body text-center">
-          <h2><h2>{{ $stockReagen->quantity ?? 0 }}</h2></h2>
+          <h2><h2>{{ $totalQuantity ?? 0 }}</h2></h2>
           <p>Total Reagent</p>
         </div>
       </div><!-- baris 1 kolom 2 -->
@@ -24,7 +24,7 @@
       <!-- baris 1 kolom 3 -->
       <div class="card col m-1 quantity-in">
         <div class="card-body text-center">
-          <h2>{{ $stockReagen->quantity_in ?? 0 }}</h2>
+          <h2>{{ $totalQuantityIn ?? 0 }}</h2>
           <p>Reagent In</p>
         </div>
       </div><!-- baris 1 kolom 3 -->
@@ -32,7 +32,7 @@
       <!-- baris 1 kolom 4 -->
       <div class="card col m-1 reagen-out">
         <div class="card-body text-center">
-          <h2>{{ $stockReagen->quantity_out ?? 0 }}</h2>
+          <h2>{{ $totalQuantityOut ?? 0 }}</h2>
           <p>Reagent Taken</p>
         </div>
       </div><!-- baris 1 kolom 4 -->
@@ -54,7 +54,7 @@
               </tr>
             </thead>
             <tbody>
-          @foreach($stockKosong as $item)
+          @foreach($zeroStockReagen as $item)
               <tr>
                 <td>{{ $item->noCatalog }}</td>
                 <td>{{ $item->reagen->nameReagen }}</td>

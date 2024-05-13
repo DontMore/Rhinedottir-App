@@ -25,13 +25,30 @@ class DashboardController extends Controller
                                     ->where('year', $currentYear)
                                     ->first();
 
+        $totalQuantity = StockHistory::where('month', $currentMonth)
+                            ->where('year', $currentYear)
+                            ->sum('quantity');
+                                    
+        $totalQuantityIn = StockHistory::where('month', $currentMonth)
+                            ->where('year', $currentYear)
+                            ->sum('quantity_in');
+
+        $totalQuantityOut = StockHistory::where('month', $currentMonth)
+                            ->where('year', $currentYear)
+                            ->sum('quantity_out');
+
         $logbook = LogbookReagen::all();
-        $stockKosong = StockReagen::where('quantity', 0)->get();
+
+        $zeroStockReagen = StockHistory::where('month', $currentMonth)
+                            ->where('year', $currentYear)
+                            ->where('quantity', 0)
+                            ->get();
+
 
         $reagenOrder = Order::all();
 
-        $reagenED = ReagenIn::all();
+        $reagenED = ReagenIn::orderBy('expiredDate', 'asc')->take(10)->get();
 
-        return view('dashboard.dashboard', compact('totalReagen', 'stockReagen', 'stockKosong', 'reagenOrder', 'reagenED'));
+        return view('dashboard.dashboard', compact('totalReagen', 'totalQuantity', 'totalQuantityIn', 'totalQuantityOut', 'zeroStockReagen', 'reagenOrder', 'reagenED'));
     }
 }
