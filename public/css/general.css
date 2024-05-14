@@ -22,3 +22,30 @@ table tbody tr td a {
         /* Tambahkan gaya lainnya sesuai kebutuhan */
     }
 }
+
+.inline > div {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.label-reagen p {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.kepala-label {
+    font-weight: bold;
+    font-size: 18pt;
+    display: flex;
+    justify-content: center; /* Horizontal alignment */
+    align-items: center;  
+}
+
+.logo-b7 {
+    width: 150px;  /* Mengatur lebar gambar menjadi 300 pixel */
+    height: 50px; /* Mengatur tinggi gambar menjadi 200 pixel */
+}
+
+.custom-right {
+    text-align: left;
+}

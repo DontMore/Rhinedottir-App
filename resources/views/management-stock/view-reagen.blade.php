@@ -176,7 +176,7 @@
                     <td>{{ $item->batch }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}</td>
-                    <td><button type="button" class="btn btn-primary btn-show-modal" data-bs-toggle="modal" data-bs-target="#exampleModal" data-batch="{{ $item->batch }}" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}" data-id="{{ $item->Id }}">label</button></td>
+                    <td><button type="button" class="btn btn-primary btn-show-modal" data-bs-toggle="modal" data-bs-target="#exampleModal" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}" data-id="{{ $item->Id }}">label</button></td>
                 </tr>
                 @endforeach
             </tbody>
@@ -192,14 +192,34 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
       </div>
       <div class="modal-body" id="modalBody" style="background-color: white;">
-        <div class="row border m-2">
-            <div class="col-md-3 border text-center">
-                <div id="qrcode" style="width: 150px; height: 150px;"></div>
+        <div class="row border">
+            <div class="col-md-3">
+                <div id="qrcode" style="width: 180px; height: 180px;"></div>
             </div>
-            <div class="col-md-9 border p-2">
-                <p><strong>Nama Reagen :</strong> {{ $data->nameReagen }}</p>
-                <p><strong>Batch :</strong> <span id="batch"></span></p>
-                <p><strong>Expired Date :</strong><span id="expired"></span></p>
+            <div class="col-md-9 label-reagen">
+                <!-- kepala label -->
+                <div class="row"> 
+                    <div class="col-md-4 border"><img src="{{ asset('images/logo_b7.png') }}" alt="Logo" class="logo-b7"></div>
+                    <div class="col border kepala-label">LABORATORIUM QC-ANDEV</div>
+                </div>
+                <!-- isi label -->
+                <div class="row border">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col-md-4"><p>Nama Reagen </p></div><div class="col"><p>: {{ $data->nameReagen }}</p></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><p>Expired Date </p></div><div class="col"><p>: <span id="expired"></span></p></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><p>Tanggal Buka </p></div><div class="col"><p>: </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- catatan kaki label -->
+                <div class="row border custom-right">
+                    Distribution List - Lampiran 1:WI-QO-QC-1018.02
+                </div>
             </div>
         </div>           
       </div>
@@ -217,14 +237,14 @@
 
         buttons.forEach(button => {
             button.addEventListener("click", function() {
-                const batch = this.getAttribute("data-batch");
+                // const batch = this.getAttribute("data-batch");
                 const expired = this.getAttribute("data-expired");
                 const id = this.getAttribute("data-id");
 
-                document.getElementById("batch").textContent = batch;
+                // document.getElementById("batch").textContent = batch;
                 document.getElementById("expired").textContent = expired;
 
-                generateQRCode("http://127.0.0.1:8000/qrcode/", id);
+                generateQRCode("https://reagen.onexternal.com/qrcode/", id);
             });
         });
     });
@@ -259,7 +279,7 @@
 
     // Atur ukuran gambar QR code menggunakan properti width dan height
     // Nilai width dan height harus sesuai dengan ukuran yang diinginkan
-    qrImage = qrImage.replace('<img ', '<img width="150px" height="150px" '); // Misalnya disini saya atur menjadi 200x200px
+    qrImage = qrImage.replace('<img ', '<img width="180px" height="180px" '); // Misalnya disini saya atur menjadi 200x200px
 
     // Tampilkan gambar QR code di dalam elemen div dengan id "qrcode"
     document.getElementById("qrcode").innerHTML = qrImage;
