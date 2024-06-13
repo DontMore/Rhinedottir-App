@@ -106,14 +106,17 @@ class ManagementStockController extends Controller
             'nameReagen' => 'required',
             'merk' => 'required',
             'packSize' => 'required',
-            'hazardOptions' => 'required|array',
+            'hazardOptions' => 'array',
             'msds' => 'required',
             'price' => 'required'
             // Tambahkan validasi lainnya jika diperlukan
         ]);
 
-        // Konversi array menjadi string
-        $validatedData['hazardOptions'] = implode(',', $validatedData['hazardOptions']);
+        // Check if 'hazardOptions' key exists in the request data
+        $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
+
+        // konversi array menjadi string
+        $validatedData['hazardOptions'] = implode(',', $hazardOptions);
 
         // Perbarui data reagen
         $data->update($validatedData);

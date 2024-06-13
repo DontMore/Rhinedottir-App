@@ -31,8 +31,8 @@
                 </select>
             </div>
 
-                <!-- Nama Reagen -->
-                <div class="form-group">
+            <!-- Nama Reagen -->
+            <div class="form-group">
                 <label for="namaReagen">Nama Reagen</label>
                 <input type="text" class="form-control" id="namaReagen" name="nameReagen" readonly>
             </div>
@@ -61,33 +61,33 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div><!-- baris 3 kolom 1 -->
-    
 </div><!-- baris 3 -->
 
-        <!-- AJAX Script -->
-        <script>
-            $(document).ready(function(){
-                $('#nomorKatalog').on('change', function(){
-                    var noCatalogUtama = $(this).val();
-                    if(noCatalogUtama) {
-                        $.ajax({
-                            url: '/reagen/'+noCatalogUtama,
-                            type: "GET",
-                            dataType: "json",
-                            success:function(data) {
-                                $('#namaReagen').val(data.nameReagen);
-                                $('#merk').val(data.merk);
-                                $('#packSize').val(data.packSize);
-                            }
-                        });
-                    } else {
-                        $('#namaReagen').val('');
-                        $('#merk').val('');
-                        $('#packSize').val('');
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('#nomorKatalog').on('change', function(){
+            var noCatalogUtama = $(this).val();
+            if(noCatalogUtama) {
+                $.ajax({
+                    url: '/reagen/'+noCatalogUtama,
+                    type: "GET",
+                    dataType: "json",
+                    success:function(data) {
+                        $('#namaReagen').val(data.nameReagen);
+                        $('#merk').val(data.merk);
+                        $('#packSize').val(data.packSize);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
                     }
                 });
-            });
-        </script>
-
-
+            } else {
+                $('#namaReagen').val('');
+                $('#merk').val('');
+                $('#packSize').val('');
+            }
+        });
+    });
+</script>
 @endsection

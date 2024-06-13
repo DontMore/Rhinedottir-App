@@ -26,26 +26,33 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi form
-        $validatedData = $request->validate([
-            'noCatalog' => 'required|string',
-            'nameReagen' => 'required|string',
-            'merk' => 'required|string',
-            'packSize' => 'required|string',
-            'quantity' => 'required|integer',
-            'status' => 'required',
-            'userId' => 'required|integer',
-        ]);
+        try {
+            // Validasi form
+            $validatedData = $request->validate([
+                'noCatalog' => 'required|string',
+                'nameReagen' => 'required|string',
+                'merk' => 'required|string',
+                'packSize' => 'required|string',
+                'quantity' => 'required|integer',
+                'status' => 'required',
+                'userId' => 'required|integer',
+            ]);
 
-        // Simpan data ke dalam database menggunakan model Order
-        Order::create($validatedData);
+            // Simpan data ke dalam database menggunakan model Order
+            Order::create($validatedData);
 
-        // Tambahkan logika lain jika diperlukan, seperti redirect atau pesan flash
-        // ...
-        Alert::success('Success', 'Order successfully!');
+            Alert::success('Success', 'Order successfully!');
 
-        return redirect()->route('order.index'); // Gantilah 'route.name' dengan nama rute yang sesuai
+            return redirect()->route('order.index');
+        } catch (\Exception $e) {
+            // Log error
+            \Log::error($e->getMessage());
+
+            // Redirect back with an error message
+            return redirect()->back()->with('error', 'Failed to create order.');
+        }
     }
+
 
     public function viewOrder($id){  
         $order = Order::find($id);
