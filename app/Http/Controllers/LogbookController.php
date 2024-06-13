@@ -136,4 +136,20 @@ class LogbookController extends Controller
         return view('logbook.logbook-qrcode', compact('reagenIn'));
     }
 
+    public function takeAdmin($noCatalog)
+    {
+        // Lakukan logika sesuai kebutuhan dengan menggunakan $noCatalog
+        
+        // Contoh: Ambil data reagen berdasarkan nomor katalog
+        $reagen = Reagen::where('noCatalog', $noCatalog)->first();
+
+        // Jika reagen tidak ditemukan, redirect ke halaman lain atau berikan pesan error
+        if (!$reagen) {
+            return redirect()->route('order.index')->with('error', 'Reagen not found');
+        }
+
+        // Kirim data reagen ke view take-admin.blade.php
+        return view('logbook.logbook-take-admin', compact('reagen'));
+    }
+
 }

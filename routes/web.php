@@ -65,6 +65,9 @@ Route::get('/take/{noCatalog}', [LogbookController::class, 'takeReagen'])->name(
 Route::get('/qrcode/{id}', [LogbookController::class, 'takeQRCode'])->name('qrcode')->middleware('auth');
 Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth');
 Route::get('/logbook-history/{noCatalog}', [LogbookController::class, 'logbookHistory'])->name('data.history')->middleware('auth');
+// Tambahkan rute ini jika belum ada
+Route::get('/take-admin/{noCatalog}', [LogbookController::class, 'takeAdmin'])->name('take-admin');
+
 
 // route order
 Route::get('/order', [OrderController::class, 'index'])->name('order.index')->middleware('admin');
