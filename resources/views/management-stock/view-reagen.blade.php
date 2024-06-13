@@ -176,7 +176,19 @@
                     <td>{{ $item->batch }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}</td>
-                    <td><button type="button" class="btn btn-primary btn-show-modal" data-bs-toggle="modal" data-bs-target="#exampleModal" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}" data-id="{{ $item->Id }}">label</button></td>
+                    <td>
+                        <!-- Tombol view label -->
+                        <button type="button" class="btn btn-primary btn-show-modal" data-bs-toggle="modal" data-bs-target="#exampleModal" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}" data-id="{{ $item->Id }}">label
+                        </button>
+                        <!-- Form untuk delete stock -->
+                        <form id="delete-form-{{ $item->Id }}" action="{{ route('management-stock.delete-stock', $item->Id) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete({{ $item->Id }});">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -230,6 +242,24 @@
     </div>
   </div>
 </div>
+
+<script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        })
+    }
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -286,6 +316,11 @@
   }
 
   // Panggil fungsi generateQRCode dengan teks yang diinginkan
+  $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
 </script>
 

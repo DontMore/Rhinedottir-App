@@ -44,11 +44,28 @@ class DashboardController extends Controller
                             ->where('quantity', 0)
                             ->get();
 
+        $stocks = StockHistory::select('month', 'year', 'quantity')
+                            ->where('noCatalog', '=', '1000142500') // Ubah sesuai nama kolom yang sesuai
+                            ->orderBy('year')
+                            ->orderBy('month')
+                            ->get();
+
+        $chartData = [];
+        foreach ($stocks as $stock) {
+            $monthYear = $stock->month . ' ' . $stock->year;
+            if (!isset($chartData[$monthYear])) {
+                $chartData[$monthYear] = [];
+            }
+            $chartData[$monthYear][] = $stock->quantity;
+        }
+
+        $labels = array_keys($chartData);
+        $data = array_values($chartData);
 
         $reagenOrder = Order::all();
 
         $reagenED = ReagenIn::orderBy('expiredDate', 'asc')->take(10)->get();
 
-        return view('dashboard.dashboard', compact('totalReagen', 'totalQuantity', 'totalQuantityIn', 'totalQuantityOut', 'zeroStockReagen', 'reagenOrder', 'reagenED'));
+        return view('dashboard.dashboard', compact('totalReagen', 'totalQuantity', 'totalQuantityIn', 'totalQuantityOut', 'zeroStockReagen', 'reagenOrder', 'reagenED', 'labels', 'data'));
     }
 }

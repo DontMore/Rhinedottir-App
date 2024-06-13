@@ -56,6 +56,8 @@ Route::post('/reagen/{noCatalog}', [ManagementStockController::class, 'getReagen
 Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->middleware('admin');
 Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
 Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
+Route::delete('/management-stock/delete-stock/{id}', [ManagementStockController::class, 'deleteStock'])->name('management-stock.delete-stock');
+
 
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index')->middleware('auth'); // Route untuk menampilkan data logbook

@@ -119,6 +119,37 @@
       </div><!-- baris 3 kolom 4 -->
     </div><!-- Baris 3 -->
 
+    <!-- baris 4 -->
+    <div class="row">
+        <canvas id="lineChart" width="800" height="400"></canvas>
+    </div><!-- baris 4 -->
+
 </div>
+
+<script>
+var ctx = document.getElementById('lineChart').getContext('2d');
+var lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        datasets: [{
+            label: 'Stock Reagen',
+            data: {!! json_encode($data) !!},
+            borderColor: 'rgb(75, 192, 192)',
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+});
+</script>
+
 
 @endsection

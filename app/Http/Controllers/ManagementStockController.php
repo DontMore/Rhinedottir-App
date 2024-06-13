@@ -232,4 +232,52 @@ class ManagementStockController extends Controller
         return 'data:image/png;base64,' . base64_encode($qrCode);
     }
 
+    public function deleteStock($id)
+    {
+        // Ambil data stok berdasarkan id
+        $reagenIn = ReagenIn::find($id);
+
+        if ($reagenIn) {
+            // Kurangi quantity dari stock_reagens
+            $stockReagen = StockReagen::where('noCatalog', $reagenIn->noCatalog)->first();
+            if ($stockReagen) {
+                $stockReagen->quantity -= $reagenIn->quantity;
+                if ($stockReagen->quantity < 0) {
+                    $stockReagen->quantity = 0; // Jangan biarkan quantity menjadi negatif
+                }
+                $stockReagen->save();
+            }
+
+            // Dapatkan bulan dan tahun saat ini
+            $currentMonth = Carbon::now()->format('m');
+            $currentYear = Carbon::now()->format('Y');
+
+            // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
+            $stockHistory = StockHistory::where('noCatalog', $reagenIn->noCatalog)
+                ->where('month', $currentMonth)
+                ->where('year', $currentYear)
+                ->first();
+
+            if ($stockHistory) {
+                // Update data stock_histories
+                $stockHistory->quantity -= $reagenIn->quantity;
+                $stockHistory->quantity_in -= $reagenIn->quantity; // Sesuaikan dengan logika Anda
+                if ($stockHistory->quantity < 0) {
+                    $stockHistory->quantity = 0; // Jangan biarkan quantity menjadi negatif
+                }
+                $stockHistory->save();
+            }
+
+            // Hapus data reagenIn
+            $reagenIn->delete();
+
+            Alert::success('SUCCESS!', 'Stock deleted successfully');
+        } else {
+            Alert::error('Error', 'Stock not found');
+        }
+
+        return redirect()->route('management-stock.index');
+    }
+
+
 }
