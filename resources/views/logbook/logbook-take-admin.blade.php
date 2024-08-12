@@ -67,7 +67,7 @@
 
     <div class="row mt-3">
         <div class="col-md-12">
-            <form action="/take-process" method="post">
+            <form action="/take-process-admin" method="post">
                 @csrf
 
                 <div class="mb-3">
@@ -95,8 +95,13 @@
 
                 <div class="mb-3">
                     <label for="analis" class="form-label">Analis:</label>
-                    <input type="text" class="form-control" id="analis" name="analis">
+                    <select class="form-control" id="analis" name="analis">
+                        @foreach ($analisList as $id => $name)
+                            <option value="{{ $id }}">{{ $name }} - {{ $id }}</option>
+                        @endforeach
+                    </select>
                 </div>
+
 
                 <div class="mb-3">
                     <label for="exampleFormControlTextarea1" class="form-label">Notes:</label>

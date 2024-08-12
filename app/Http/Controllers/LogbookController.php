@@ -117,14 +117,24 @@ class LogbookController extends Controller
     }
 
     public function logbookHistory($noCatalog)
-    {   
+    {
+        // Ambil data logbook berdasarkan noCatalog dan urutkan berdasarkan created_at
+        $logbookReagens = LogbookReagen::where('noCatalog', $noCatalog)
+            ->orderBy('created_at', 'desc') // Urutkan berdasarkan tanggal created_at, descending
+            ->get()
+            ->map(function ($logbook) {
+                // Format tanggal created_at menjadi d-m-Y
+                $logbook->formatted_created_at = $logbook->created_at->format('d-m-Y');
+                return $logbook;
+            });
+
         $reagen = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
         }])
         ->where('noCatalog', $noCatalog)
         ->first();
         
-        return view('logbook.logbook-history', compact('reagen'));
+        return view('logbook.logbook-history', compact('reagen', 'logbookReagens'));
     }
 
     // Fungsi takeReagen
@@ -143,13 +153,95 @@ class LogbookController extends Controller
         // Contoh: Ambil data reagen berdasarkan nomor katalog
         $reagen = Reagen::where('noCatalog', $noCatalog)->first();
 
+        // Ambil data analis dari database
+        $analisList = DB::table('users')->pluck('name', 'id');
+
         // Jika reagen tidak ditemukan, redirect ke halaman lain atau berikan pesan error
         if (!$reagen) {
             return redirect()->route('order.index')->with('error', 'Reagen not found');
         }
 
         // Kirim data reagen ke view take-admin.blade.php
-        return view('logbook.logbook-take-admin', compact('reagen'));
+        return view('logbook.logbook-take-admin', compact('reagen', 'analisList'));
+    }
+
+    // menyimpan data take reagen admin
+    public function storeTakeAdmin(Request $request)
+    {
+        // Validasi form
+    $validatedData = $request->validate([
+        'noCatalog' => 'required',
+        'user_id' => 'required',
+        'batch' => 'required',
+        'quantity_taken' => 'required|numeric|min:1',
+        'analis' => 'required|exists:users,id',
+        'note' => 'nullable|string',
+        'date' => 'required|date', // pastikan ini valid
+    ]);
+
+    // Check if there is sufficient stock in the stock_reagens table
+    $availableStock = StockReagen::where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
+
+    if ($availableStock < $validatedData['quantity_taken']) {
+        // Redirect back with an error message if the requested quantity exceeds the available stock
+        Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
+        return redirect()->back();
+    }
+
+    // Dapatkan bulan dan tahun saat ini
+    $currentMonth = Carbon::now()->format('m');
+    $currentYear = Carbon::now()->format('Y');
+
+    // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
+    $stockHistory = DB::table('stock_histories')
+        ->where('noCatalog', $validatedData['noCatalog'])
+        ->where('month', $currentMonth)
+        ->where('year', $currentYear)
+        ->first();
+
+    if ($stockHistory) {
+        // Update data
+        DB::table('stock_histories')
+            ->where('noCatalog', $validatedData['noCatalog'])
+            ->where('month', $currentMonth)
+            ->where('year', $currentYear)
+            ->update([
+                'quantity' => $stockHistory->quantity - $validatedData['quantity_taken'],
+                'quantity_out' => $stockHistory->quantity_out + $validatedData['quantity_taken'],
+                'updated_at' => now(),
+            ]);
+    } else {
+        // Jika belum ada, buat entri baru pada stock_histories
+        StockHistory::create([
+            'noCatalog' => $validatedData['noCatalog'],
+            'quantity' => 0,
+            'quantity_in' => 0,
+            'quantity_out' => $validatedData['quantity_taken'],
+            'month' => $currentMonth,
+            'year' => $currentYear,
+        ]);
+    }
+
+    // Create a new entry in the LogbookReagen table
+    LogbookReagen::create([
+        'noCatalog' => $validatedData['noCatalog'],
+        'user_id' => $validatedData['user_id'],
+        'batch' => $validatedData['batch'],
+        'quantity_taken' => $validatedData['quantity_taken'],
+        'user_id' => $validatedData['analis'], // Assuming `analis` is an ID
+        'note' => $validatedData['note'],
+        'created_at' => $validatedData['date'], // Set `created_at` manually
+    ]);
+
+    // Update the stock_reagens table by reducing the quantity
+    StockReagen::where('noCatalog', $validatedData['noCatalog'])
+        ->orderBy('created_at') // Adjust order based on your logic
+        ->decrement('quantity', $validatedData['quantity_taken']);
+
+    Alert::success('Success', 'Information has been successfully saved.');
+
+    // Redirect with a success message or handle it based on your requirements
+    return redirect()->route('logbook.index');
     }
 
 }

@@ -67,6 +67,8 @@ Route::post('/take-process', [LogbookController::class, 'store'])->middleware('a
 Route::get('/logbook-history/{noCatalog}', [LogbookController::class, 'logbookHistory'])->name('data.history')->middleware('auth');
 // Tambahkan rute ini jika belum ada
 Route::get('/take-admin/{noCatalog}', [LogbookController::class, 'takeAdmin'])->name('take-admin');
+// Route untuk menyimpan data dari form
+Route::post('/take-process-admin', [LogbookController::class, 'storeTakeAdmin']);
 
 
 // route order
