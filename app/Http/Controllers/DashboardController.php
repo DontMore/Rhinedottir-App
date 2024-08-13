@@ -10,6 +10,7 @@ use App\Models\StockReagen;
 use App\Models\Order;
 use App\Models\ReagenIn;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -67,5 +68,48 @@ class DashboardController extends Controller
         $reagenED = ReagenIn::orderBy('expiredDate', 'asc')->take(10)->get();
 
         return view('dashboard.dashboard', compact('totalReagen', 'totalQuantity', 'totalQuantityIn', 'totalQuantityOut', 'zeroStockReagen', 'reagenOrder', 'reagenED', 'labels', 'data'));
+    }
+
+    public function getChartData(Request $request)
+    {
+        $noCatalog = $request->query('noCatalog');
+        $currentYear = date('Y');
+
+        // Generate an array of all months in the current year
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $month = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $months[] = "{$currentYear}-{$month}";
+        }
+
+        // Query to get the total quantities per month
+        $query = DB::table('reagens_in')
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('SUM(quantity) as total_quantity')
+            )
+            ->where('noCatalog', $noCatalog)
+            ->whereYear('created_at', $currentYear)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->keyBy('month');
+
+        // Initialize an array to hold the final data with all months
+        $data = [];
+        foreach ($months as $month) {
+            $data[] = [
+                'month' => $month,
+                'total_quantity' => isset($query[$month]) ? $query[$month]->total_quantity : 0
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function getReagentList()
+    {
+        $reagents = DB::table('reagens')->select('noCatalog', 'nameReagen')->get();
+        return response()->json($reagents);
     }
 }

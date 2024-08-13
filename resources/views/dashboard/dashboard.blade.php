@@ -2,6 +2,9 @@
 
 @section('container')
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <div class="container-fluid">
     <!-- baris 1 -->
     <div class="row baris-1">
@@ -119,37 +122,80 @@
       </div><!-- baris 3 kolom 4 -->
     </div><!-- Baris 3 -->
 
-    <!-- baris 4 -->
-    <div class="row">
-        <canvas id="lineChart" width="800" height="400"></canvas>
-    </div><!-- baris 4 -->
+    <div class="col-md-6">
+        <label for="reagentSelect">Choose a Reagent:</label>
+        <select id="reagentSelect">
+            <option value="">Select Reagent</option>
+        </select>
+        <canvas id="reagentChart" style="margin-top: 20px;"></canvas>
+    </div>
 
-</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let chartInstance = null;
 
-<script>
-var ctx = document.getElementById('lineChart').getContext('2d');
-var lineChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        datasets: [{
-            label: 'Stock Reagen',
-            data: {!! json_encode($data) !!},
-            borderColor: 'rgb(75, 192, 192)',
-            fill: false
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true
-                }
-            }]
-        }
-    }
-});
-</script>
+            // Fetch and populate the dropdown
+            fetch("{{ url('/reagent-list') }}")
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('reagentSelect');
+                    data.forEach(reagent => {
+                        const option = document.createElement('option');
+                        option.value = reagent.noCatalog;
+                        option.text = reagent.nameReagen;
+                        select.appendChild(option);
+                    });
+                });
 
+            // Event listener for dropdown change
+            $('#reagentSelect').change(function() {
+                const noCatalog = $(this).val();
+                const nameReagen = $('#reagentSelect option:selected').text();
+                updateChart(noCatalog, nameReagen);
+            });
+
+            // Function to update the chart based on selected noCatalog
+            function updateChart(noCatalog, nameReagen) {
+                fetch(`{{ url('/chart-data') }}?noCatalog=${noCatalog}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const labels = data.map(item => item.month);
+                        const quantities = data.map(item => item.total_quantity);
+
+                        const ctx = document.getElementById('reagentChart').getContext('2d');
+
+                        // Destroy the previous chart instance if it exists
+                        if (chartInstance !== null) {
+                            chartInstance.destroy();
+                        }
+
+                        chartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: nameReagen,
+                                    data: quantities,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 2,
+                                    fill: false
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // Load chart for default or first selection
+            updateChart('', '');
+        });
+    </script>
 
 @endsection

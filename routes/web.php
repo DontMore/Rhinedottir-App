@@ -42,6 +42,11 @@ Route::post('forgot-password', [MailController::class, 'sendResetLink'])->name('
 
 // route dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('admin')->name('dashboard.index');
+Route::get('/chart-data', [DashboardController::class, 'getChartData']);
+Route::get('/reagent-list', [DashboardController::class, 'getReagentList']);
+Route::get('/reagent-chart', function () {
+    return view('reagent_chart');
+});
 
 // route management stock
 Route::get('/management-stock', [ManagementStockController::class, 'index'])->name('management-stock.index')->middleware('admin');
