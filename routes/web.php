@@ -47,6 +47,11 @@ Route::get('/reagent-list', [DashboardController::class, 'getReagentList']);
 Route::get('/reagent-chart', function () {
     return view('reagent_chart');
 });
+Route::get('/logbook-chart-data', [DashboardController::class, 'getLogbookChartData']);
+Route::get('/logbook-reagent-list', [DashboardController::class, 'getLogbookReagentList']);
+Route::get('/logbook-chart', function () {
+    return view('logbook_chart');
+});
 
 // route management stock
 Route::get('/management-stock', [ManagementStockController::class, 'index'])->name('management-stock.index')->middleware('admin');

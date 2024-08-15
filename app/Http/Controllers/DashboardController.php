@@ -112,4 +112,48 @@ class DashboardController extends Controller
         $reagents = DB::table('reagens')->select('noCatalog', 'nameReagen')->get();
         return response()->json($reagents);
     }
+
+    // chart logbook
+    public function getLogbookChartData(Request $request)
+    {
+        $noCatalog = $request->query('noCatalog');
+        $currentYear = date('Y');
+
+        // Generate an array of all months in the current year
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $month = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $months[] = "{$currentYear}-{$month}";
+        }
+
+        // Query to get the total quantity_taken per month
+        $query = DB::table('logbook_reagens')
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('SUM(quantity_taken) as total_quantity')
+            )
+            ->where('noCatalog', $noCatalog)
+            ->whereYear('created_at', $currentYear)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->keyBy('month');
+
+        // Initialize an array to hold the final data with all months
+        $data = [];
+        foreach ($months as $month) {
+            $data[] = [
+                'month' => $month,
+                'total_quantity' => isset($query[$month]) ? $query[$month]->total_quantity : 0
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function getLogbookReagentList()
+    {
+        $reagents = DB::table('reagens')->select('noCatalog', 'nameReagen')->get();
+        return response()->json($reagents);
+    }
 }
