@@ -36,11 +36,13 @@
             });
         </script>
 
+        @can('admin')
         <!-- tombol take admin -->
         <div>
             <!-- Ubah tombol menjadi tautan dengan parameter $reagen->noCatalog -->
             <a href="{{ route('take-admin', ['noCatalog' => $reagen->noCatalog]) }}" class="btn btn-primary">Take Admin</a>
         </div>
+        @endcan
 
         <div class="row">
             <h2>Logbook</h2>

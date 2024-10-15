@@ -102,6 +102,10 @@ Route::post('/update-quantities', [StockOpnameController::class, 'updateQuantiti
 Route::get('/generate-pdf-stock', [StockOpnameController::class, 'generateStock'])->name('stock.print')->middleware('admin');
 Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
 Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');
+Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
+Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
+
+
 
 //route email
 Route::get('kirim-email','App\Http\Controllers\MailController@index');

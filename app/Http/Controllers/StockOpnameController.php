@@ -16,7 +16,16 @@ use Validator;
 class StockOpnameController extends Controller
 {
     //
-    public function index(Request $request)
+    public function index()
+    {
+        $data = StockHistory::select('month', 'year')
+        ->groupBy('month', 'year') // Grup berdasarkan month, year, dan noCatalog
+        ->get();
+
+        return view('stock-opname.so-list', compact('data'));
+    }
+
+    public function soDetail(Request $request)
     {
         $timezone = config('app.timezone');
         // Mengambil parameter bulan dan tahun dari request
