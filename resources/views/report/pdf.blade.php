@@ -10,9 +10,9 @@
 </head>
     <!-- CSS -->
     <style>
-        /* Menetapkan ukuran font untuk tabel menjadi 12px */
+        /* Menetapkan ukuran font untuk tabel menjadi lebih kecil */
         table {
-            font-size: 12px;
+            font-size: 8px; /* Atur font lebih kecil di sini */
         }
     </style>
 <body>
@@ -21,8 +21,8 @@
         <p class="mb-4 text-center">Month {{ $month }} {{ $year }}</p>
         <hr>
 
-        <table class="table table-bordered text-center">
-            <thead>
+        <table class="table table-bordered">
+            <thead class="text-center">
                 <tr>
                     <th>No. Catalog</th>
                     <th>Name Reagen</th>
@@ -38,11 +38,11 @@
                     <tr>
                         <td>{{ $reagen->noCatalog }}</td>
                         <td>{{ $reagen->reagen->nameReagen }}</td>
-                        <td>{{ $reagen->reagen->merk }}</td>
-                        <td>{{ $reagen->reagen->packSize }}</td>
-                        <td>{{ $reagen->first()->quantity }}</td>
-                        <td>{{ $reagen->first()->quantity_in }}</td>
-                        <td>{{ $reagen->first()->quantity_out }}</td>
+                        <td class="text-center">{{ $reagen->reagen->merk }}</td>
+                        <td class="text-center">{{ $reagen->reagen->packSize }}</td>
+                        <td class="text-center">{{ $reagen->quantity }}</td>
+                        <td class="text-center">{{ $reagen->quantity_in }}</td>
+                        <td class="text-center">{{ $reagen->quantity_out }}</td>
                     </tr>
                 @endforeach
             </tbody>

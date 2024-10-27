@@ -2,6 +2,11 @@
 
 @section('container')
 
+      <div>
+        <a href="/reagen-in"><button>Reagen In</button></a>
+        <a href="/reagen-out"><button>Reagen Out</button></a>
+      </div>
+
       <!-- Judul halaman  -->
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
         <h1 class="h2">Management Stock</h1>

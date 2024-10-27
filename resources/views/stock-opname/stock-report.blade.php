@@ -12,7 +12,7 @@
     <style>
         /* Set font size for the table to 12px */
         table {
-            font-size: 12px;
+            font-size: 8px;
         }
 
         /* Add styling for different status classes */

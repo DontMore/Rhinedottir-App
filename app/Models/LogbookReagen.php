@@ -25,7 +25,7 @@ class LogbookReagen extends Model
     // Relasi ke tabel 'reagens'
     public function reagen()
     {
-        return $this->belongsTo(Reagen::class, 'catalog_number', 'noCatalog');
+        return $this->belongsTo(Reagen::class, 'noCatalog', 'noCatalog');
     }
 
     // Relasi ke tabel 'users'

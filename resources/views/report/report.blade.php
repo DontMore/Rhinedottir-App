@@ -9,33 +9,6 @@
         <h2>All Reagen Data</h2>
     </div> <!-- End baris 1 kolom 1 -->
 
-    <!-- baris 1 kolom 2 -->
-    <div class="col-md-5">
-        <form action="{{ route('report.index') }}" method="get" class="form-inline mb-3">
-            @csrf
-            <label for="month" class="mr-2">Month:</label>
-            <select name="month" id="month" class="form-control mr-2">
-                <!-- Option untuk bulan, sesuaikan dengan kebutuhan Anda -->
-                <option value="1">January</option>
-                <option value="2">February</option>
-                <option value="3">March</option>
-                <option value="4">April</option>
-                <option value="5">May</option>
-                <option value="6">June</option>
-                <option value="7">July</option>
-                <option value="8">August</option>
-                <option value="9">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-            </select>
-
-            <label for="year" class="mr-2">Year:</label>
-            <input type="text" name="year" id="year" class="form-control mr-2" placeholder="Enter year">
-
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </form>
-    </div> <!-- End baris 1 kolom 2 -->
 </div> <!-- End baris 1 -->
 <hr>
 
@@ -86,7 +59,6 @@
             @endforeach
         </tbody>
     </table>
-</body>
 </div> <!-- End Baris 3 -->
 
 @endsection

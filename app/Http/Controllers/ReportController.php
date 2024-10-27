@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\StockReagen;
+use App\Models\StockOpname;
 use App\Models\Reagen;
 use App\Models\StockHistory;
 use Carbon\Carbon;
@@ -11,7 +12,12 @@ use PDF;
 
 class ReportController extends Controller
 {
-    public function index(Request $request)
+    public function index(){
+        $report = StockOpname::all();
+        return view('report.report-list', compact('report'));
+    }
+
+    public function reportDetail(Request $request)
     {
         $timezone = config('app.timezone');
         // Mengambil parameter bulan dan tahun dari request

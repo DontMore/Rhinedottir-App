@@ -11,6 +11,7 @@ use RealRashid\SweetAlert\Facades\Alert;
 use Carbon\Carbon;
 use PDF;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\LogbookReagen;
 
 class ManagementStockController extends Controller
 {
@@ -282,5 +283,16 @@ class ManagementStockController extends Controller
         return redirect()->route('management-stock.index');
     }
 
+    public function reagenIn()
+    {
+        $reagenIn = ReagenIn::orderBy('created_at', 'desc')->paginate(20);
+        return view('management-stock.reagen-in', compact('reagenIn'));
+    }
+
+    public function reagenOut()
+    {
+        $reagenOut = LogbookReagen::orderBy('created_at', 'desc')->paginate(20);
+        return view('management-stock.reagen-out', compact('reagenOut'));
+    }
 
 }

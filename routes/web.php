@@ -67,7 +67,8 @@ Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])
 Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
 Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
 Route::delete('/management-stock/delete-stock/{id}', [ManagementStockController::class, 'deleteStock'])->name('management-stock.delete-stock');
-
+Route::get('/reagen-in', [ManagementStockController::class, 'reagenIn'])->name('data.reagenin');
+Route::get('/reagen-out', [ManagementStockController::class, 'reagenOut'])->name('data.reagenout');
 
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index')->middleware('auth'); // Route untuk menampilkan data logbook
@@ -94,6 +95,7 @@ Route::get('/reagen/{noCatalogUtama}', [OrderController::class, 'getReagenData']
 
 // route report
 Route::get('/report', [ReportController::class, 'index'])->middleware('admin')->name('report.index');
+Route::get('/report-detail', [ReportController::class, 'reportDetail'])->name('reportDetail');
 Route::get('/generate-pdf', [ReportController::class, 'generatePDF'])->name('report.print')->middleware('admin');
 
 // route stock opname
@@ -104,8 +106,7 @@ Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
 Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');
 Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
 Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
-
-
+Route::get('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
 
 //route email
 Route::get('kirim-email','App\Http\Controllers\MailController@index');

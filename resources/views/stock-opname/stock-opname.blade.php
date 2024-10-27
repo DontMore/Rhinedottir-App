@@ -102,7 +102,7 @@
                 $quantityOut = $reagen->quantity_out;
             @endphp
 
-                <tr>
+                <tr> 
                     <td>{{ $reagen->noCatalog }}</td>
                     <td>{{ $reagen->reagen->nameReagen }}</td>
                     <td>{{ $reagen->reagen->merk }}</td>

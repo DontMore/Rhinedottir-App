@@ -18,9 +18,33 @@ class StockOpnameController extends Controller
     //
     public function index()
     {
-        $data = StockHistory::select('month', 'year')
-        ->groupBy('month', 'year') // Grup berdasarkan month, year, dan noCatalog
-        ->get();
+        $yearNow = Carbon::now()->year;
+
+        // Mengecek apakah ada data dengan tahun saat ini
+        $yearCheck = StockOpname::where('year', $yearNow)->exists();
+        $yearData = StockOpname::where('year', $yearNow)->get();
+        $month = $yearData->pluck('month')->toArray();
+
+        $allMonth = range(1, 12);
+
+        // Ada bulan yang tidak ada
+        $missMonth = array_diff($allMonth, $month);
+
+        // Menyimpan bulan yang kurang ke database
+        foreach ($missMonth as $missMonth) {
+            // Simpan data ke database
+            StockOpname::create([
+                'month' => $missMonth,
+                'year' => $yearNow,
+                'user_id' => auth()->user()->id,
+                // Tambahkan atribut lain yang diperlukan sesuai struktur tabel `ReagenIn`
+                // Misalnya: 'nameReagen' => 'Default Name', 'batch' => 'Default Batch'
+            ]);
+        }
+
+        
+
+        $data = StockOpname::all();
 
         return view('stock-opname.so-list', compact('data'));
     }
@@ -32,18 +56,80 @@ class StockOpnameController extends Controller
         $month = $request->input('month') ?? Carbon::now()->format('m');
         $year = $request->input('year') ?? Carbon::now()->format('Y');
 
+        // dd($month);
+
+        $noCatalog = StockHistory::where('year', $year)->where('month', $month)->pluck('noCatalog')->toArray();
+        $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
+
+        // mencari noCatalog yang tidak ada pada database History Stock
+        $missNoCatalog = array_diff($noCatalogStd, $noCatalog);
+
+        // Menyimpan bulan yang kurang ke database
+        foreach ($missNoCatalog as $missNoCatalog) {
+            // Simpan data ke database
+            StockHistory::create([
+                'month' => $month,
+                'year' => $year,
+                'noCatalog' => $missNoCatalog,
+                // Tambahkan atribut lain yang diperlukan sesuai struktur tabel `ReagenIn`
+                // Misalnya: 'nameReagen' => 'Default Name', 'batch' => 'Default Batch'
+            ]);
+        }
+
         // Mengambil semua data reagen beserta relasinya dengan filter bulan dan tahun
         $reagens = StockHistory::where('year', $year)
-                            ->where('month', $month)
-                            ->get();
+        ->where('month', $month) 
+        ->get();
 
-        $reagens->each(function ($reagen) use ($year, $month) {
-            $reagen->quantity_before = StockHistory::where('year', $year)
-                ->where('month', $month - 1)
-                ->sum('quantity_actual');
+        // Mengambil quantity_actual untuk bulan sebelumnya
+        $previousMonthData = StockHistory::where('year', $year)
+        ->where('month', $month - 1)
+        ->get(['noCatalog', 'quantity_actual']); // Ambil noCatalog dan quantity_actual bulan sebelumnya
+
+        // Mengaitkan quantity_before dengan reagen saat ini
+        $reagens->each(function ($reagen) use ($previousMonthData) {
+        // Mencari data bulan sebelumnya yang cocok dengan noCatalog saat ini
+        $previousData = $previousMonthData->firstWhere('noCatalog', $reagen->noCatalog);
+
+        // Jika data ditemukan, ambil quantity_actual
+        $reagen->quantity_before = $previousData ? $previousData->quantity_actual : null; // Set null jika tidak ada data
         });
 
+        // var_dump($reagens->quantity_in);die;
+
         return view('stock-opname.stock-opname', compact('reagens', 'month', 'year'));
+    }
+
+    public function generatedSO(Request $request)
+    {
+       // Mengambil bulan dan tahun dari request
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        // Mengambil semua data noCatalog dari model Reagen
+        $noCatalogs = Reagen::select('noCatalog')->get();
+
+        
+
+        // Membuat array baru untuk menambahkan bulan dan tahun ke setiap noCatalog
+        $dataWithMonthYear = $noCatalogs->map(function ($reagen) use ($month, $year) {
+            return [
+                'noCatalog' => $reagen->noCatalog,
+                'month' => $month,
+                'year' => $year,
+            ];
+        });
+
+        // Menggunakan var_dump untuk menampilkan hasil
+        var_dump($dataWithMonthYear);
+
+        // Jika Anda ingin mengembalikan hasil ke view, bisa dilakukan seperti ini
+        // return view('your_view_name', compact('dataWithMonthYear'));
+
+        // Misalnya, mengambil data dari database berdasarkan bulan dan tahun
+        $data = StockHistory::where('month', $month)->where('year', $year)->get();
+
+        return view('stock-opname.generated', compact('data', 'month', 'year'));
     }
 
     public function generateStock(Request $request)
