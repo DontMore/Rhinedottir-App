@@ -154,41 +154,6 @@ class ManagementStockController extends Controller
     // Simpan data ke tabel ReagenIn
     $reagenIn = ReagenIn::create($validatedDataStock);
 
-    // Dapatkan bulan dan tahun saat ini
-    $currentMonth = Carbon::now()->format('m'); // 'F' akan mengembalikan nama bulan dalam bentuk lengkap
-    $currentYear = Carbon::now()->format('Y');  // 'Y' akan mengembalikan tahun dalam format empat digit
-
-
-    // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
-    $stockHistory = DB::table('stock_histories')
-        ->where('noCatalog',  $validatedDataStock['noCatalog'])
-        ->where('month', $currentMonth)
-        ->where('year', $currentYear)
-        ->first();
-
-    if ($stockHistory) {
-            // Update data
-            $updateResult = DB::table('stock_histories')
-                ->where('noCatalog',  $validatedDataStock['noCatalog'])
-                ->where('month', $currentMonth)
-                ->where('year', $currentYear)
-                ->update([
-                    'quantity' => $stockHistory->quantity + $validatedDataStock['quantity'],
-                    'quantity_in' => $stockHistory->quantity_in + $validatedDataStock['quantity'],  // Gantilah dengan nilai yang diinginkan
-                    'updated_at' => now(),
-                ]);
-    } else {
-        // Jika belum ada, buat entri baru pada stock_histories
-        StockHistory::create([
-            'noCatalog' => $validatedDataStock['noCatalog'],
-            'quantity' => $validatedDataStock['quantity'], // Default quantity, dapat diubah sesuai kebutuhan
-            'quantity_in' => $validatedDataStock['quantity'],
-            'quantity_out' => 0, // Default quantity_out, dapat diubah sesuai kebutuhan
-            'month' => Carbon::now()->format('m'),
-            'year' => Carbon::now()->format('Y'),
-        ]);
-    }
-
     // Tambahan kode untuk menambahkan quantity pada stock_reagens
     $stockReagen = StockReagen::where('noCatalog', $validatedDataStock['noCatalog'])->first();
 

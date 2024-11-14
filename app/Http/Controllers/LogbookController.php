@@ -68,40 +68,6 @@ class LogbookController extends Controller
         return redirect()->back();
     }
 
-    // Dapatkan bulan dan tahun saat ini
-    $currentMonth = Carbon::now()->format('m'); // 'F' akan mengembalikan nama bulan dalam bentuk lengkap
-    $currentYear = Carbon::now()->format('Y');  // 'Y' akan mengembalikan tahun dalam format empat digit
-
-    // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
-    $stockHistory = DB::table('stock_histories')
-        ->where('noCatalog',  $validatedData['noCatalog'])
-        ->where('month', $currentMonth)
-        ->where('year', $currentYear)
-        ->first();
-
-    if ($stockHistory) {
-            // Update data
-            $updateResult = DB::table('stock_histories')
-                ->where('noCatalog',  $validatedData['noCatalog'])
-                ->where('month', $currentMonth)
-                ->where('year', $currentYear)
-                ->update([
-                    'quantity' => $stockHistory->quantity - $validatedData['quantity_taken'],
-                    'quantity_out' => $stockHistory->quantity_out + $validatedData['quantity_taken'],  // Gantilah dengan nilai yang diinginkan
-                    'updated_at' => now(),
-                ]);
-    } else {
-        // Jika belum ada, buat entri baru pada stock_histories
-        StockHistory::create([
-            'noCatalog' => $validatedData['noCatalog'],
-            'quantity' => 0, // Default quantity, dapat diubah sesuai kebutuhan
-            'quantity_in' => 0,
-            'quantity_out' => $validatedData['quantity_taken'], // Default quantity_out, dapat diubah sesuai kebutuhan
-            'month' => Carbon::now()->format('m'),
-            'year' => Carbon::now()->format('Y'),
-        ]);
-    }
-
     // Create a new entry in the LogbookReagen table
     LogbookReagen::create($validatedData);
 

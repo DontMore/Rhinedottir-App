@@ -106,7 +106,7 @@ Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
 Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');
 Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
 Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
-Route::get('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
+Route::post('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
 
 //route email
 Route::get('kirim-email','App\Http\Controllers\MailController@index');

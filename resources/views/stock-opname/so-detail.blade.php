@@ -4,7 +4,9 @@
 
 <!-- baris 1 -->
 <div class="row">
-    <button>Generate Stock</button>
+    <div class="col">
+        <h2>Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h2>
+    </div>
 </div> <!-- End baris 1 -->
 <hr>
 
@@ -12,7 +14,12 @@
 <div class="row">
     <!-- Baris 2 kolom 1 -->
     <div class="col">
-        <h2>Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h2>
+        <form action="{{ route('generatedSO') }}" method="POST">
+            @csrf
+            <input type="hidden" name="month"value="{{ $month }}">
+            <input type="hidden" name="year"value="{{ $year }}">
+            <button type="submit" class="btn btn-primary">Generate Stock</button>
+        </form>
     </div>
 
     <!-- Baris 2 kolom 3 -->
@@ -69,7 +76,7 @@
                     <td>{{ $quantityBefore }}</td>
                     <td>{{ $reagen->quantity_in }}</td>
                     <td>{{ $reagen->quantity_out }}</td>
-                    <td><span id="quantity_now_{{ $reagen->id }}">{{ $reagen->stock_opname ? $reagen->quantity_actual : $quantityNow }}</span></td>
+                    <td><span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span></td>
                     <td>{{ $reagen->status }}</td>
                     <td>{{ $reagen->stock_opname ? 'done' : 'not done' }}</td>
                     <td>
