@@ -76,12 +76,19 @@
                     <td>{{ $quantityBefore }}</td>
                     <td>{{ $reagen->quantity_in }}</td>
                     <td>{{ $reagen->quantity_out }}</td>
-                    <td><span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span></td>
+                    <td>
+                        @if ($reagen->stock_opname == 1)
+                            {{ $reagen->quantity_actual }}
+                        @else
+                            <span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span>
+                        @endif
+                    </td>
                     <td>{{ $reagen->status }}</td>
                     <td>{{ $reagen->stock_opname ? 'done' : 'not done' }}</td>
                     <td>
                         <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}">
+                        <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}" data-bulan="{{ $month }}" 
+                        data-tahun="{{ $year }}">
                         Edit
                         </button>
                     </td>
@@ -153,10 +160,16 @@
 
 <script>
     $(document).ready(function() {
-        // fungsi modal
+        // Fungsi modal
         $('.edit-btn').click(function() {
+            // Ambil data dari tombol
             var reagenId = $(this).data('id');
-            $.get("/get-reagen/" + reagenId, function(data) {
+            var bulan = $(this).data('bulan');
+            var tahun = $(this).data('tahun');
+
+            // Kirim permintaan GET dengan data bulan dan tahun sebagai parameter query
+            $.get("/get-reagen/" + reagenId, { bulan: bulan, tahun: tahun }, function(data) {
+                // Isi data ke modal
                 $('#no-catalog').text(data.reagen.noCatalog);
                 $('#reagen-name').text(data.reagen.nameReagen);
                 $('#current-stock').text(data.stockHistory.stock_opname ? data.stockHistory.quantity_actual : data.stockHistory.quantity);

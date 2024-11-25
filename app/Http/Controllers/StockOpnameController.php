@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\StockReagen;
 use App\Models\Reagen;
 use App\Models\ReagenIn;
@@ -349,9 +350,38 @@ class StockOpnameController extends Controller
     return redirect()->back()->with('success', 'Quantities updated successfully!');
     }
 
-    public function getReagen($id) {
-        $stockHistory = StockHistory::with('reagen')->find($id);
+    // untuk mengambil data reagen untuk modal
+    public function getReagen($id, Request $request) {
+        $bulan = $request->query('bulan');
+        $tahun = $request->query('tahun');
+    
+        Log::channel('debug')->info("Parameter bulan: $bulan, tahun: $tahun, id: $id");
+    
+        if (!$bulan || !$tahun) {
+            Log::channel('debug')->error("Parameter bulan atau tahun tidak ditemukan");
+            return response()->json([
+                'error' => 'Parameter bulan dan tahun wajib diisi'
+            ], 400);
+        }
+    
+        $stockHistory = StockHistory::with('reagen')
+            ->where('id', $id)
+            ->where('month', $bulan)
+            ->where('year', $tahun)
+            ->first();
+    
+        Log::channel('debug')->info("Query result: " . ($stockHistory ? $stockHistory->toJson() : 'No Data Found'));
+    
+        if (!$stockHistory) {
+            Log::channel('debug')->warning("Data tidak ditemukan untuk ID: $id, Bulan: $bulan, Tahun: $tahun");
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk ID, bulan, dan tahun yang diberikan'
+            ], 404);
+        }
+    
         $reagen = $stockHistory->reagen;
+        Log::channel('debug')->info("Reagen data: " . $reagen->toJson());
+    
         return response()->json([
             'stockHistory' => $stockHistory,
             'reagen' => $reagen
