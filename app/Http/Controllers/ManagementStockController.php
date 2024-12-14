@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Reagen;
@@ -257,7 +258,21 @@ class ManagementStockController extends Controller
                 return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
             });
 
-        return view('management-stock.reagen-in', compact('reagenIn'));
+        // Convert hasil groupBy ke collection
+        $groupedData = collect($reagenIn);
+
+        // Pagination manual
+        $currentPage = request()->get('page', 1); // Ambil halaman saat ini
+        $perPage = 10; // Jumlah grup per halaman
+        $paginatedData = new LengthAwarePaginator(
+            $groupedData->forPage($currentPage, $perPage), // Data untuk halaman saat ini
+            $groupedData->count(), // Total jumlah grup
+            $perPage, // Jumlah grup per halaman
+            $currentPage, // Halaman saat ini
+            ['path' => request()->url()] // URL untuk pagination
+        );
+
+        return view('management-stock.reagen-in', compact('paginatedData'));
     }
 
     public function reagenOut()
