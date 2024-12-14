@@ -64,9 +64,9 @@ class AuthenticationController extends Controller
             $request->session()->regenerate();
             // Periksa peran pengguna setelah otentikasi
             if (Auth::user()->role === 'Admin') {
-                return redirect()->intended('/dashboard');
+                return redirect()->intended('dashboard');
             } elseif (Auth::user()->role ===  'Analis') {
-                return redirect()->intended('/logbook');
+                return redirect()->intended('logbook');
             }
         }
 

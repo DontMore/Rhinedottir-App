@@ -34,7 +34,7 @@
                             </div>
                         @endif
                         <!-- Form login -->
-                        <form action="/login" method="POST">
+                        <form action="login" method="POST">
                             @csrf
                             <div class="form-group">
                                 <label for="username">Username</label>
@@ -47,8 +47,8 @@
                             <button type="submit" class="btn btn-primary btn-block">Login</button>
                         </form>
                         <div class="text-center mt-3">
-                            <a href="/kirim-email">Lupa Password</a> |
-                            <a href="/register-guest">Pendaftaran</a>
+                            <a href="kirim-email">Lupa Password</a> |
+                            <a href="register-guest">Pendaftaran</a>
                         </div>
                     </div>
                 </div>

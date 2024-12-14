@@ -6,7 +6,7 @@
             <h1 class="h2">Add Reagen</h1>
           </div>
 
-        <form action="/add-reagen" method="POST">
+        <form action="add-reagen" method="POST">
             @csrf
             <!-- nomor katalog -->
             <div class="mb-3">
@@ -37,66 +37,65 @@
                 <label for="exampleInputPassword1" class="form-label">Hazard Symbol</label><br>
 
                 <!-- Toxic Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck1" name="hazardOptions[]" value="Toxic">
                     <label class="custom-control-label" for="customCheck1">
-                        <img src="{{ asset('images/toxic.png') }}" alt="Gambar" width="100" height="100" class="customCheck1Image custom-control-image">
+                        <img src="{{ asset('public/images/toxic.png') }}" alt="Gambar" width="100" height="100" class="customCheck1Image custom-control-image">
                     </label>
                 </div>
-
                 <!-- Corrosive Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck2" name="hazardOptions[]" value="Corrosive">
                     <label class="custom-control-label" for="customCheck2">
-                        <img src="{{ asset('images/corrosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck2Image custom-control-image">
+                        <img src="{{ asset('public/images/corrosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck2Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Explosive Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck3" name="hazardOptions[]" value="Explosive">
                     <label class="custom-control-label" for="customCheck3">
-                        <img src="{{ asset('images/explosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/explosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Carcinogen Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck4" name="hazardOptions[]" value="Carcinogen">
                     <label class="custom-control-label" for="customCheck4">
-                        <img src="{{ asset('images/carcinogen.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/carcinogen.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Environment Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck5" name="hazardOptions[]" value="Environment">
                     <label class="custom-control-label" for="customCheck5">
-                        <img src="{{ asset('images/Environmental-Hazard.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/Environmental-Hazard.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Flammable Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck6" name="hazardOptions[]" value="Flammable">
                     <label class="custom-control-label" for="customCheck6">
-                        <img src="{{ asset('images/flammable.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/flammable.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Irritant Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck7" name="hazardOptions[]" value="Irritant">
                     <label class="custom-control-label" for="customCheck7">
-                        <img src="{{ asset('images/irritant.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/irritant.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 
                 <!-- Irritant Symbol -->
-                <div class="form-check form-check-inline">
+                <div class="form-check form-check-inline col">
                     <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck8" name="hazardOptions[]" value="Oxidising">
                     <label class="custom-control-label" for="customCheck8">
-                        <img src="{{ asset('images/oxidising.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
+                        <img src="{{ asset('public/images/oxidising.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
                     </label>
                 </div>
 

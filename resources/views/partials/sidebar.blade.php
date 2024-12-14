@@ -56,7 +56,7 @@
 
   <!-- Menu Stock Opname -->
   <div class="mt-3 menu {{ request()->is('stock-opname*') ? 'active' : '' }}">
-    <a href="/stock-opname">
+    <a href="stock-opname">
       <span data-feather="file"></span>
       Stock Opname
     </a>
@@ -74,7 +74,7 @@
   @can('admin')
   <!-- Menu Orders -->
   <div class="mt-3 menu {{ request()->is('order*') ? 'active' : '' }}">
-    <a href="/order">
+    <a href="order">
       <span data-feather="file"></span>
       Orders
     </a>
@@ -82,7 +82,7 @@
 
   <!-- Menu Reports -->
   <div class="mt-3 menu {{ request()->is('report*') ? 'active' : '' }}">
-    <a href="/report">
+    <a href="report">
       <span data-feather="bar-chart-2"></span>
       Reports
     </a>
@@ -90,7 +90,7 @@
 
   <!-- Menu Users -->
   <div class="mt-3 menu {{ request()->is('user-list*') ? 'active' : '' }}">
-    <a href="/user-list">
+    <a href="user-list">
       <span data-feather="layers"></span>
       Users
     </a>

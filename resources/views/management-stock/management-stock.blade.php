@@ -3,8 +3,8 @@
 @section('container')
 
       <div>
-        <a href="/reagen-in"><button>Reagen In</button></a>
-        <a href="/reagen-out"><button>Reagen Out</button></a>
+        <a href="reagen-in"><button>Reagen In</button></a>
+        <a href="reagen-out"><button>Reagen Out</button></a>
       </div>
 
       <!-- Judul halaman  -->
@@ -16,7 +16,7 @@
       <div class="row">
         <!-- tombol add reagan -->
         <div class="col-md-2">
-          <a href="/add-reagen"><button type="button" class="btn btn-success">Tambahkan</button></a>
+          <a href="add-reagen"><button type="button" class="btn btn-success">Tambahkan</button></a>
         </div>
 
         <!-- search -->

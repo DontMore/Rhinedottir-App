@@ -168,7 +168,7 @@
             var tahun = $(this).data('tahun');
 
             // Kirim permintaan GET dengan data bulan dan tahun sebagai parameter query
-            $.get("/get-reagen/" + reagenId, { bulan: bulan, tahun: tahun }, function(data) {
+            $.get("get-reagen/" + reagenId, { bulan: bulan, tahun: tahun }, function(data) {
                 // Isi data ke modal
                 $('#no-catalog').text(data.reagen.noCatalog);
                 $('#reagen-name').text(data.reagen.nameReagen);
