@@ -250,7 +250,13 @@ class ManagementStockController extends Controller
 
     public function reagenIn()
     {
-        $reagenIn = ReagenIn::orderBy('created_at', 'desc')->paginate(20);
+        // Ambil data dan urutkan berdasarkan created_at secara desc
+        $reagenIn = ReagenIn::orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
+            });
+
         return view('management-stock.reagen-in', compact('reagenIn'));
     }
 

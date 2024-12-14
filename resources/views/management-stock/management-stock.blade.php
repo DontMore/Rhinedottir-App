@@ -2,10 +2,7 @@
 
 @section('container')
 
-      <div>
-        <a href="reagen-in"><button>Reagen In</button></a>
-        <a href="reagen-out"><button>Reagen Out</button></a>
-      </div>
+      
 
       <!-- Judul halaman  -->
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -20,7 +17,7 @@
         </div>
 
         <!-- search -->
-        <div class="mb-3 col-md-10">
+        <div class="col-md-10">
           <!-- Form input Search -->
           <form action="{{ route('management-stock.index') }}" method="GET">
                 <div class="input-group mb-3">
@@ -29,6 +26,13 @@
                 </div>
             </form>
         </div>
+      </div>
+
+      <div>
+        <hr>
+        <a href="reagen-in"><button class="btn btn-success">Reagen In</button></a>
+        <a href="reagen-out"><button class="btn btn-warning">Reagen Out</button></a>
+        <hr>
       </div>
           
       <table class="table table-hover table-sm">
