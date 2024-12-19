@@ -25,6 +25,7 @@
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="{{ asset('public/css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('public/css/management-stock.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/css/report.css') }}">
     <link rel="stylesheet" href="{{ asset('public/css/logbook-taken.css') }}">
     <link rel="stylesheet" href="{{ asset('public/css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('public/css/order.css') }}">

@@ -14,7 +14,7 @@ class ReportController extends Controller
 {
     public function index(){
         $report = StockOpname::all();
-        return view('report.report-list', compact('report'));
+        return view('report.report', compact('report'));
     }
 
     public function reportDetail(Request $request)
