@@ -277,8 +277,29 @@ class ManagementStockController extends Controller
 
     public function reagenOut()
     {
-        $reagenOut = LogbookReagen::orderBy('created_at', 'desc')->paginate(20);
-        return view('management-stock.reagen-out', compact('reagenOut'));
+        // Ambil data dan urutkan berdasarkan created_at secara desc
+        $reagenOut = LogbookReagen::orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
+            });
+    
+        // Convert hasil groupBy ke collection
+        $groupedData = collect($reagenOut);
+    
+        // Pagination manual
+        $currentPage = request()->get('page', 1); // Ambil halaman saat ini
+        $perPage = 10; // Jumlah grup per halaman
+        $paginatedData = new LengthAwarePaginator(
+            $groupedData->forPage($currentPage, $perPage), // Data untuk halaman saat ini
+            $groupedData->count(), // Total jumlah grup
+            $perPage, // Jumlah grup per halaman
+            $currentPage, // Halaman saat ini
+            ['path' => request()->url()] // URL untuk pagination
+        );
+    
+        return view('management-stock.reagen-out', compact('paginatedData'));
     }
+    
 
 }
