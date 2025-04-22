@@ -56,7 +56,7 @@
 
   <!-- Menu Stock Opname -->
   <div class="mt-3 menu {{ request()->is('stock-opname*') ? 'active' : '' }}">
-    <a href="stock-opname">
+    <a href="{{ route('stock.index') }}">
       <span data-feather="file"></span>
       Stock Opname
     </a>

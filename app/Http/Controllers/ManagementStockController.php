@@ -75,8 +75,16 @@ class ManagementStockController extends Controller
     public function viewReagen($noCatalog)
     {
         $data = Reagen::find($noCatalog);
+
+        if (!$data) {
+            abort(404, 'Data reagen tidak ditemukan.');
+        }
+
         $hazardOptions = explode(',', $data->hazardOptions);
-        $reagenIn = $data->reagenIn;
+
+        // Ambil data reagenIn, urutkan dari yang terbaru, dan paginasi 10 per halaman
+        $reagenIn = $data->reagenIn()->orderBy('created_at', 'desc')->paginate(10);
+
         return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
     }
 

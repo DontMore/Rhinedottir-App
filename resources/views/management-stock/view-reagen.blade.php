@@ -193,6 +193,12 @@
                 @endforeach
             </tbody>
         </table>
+
+        <!-- Tambahkan ini untuk pagination -->
+        <div class="d-flex justify-content-center">
+            {{ $reagenIn->links() }}
+        </div>
+        
     </div>
 
 <!-- Modal -->

@@ -63,7 +63,7 @@ Route::get('/edit/{noCatalog}', [ManagementStockController::class, 'editReagen']
 Route::post('/delete/{noCatalog}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
 Route::post('/update/{noCatalog}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');
 Route::post('/reagen/{noCatalog}', [ManagementStockController::class, 'getReagenData'])->middleware('admin');
-Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->middleware('admin');
+Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->name('reagen.addstockreagen')->middleware('admin');
 Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
 Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
 Route::delete('/management-stock/delete-stock/{id}', [ManagementStockController::class, 'deleteStock'])->name('management-stock.delete-stock');

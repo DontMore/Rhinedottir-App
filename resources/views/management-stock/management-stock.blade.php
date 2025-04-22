@@ -39,10 +39,10 @@
         <thead>
           <tr>
             <th class="col-2">Catalog Number</th>
-            <th class="col-5">Reagent Name</th>
+            <th class="col-4">Reagent Name</th>
             <th class="col-1">Merk</th>
             <th class="col-1">Quanlity</th>
-            <th class="col-2">Action</th>
+            <th class="col-3">Action</th>
           </tr>
         </thead>
         <tbody>

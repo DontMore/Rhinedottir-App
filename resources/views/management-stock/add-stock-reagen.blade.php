@@ -3,7 +3,7 @@
 @section('container')
 <div class="container">
         <h2>Add Stock Reagen</h2>
-        <form action="/add-stock-reagen" method="POST">
+        <form action="{{ route('reagen.addstockreagen') }}" method="POST">
             @csrf
             <!-- Nomor Katalog -->
             <div class="form-group">
