@@ -1,118 +1,137 @@
 @extends('layout.main')
 
 @section('container')
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Add New Reagen</h5>
+            <a href="{{ route('management-stock.index') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+        
+        <div class="card-body">
+            <form action="add-reagen" method="POST">
+                @csrf
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Catalog Number</label>
+                            <input type="text" class="form-control" name="noCatalog" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Reagen Name</label>
+                            <input type="text" class="form-control" name="nameReagen" required>
+                        </div>
+                    </div>
 
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-            <h1 class="h2">Add Reagen</h1>
-          </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Brand</label>
+                            <input type="text" class="form-control" name="merk" required>
+                        </div>
+                    </div>
 
-        <form action="add-reagen" method="POST">
-            @csrf
-            <!-- nomor katalog -->
-            <div class="mb-3">
-                <label for="exampleInputEmail1" class="form-label">Catalog Number</label>
-                <input type="text" class="form-control" name="noCatalog" id="exampleInputEmail1" aria-describedby="emailHelp" required>
-            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Pack Size</label>
+                            <input type="text" class="form-control" name="packSize" required>
+                        </div>
+                    </div>
 
-            <!-- nama reagen -->
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Reagen Name</label>
-                <input type="text" class="form-control" name="nameReagen" id="exampleInputPassword1" required>
-            </div>
+                    <div class="col-12">
+                        <label class="form-label d-block mb-3">Hazard Symbol</label>
+                        <div class="row g-3 mb-3">
+                            @php
+                            $hazards = [
+                                ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
+                                ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
+                                ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
+                                ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
+                                ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
+                                ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
+                                ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
+                                ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png']
+                            ];
+                            @endphp
 
-            <!-- merk -->
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Merk</label>
-                <input type="text" class="form-control" name="merk" id="exampleInputPassword1" required>
-            </div>
+                            @foreach($hazards as $hazard)
+                            <div class="col-6 col-md-3">
+                                <div class="form-check custom-checkbox">
+                                    <input type="checkbox" class="form-check-input" 
+                                           id="hazard{{ $hazard['id'] }}" 
+                                           name="hazardOptions[]" 
+                                           value="{{ $hazard['name'] }}">
+                                    <label class="form-check-label" for="hazard{{ $hazard['id'] }}">
+                                        <img src="{{ asset('public/images/' . $hazard['image']) }}" 
+                                             alt="{{ $hazard['name'] }}" 
+                                             class="img-fluid mb-2" 
+                                             style="max-width: 80px;">
+                                        <span class="d-block small">{{ $hazard['name'] }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
 
-            <!-- Pack Size -->
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Pack Size</label>
-                <input type="text" class="form-control" name="packSize" id="exampleInputPassword1" required>
-            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">MSDS</label>
+                            <input type="text" class="form-control" name="msds" required>
+                        </div>
+                    </div>
 
-            <!-- Hazard Symbol -->
-            <div class="custom-control custom-checkbox mb-3 row" id="checkboxContainer">
-                <label for="exampleInputPassword1" class="form-label">Hazard Symbol</label><br>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control" name="price" required>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Toxic Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck1" name="hazardOptions[]" value="Toxic">
-                    <label class="custom-control-label" for="customCheck1">
-                        <img src="{{ asset('public/images/toxic.png') }}" alt="Gambar" width="100" height="100" class="customCheck1Image custom-control-image">
-                    </label>
+                    <div class="col-12">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="reset" class="btn btn-light">Reset</button>
+                            <button type="submit" class="btn btn-primary">Save Reagen</button>
+                        </div>
+                    </div>
                 </div>
-                <!-- Corrosive Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck2" name="hazardOptions[]" value="Corrosive">
-                    <label class="custom-control-label" for="customCheck2">
-                        <img src="{{ asset('public/images/corrosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck2Image custom-control-image">
-                    </label>
-                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                <!-- Explosive Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck3" name="hazardOptions[]" value="Explosive">
-                    <label class="custom-control-label" for="customCheck3">
-                        <img src="{{ asset('public/images/explosive.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-                <!-- Carcinogen Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck4" name="hazardOptions[]" value="Carcinogen">
-                    <label class="custom-control-label" for="customCheck4">
-                        <img src="{{ asset('public/images/carcinogen.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-                <!-- Environment Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck5" name="hazardOptions[]" value="Environment">
-                    <label class="custom-control-label" for="customCheck5">
-                        <img src="{{ asset('public/images/Environmental-Hazard.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-                <!-- Flammable Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck6" name="hazardOptions[]" value="Flammable">
-                    <label class="custom-control-label" for="customCheck6">
-                        <img src="{{ asset('public/images/flammable.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-                <!-- Irritant Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck7" name="hazardOptions[]" value="Irritant">
-                    <label class="custom-control-label" for="customCheck7">
-                        <img src="{{ asset('public/images/irritant.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-                <!-- Irritant Symbol -->
-                <div class="form-check form-check-inline col">
-                    <input type="checkbox" class="custom-control-input custom-checkbox-input" id="customCheck8" name="hazardOptions[]" value="Oxidising">
-                    <label class="custom-control-label" for="customCheck8">
-                        <img src="{{ asset('public/images/oxidising.png') }}" alt="Gambar" width="100" height="100" class="customCheck3Image custom-control-image">
-                    </label>
-                </div>
-
-            </div>
-
-            <!-- MSDS -->
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">MSDS</label>
-                <input type="text" class="form-control" name="msds" id="exampleInputPassword1" required>
-            </div>
-
-            <!-- Price -->
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Price</label>
-                <input type="text" class="form-control" name="price" id="exampleInputPassword1" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-
+<style>
+.card {
+    border: none;
+    border-radius: 10px;
+}
+.form-check-label {
+    cursor: pointer;
+    text-align: center;
+}
+.form-check-input:checked ~ .form-check-label img {
+    border: 2px solid #0d6efd;
+    padding: 3px;
+    border-radius: 8px;
+}
+.form-check {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.form-check-input {
+    margin: 0;
+    position: absolute;
+    opacity: 0;
+}
+</style>
 @endsection

@@ -15,28 +15,25 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     // index
-    public function index(){
-        // total reagen
+    public function index()
+    {
         $totalReagen = Reagen::count();
-
-        $currentMonth = Carbon::now()->month; // Get current month (1-12)
+        
+        $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        $stockReagen = StockHistory::where('month', $currentMonth)
-                                    ->where('year', $currentYear)
-                                    ->first();
+        // Get total stock quantity
+        $totalQuantity = StockReagen::sum('quantity');
 
-        $totalQuantity = StockHistory::where('month', $currentMonth)
-                            ->where('year', $currentYear)
-                            ->sum('quantity');
-                                    
-        $totalQuantityIn = StockHistory::where('month', $currentMonth)
-                            ->where('year', $currentYear)
-                            ->sum('quantity_in');
+        // Calculate total Reagen In for current month
+        $totalQuantityIn = ReagenIn::whereMonth('created_at', $currentMonth)
+                                  ->whereYear('created_at', $currentYear)
+                                  ->sum('quantity');
 
-        $totalQuantityOut = StockHistory::where('month', $currentMonth)
-                            ->where('year', $currentYear)
-                            ->sum('quantity_out');
+        // Calculate total Reagen Taken for current month
+        $totalQuantityOut = LogbookReagen::whereMonth('created_at', $currentMonth)
+                                        ->whereYear('created_at', $currentYear)
+                                        ->sum('quantity_taken');
 
         $logbook = LogbookReagen::all();
 
@@ -67,7 +64,17 @@ class DashboardController extends Controller
 
         $reagenED = ReagenIn::orderBy('expiredDate', 'asc')->take(10)->get();
 
-        return view('dashboard.dashboard', compact('totalReagen', 'totalQuantity', 'totalQuantityIn', 'totalQuantityOut', 'zeroStockReagen', 'reagenOrder', 'reagenED', 'labels', 'data'));
+        return view('dashboard.dashboard', compact(
+            'totalReagen',
+            'totalQuantity',
+            'totalQuantityIn',
+            'totalQuantityOut',
+            'zeroStockReagen',
+            'reagenOrder',
+            'reagenED',
+            'labels',
+            'data'
+        ));
     }
 
     public function getChartData(Request $request)
@@ -109,7 +116,15 @@ class DashboardController extends Controller
 
     public function getReagentList()
     {
-        $reagents = DB::table('reagens')->select('noCatalog', 'nameReagen')->get();
+        $reagents = DB::table('reagens')
+            ->select('noCatalog', 'nameReagen')
+            ->orderBy('nameReagen', 'asc')  // Sort alphabetically by name
+            ->get();
+
+        if ($reagents->isEmpty()) {
+            \Log::info('No reagents found in database');
+        }
+
         return response()->json($reagents);
     }
 
@@ -153,7 +168,15 @@ class DashboardController extends Controller
 
     public function getLogbookReagentList()
     {
-        $reagents = DB::table('reagens')->select('noCatalog', 'nameReagen')->get();
+        $reagents = DB::table('reagens')
+            ->select('noCatalog', 'nameReagen')
+            ->orderBy('nameReagen', 'asc')  // Sort alphabetically by name
+            ->get();
+
+        if ($reagents->isEmpty()) {
+            \Log::info('No reagents found in database');
+        }
+
         return response()->json($reagents);
     }
 }

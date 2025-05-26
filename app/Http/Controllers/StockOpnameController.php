@@ -18,8 +18,12 @@ use Validator;
 
 class StockOpnameController extends Controller
 {
-    //
-    public function index()
+    private function getMonthName($monthNumber) 
+    {
+        return Carbon::create()->month($monthNumber)->format('F');
+    }
+
+    public function index(Request $request)
     {
         $yearNow = Carbon::now()->year;
 
@@ -45,9 +49,30 @@ class StockOpnameController extends Controller
             ]);
         }
 
-        
+        // Build query with filters
+        $query = StockOpname::query();
 
-        $data = StockOpname::all();
+        // Apply month filter if selected
+        if ($request->filled('month')) {
+            $query->where('month', $request->month);
+        }
+
+        // Apply year filter if selected
+        if ($request->filled('year')) {
+            $query->where('year', $request->year);
+        }
+
+        // Get filtered data with ordering and pagination
+        $data = $query->orderBy('year', 'desc')
+                      ->orderBy('month', 'desc')
+                      ->paginate(15)
+                      ->withQueryString();
+
+        // Add month names to the collection
+        $data->getCollection()->transform(function ($item) {
+            $item->month_name = $this->getMonthName($item->month);
+            return $item;
+        });
 
         return view('stock-opname.so-list', compact('data'));
     }

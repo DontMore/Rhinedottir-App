@@ -309,5 +309,47 @@ class ManagementStockController extends Controller
         return view('management-stock.reagen-out', compact('paginatedData'));
     }
     
+    public function reagenExpired(Request $request)
+    {
+        $query = ReagenIn::with('reagen')
+            ->where('quantity', '>', 0);
 
+        // Add search functionality
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('reagen', function($q) use ($search) {
+                $q->where('nameReagen', 'LIKE', "%{$search}%")
+                  ->orWhere('noCatalog', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Get results with pagination
+        $reagenExpired = $query->orderBy('expiredDate', 'asc')
+            ->paginate(15)
+            ->through(function ($item) {
+                $today = now();
+                $expDate = Carbon::parse($item->expiredDate);
+                $daysUntilExpired = $today->diffInDays($expDate, false);
+
+                // Add status and color based on expiry timeframe
+                if ($daysUntilExpired < 0) {
+                    $item->status = 'Expired';
+                    $item->status_color = 'dark';
+                } elseif ($daysUntilExpired <= 7) {
+                    $item->status = 'Akan Expired (< 1 minggu)';
+                    $item->status_color = 'danger';
+                } elseif ($daysUntilExpired <= 30) {
+                    $item->status = 'Akan Expired (< 1 bulan)';
+                    $item->status_color = 'warning';
+                } else {
+                    $item->status = 'Tidak Expired';
+                    $item->status_color = 'success';
+                }
+
+                $item->days_until_expired = $daysUntilExpired;
+                return $item;
+            });
+
+        return view('reagen-expired', compact('reagenExpired'));
+    }
 }

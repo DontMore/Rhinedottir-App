@@ -73,7 +73,7 @@
 
         <div class="row mt-3">
             <div class="col-md-12">
-                <form action="/take-process" method="post">
+                <form action="{{ route('take.process', ['noCatalog' => $reagen->noCatalog]) }}" method="post">
                     @csrf
                     <div>
                         <input type="hidden" value="{{ $reagen->noCatalog }}" name="noCatalog">

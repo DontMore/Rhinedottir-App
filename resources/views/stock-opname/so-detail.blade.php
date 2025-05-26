@@ -1,159 +1,147 @@
 @extends('layout.main')
 
 @section('container')
-
-<!-- baris 1 -->
-<div class="row">
-    <div class="col">
-        <h2>Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h2>
-    </div>
-</div> <!-- End baris 1 -->
-<hr>
-
-<!-- Baris 2 -->
-<div class="row">
-    <!-- Baris 2 kolom 1 -->
-    <div class="col">
-        <form action="{{ route('generatedSO') }}" method="POST">
-            @csrf
-            <input type="hidden" name="month"value="{{ $month }}">
-            <input type="hidden" name="year"value="{{ $year }}">
-            <button type="submit" class="btn btn-primary">Generate Stock</button>
-        </form>
-    </div>
-
-    <!-- Baris 2 kolom 3 -->
-    <div class="col">
-           <?php
-           $stockOpnameStatus = $stockOpname->status ?? 0;
-           if($stockOpnameStatus == 0){
-                echo '<div class="alert alert-warning" role="alert">
-                    Stock Opname Not Complate
-                </div>';
-           }else{
-              echo '<div class="alert alert-success" role="alert">
-                Stock Opname Complate
-              </div>';
-           }
-           ?>
-    </div>
-    <!-- End Baris 2 kolom 3 -->
-
-</div> <!-- End Baris 2 -->
-
-<!-- baris 3 -->
-<div class="row">
-    <table class="table table-bordered text-center">
-        <thead>
-            <tr>
-                <th>No. Catalog</th>
-                <th>Name Reagen</th>
-                <th>Merk</th>
-                <th>Pack Size</th>
-                <th>Previous month's stock quantity</th>
-                <th>Quantity in</th>
-                <th>Quantity out</th>
-                <th>Current stock</th>
-                <th>Status</th>
-                <th>Stock Opname</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach ($reagens as $reagen)
-            @php
-                $quantityNow = $reagen->quantity;
-                $quantityBefore = $reagen->quantity_before;
-                $quantityIn = $reagen->quantity_in;
-                $quantityOut = $reagen->quantity_out;
-            @endphp
-
-                <tr> 
-                    <td>{{ $reagen->noCatalog }}</td>
-                    <td>{{ $reagen->reagen->nameReagen }}</td>
-                    <td>{{ $reagen->reagen->merk }}</td>
-                    <td>{{ $reagen->reagen->packSize }}</td>
-                    <td>{{ $quantityBefore }}</td>
-                    <td>{{ $reagen->quantity_in }}</td>
-                    <td>{{ $reagen->quantity_out }}</td>
-                    <td>
-                        @if ($reagen->stock_opname == 1)
-                            {{ $reagen->quantity_actual }}
-                        @else
-                            <span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span>
-                        @endif
-                    </td>
-                    <td>{{ $reagen->status }}</td>
-                    <td>{{ $reagen->stock_opname ? 'done' : 'not done' }}</td>
-                    <td>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}" data-bulan="{{ $month }}" 
-                        data-tahun="{{ $year }}">
-                        Edit
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h4>
+                <div class="d-flex gap-3 align-items-center">
+                    <form action="{{ route('generatedSO') }}" method="POST" class="m-0">
+                        @csrf
+                        <input type="hidden" name="month" value="{{ $month }}">
+                        <input type="hidden" name="year" value="{{ $year }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise"></i> Generate Stock
                         </button>
-                    </td>
-                </tr>
-        @endforeach
-    </tbody>
-    </table>
-</div> <!-- End Baris 3 -->
-
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Detail Reagen</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body container">
-        <!-- baris 1 modal -->
-        <div class="row">
-            <div class="col"><p>Catalog Number</div><div class="col"> : <span id="no-catalog"></span></p></div>
-        </div><!-- baris 1 modal -->
-        <!-- baris 2 modal -->
-        <div class="row">
-            <div class="col"><p>Reagen Name</div><div class="col"> : <span id="reagen-name"></span></p></div>
-        </div><!-- baris 2 modal -->
-        <!-- baris 3 modal -->
-        <div class="row">
-            <div class="col"><p>Current Stock</div><div class="col">: <span id="current-stock"></span></p></div>
-        </div><!-- baris 3 modal -->
-        <!-- baris 4 modal -->
-        <div class="row">
-            <div class="col"><p>Quantity In</div><div class="col">: <span id="quantity-in"></span></p></div>
-        </div><!-- baris 4 modal -->
-        <!-- baris 5 modal -->
-        <div class="row">
-           <div class="col"><p>Quantity Out</div><div class="col">: <span id="quantity-out"></span></p></div>
-        </div><!-- baris 5 modal -->
-
-            <form id="updateForm" method="POST" action="{{ route('stock.update') }}">
-            <input type="hidden" id="stock-id" name="stock_id">
-            <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="recipient-name" class="col-form-label">Quantity Actual</label>
-                        <input type="text" class="form-control" id="quantity-actual">
+                    </form>
+                    <div class="status-badge">
+                        @if($stockOpname->status ?? 0)
+                            <span class="badge bg-success px-3 py-2">Stock Opname Complete</span>
+                        @else
+                            <span class="badge bg-warning px-3 py-2">Stock Opname Not Complete</span>
+                        @endif
                     </div>
-                    <div class="form-group col-md-6">
-                        <label for="recipient-name" class="col-form-label">Status</label>
-                        <input type="text" class="form-control" id="status">
-                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="message-text" class="col-form-label">Note</label>
-                <textarea class="form-control" id="note"></textarea>
-            </div>
-            <input type="hidden" id="user" value="{{ auth()->user()->id }}">
-            </form>
 
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" id="btn-update-stock" class="btn btn-primary">Save</button>
-      </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">No. Catalog</th>
+                            <th>Name Reagen</th>
+                            <th>Merk</th>
+                            <th>Pack Size</th>
+                            <th class="text-center">Previous Stock</th>
+                            <th class="text-center">In</th>
+                            <th class="text-center">Out</th>
+                            <th class="text-center">Current</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">SO Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($reagens as $reagen)
+                        @php
+                            $quantityNow = $reagen->quantity;
+                            $quantityBefore = $reagen->quantity_before;
+                            $quantityIn = $reagen->quantity_in;
+                            $quantityOut = $reagen->quantity_out;
+                        @endphp
+                        <tr>
+                            <td class="text-center">{{ $reagen->noCatalog }}</td>
+                            <td>{{ $reagen->reagen->nameReagen }}</td>
+                            <td>{{ $reagen->reagen->merk }}</td>
+                            <td>{{ $reagen->reagen->packSize }}</td>
+                            <td class="text-center">{{ $quantityBefore }}</td>
+                            <td class="text-center">{{ $reagen->quantity_in }}</td>
+                            <td class="text-center">{{ $reagen->quantity_out }}</td>
+                            <td class="text-center fw-bold">
+                                @if ($reagen->stock_opname == 1)
+                                    {{ $reagen->quantity_actual }}
+                                @else
+                                    <span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span>
+                                @endif
+                            </td>
+                            <td class="text-center">{{ $reagen->status }}</td>
+                            <td class="text-center">
+                                <span class="badge {{ $reagen->stock_opname ? 'bg-success' : 'bg-warning' }}">
+                                    {{ $reagen->stock_opname ? 'Done' : 'Not Done' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}" data-bulan="{{ $month }}" data-tahun="{{ $year }}">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Reagen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-4 text-muted">Catalog Number</div>
+                            <div class="col-md-8 fw-bold" id="no-catalog"></div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-4 text-muted">Reagen Name</div>
+                            <div class="col-md-8" id="reagen-name"></div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-4 text-muted">Current Stock</div>
+                            <div class="col-md-8" id="current-stock"></div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-4 text-muted">Quantity In</div>
+                            <div class="col-md-8" id="quantity-in"></div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-4 text-muted">Quantity Out</div>
+                            <div class="col-md-8" id="quantity-out"></div>
+                        </div>
+                    </div>
+
+                    <form id="updateForm">
+                        <input type="hidden" id="stock-id" name="stock_id">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity Actual</label>
+                                <input type="text" class="form-control" id="quantity-actual">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <input type="text" class="form-control" id="status" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" id="note" rows="3"></textarea>
+                        </div>
+                        <input type="hidden" id="user" value="{{ auth()->user()->id }}">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" id="btn-update-stock" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

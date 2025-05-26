@@ -69,12 +69,13 @@ Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generat
 Route::delete('/management-stock/delete-stock/{id}', [ManagementStockController::class, 'deleteStock'])->name('management-stock.delete-stock');
 Route::get('/reagen-in', [ManagementStockController::class, 'reagenIn'])->name('data.reagenin');
 Route::get('/reagen-out', [ManagementStockController::class, 'reagenOut'])->name('data.reagenout');
+Route::get('/reagen-expired', [ManagementStockController::class, 'reagenExpired'])->name('reagen.expired')->middleware('admin');
 
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index')->middleware('auth'); // Route untuk menampilkan data logbook
 Route::get('/take/{noCatalog}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');
 Route::get('/qrcode/{id}', [LogbookController::class, 'takeQRCode'])->name('qrcode')->middleware('auth');
-Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth');
+Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth')->name('take.process');
 Route::get('/logbook-history/{noCatalog}', [LogbookController::class, 'logbookHistory'])->name('data.history')->middleware('auth');
 // Tambahkan rute ini jika belum ada
 Route::get('/take-admin/{noCatalog}', [LogbookController::class, 'takeAdmin'])->name('take-admin');

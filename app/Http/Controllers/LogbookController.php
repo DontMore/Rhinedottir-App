@@ -84,12 +84,11 @@ class LogbookController extends Controller
 
     public function logbookHistory($noCatalog)
     {
-        // Ambil data logbook berdasarkan noCatalog dan urutkan berdasarkan created_at
+        // Ambil data logbook dengan pagination
         $logbookReagens = LogbookReagen::where('noCatalog', $noCatalog)
-            ->orderBy('created_at', 'desc') // Urutkan berdasarkan tanggal created_at, descending
-            ->get()
-            ->map(function ($logbook) {
-                // Format tanggal created_at menjadi d-m-Y
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->through(function ($logbook) {
                 $logbook->formatted_created_at = $logbook->created_at->format('d-m-Y');
                 return $logbook;
             });
@@ -99,9 +98,10 @@ class LogbookController extends Controller
         }])
         ->where('noCatalog', $noCatalog)
         ->first();
-        
+
         return view('logbook.logbook-history', compact('reagen', 'logbookReagens'));
     }
+
 
     // Fungsi takeReagen
     public function takeQRCode($id){
