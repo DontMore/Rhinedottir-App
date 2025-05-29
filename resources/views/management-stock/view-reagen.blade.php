@@ -1,214 +1,294 @@
 @extends('layout.main')
 
 @section('container')
-<div class="container-fluid px-4 py-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Reagen Details</h5>
-            <div class="d-flex gap-2">
-                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left"></i> Back
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Reagen Details Card -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h1 class="text-xl font-semibold text-gray-900">Reagen Details</h1>
+            <div class="flex space-x-2">
+                <a href="{{ url()->previous() }}" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back
                 </a>
-                <a href="{{ route('data.edit', ['noCatalog' => $data->noCatalog]) }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-pencil"></i> Edit
+                <a href="{{ route('data.edit', ['noCatalog' => $data->noCatalog]) }}" 
+                   class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
                 </a>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="list-group">
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Catalog Number</span>
-                            <strong>{{ $data->noCatalog }}</strong>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Reagen Name</span>
-                            <strong>{{ $data->nameReagen }}</strong>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Brand</span>
-                            <strong>{{ $data->merk }}</strong>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Pack Size</span>
-                            <strong>{{ $data->packSize }}</strong>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">MSDS</span>
-                            <a href="{{ $data->msds }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                <i class="bi bi-file-earmark-pdf"></i> View MSDS
-                            </a>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between">
-                            <span class="text-muted">Price</span>
-                            <strong>Rp {{ number_format((float)$data->price, 0, ',', '.') }}</strong>
-                        </div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Details List -->
+                <div class="space-y-1 divide-y divide-gray-200">
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">Catalog Number</span>
+                        <span class="font-medium text-gray-900">{{ $data->noCatalog }}</span>
+                    </div>
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">Reagen Name</span>
+                        <span class="font-medium text-gray-900">{{ $data->nameReagen }}</span>
+                    </div>
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">Brand</span>
+                        <span class="font-medium text-gray-900">{{ $data->merk }}</span>
+                    </div>
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">Pack Size</span>
+                        <span class="font-medium text-gray-900">{{ $data->packSize }}</span>
+                    </div>
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">MSDS</span>
+                        <a href="{{ $data->msds }}" class="inline-flex items-center px-3 py-1 border border-blue-600 text-sm font-medium rounded-md text-blue-600 hover:bg-blue-50" target="_blank">
+                            <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            View MSDS
+                        </a>
+                    </div>
+                    <div class="flex justify-between py-3">
+                        <span class="text-gray-500">Price</span>
+                        <span class="font-medium text-gray-900">Rp {{ number_format((float)$data->price, 0, ',', '.') }}</span>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">Hazard Symbols</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                @foreach($hazardOptions as $hazard)
-                                    <div class="col-4 text-center">
-                                        @php
-                                            $imagePath = match($hazard) {
-                                                'Environment' => 'Environmental-Hazard',
-                                                default => strtolower($hazard)
-                                            };
-                                        @endphp
-                                        <img src="{{ asset('public/images/' . $imagePath . '.png') }}"
-                                             alt="{{ $hazard }}"
-                                             class="hazard-icon mb-2">
-                                        <div class="small text-muted">{{ $hazard }}</div>
-                                    </div>
-                                @endforeach
+
+                <!-- Hazard Symbols -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Hazard Symbols</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        @foreach($hazardOptions as $hazard)
+                            <div class="flex flex-col items-center">
+                                @php
+                                    $imagePath = match($hazard) {
+                                        'Environment' => 'Environmental-Hazard',
+                                        default => strtolower($hazard)
+                                    };
+                                @endphp
+                                <img src="{{ asset('public/images/' . $imagePath . '.png') }}"
+                                     alt="{{ $hazard }}"
+                                     class="w-16 h-16 object-contain transition-transform duration-200 hover:scale-110">
+                                <span class="mt-2 text-sm text-gray-600">{{ $hazard }}</span>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Stock History</h5>
+    <!-- Stock History Table -->
+    <div class="bg-white rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Stock History</h2>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>Batch Number</th>
-                            <th>Quantity</th>
-                            <th>Expired Date</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($reagenIn as $item)
-                            <tr>
-                                <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</td>
-                                <td>{{ $item->batch }}</td>
-                                <td><span class="badge bg-success">{{ $item->quantity }}</span></td>
-                                <td>
-                                    <span class="badge bg-{{ \Carbon\Carbon::parse($item->expiredDate)->isPast() ? 'danger' : 'info' }}">
-                                        {{ \Carbon\Carbon::parse($item->expiredDate)->format('d M Y') }}
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-primary btn-sm me-1 btn-show-modal" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#exampleModal"
-                                            data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}"
-                                            data-id="{{ $item->Id }}">
-                                        <i class="bi bi-qr-code"></i> Label
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" 
-                                            onclick="confirmDelete({{ $item->Id }})">
-                                        <i class="bi bi-trash"></i>
-                                        <span>Delete</span>
-                                    </button>
-                                    <form id="delete-form-{{ $item->Id }}" 
-                                          action="{{ route('management-stock.delete-stock', $item->Id) }}" 
-                                          method="POST" class="d-none">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-center p-3">
-                {{ $reagenIn->links() }}
-            </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Number</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expired Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($reagenIn as $item)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->batch }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ $item->quantity }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {{ \Carbon\Carbon::parse($item->expiredDate)->isPast() 
+                                    ? 'bg-red-100 text-red-800' 
+                                    : 'bg-blue-100 text-blue-800' }}">
+                                {{ \Carbon\Carbon::parse($item->expiredDate)->format('d M Y') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button type="button" 
+                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 mr-2"
+                                    onclick="showModal(this)" 
+                                    data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}"
+                                    data-id="{{ $item->Id }}">
+                                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v-4m6 0h-2"/>
+                                </svg>
+                                Label
+                            </button>
+                            <button type="button" 
+                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                                    onclick="confirmDelete({{ $item->Id }})">
+                                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Delete
+                            </button>
+                            <form id="delete-form-{{ $item->Id }}" 
+                                  action="{{ route('management-stock.delete-stock', $item->Id) }}" 
+                                  method="POST" class="hidden">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $reagenIn->links() }}
         </div>
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Label Reagen</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-3" id="modalBody">
-        <div class="label-container">
-            <div class="label-qr">
-                <div id="qrcode"></div>
+<!-- Modal (updated) -->
+<div id="exampleModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        
+        <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all max-w-4xl w-full">
+            <!-- Modal Header -->
+            <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Label Reagen</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500" data-dismiss="modal">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-            <div class="label-content">
-                <div class="label-header">
-                    <div class="company-logo">
-                        <img src="{{ asset('images/logo_b7.png') }}" alt="Logo" class="img-fluid">
+
+            <!-- Modal Body -->
+            <div class="p-6" id="modalBody">
+                <div class="flex flex-col md:flex-row border border-gray-200 rounded-lg bg-white">
+                    <!-- QR Code Section -->
+                    <div class="p-6 border-b md:border-b-0 md:border-r border-gray-200 flex items-center justify-center">
+                        <div id="qrcode"></div>
                     </div>
-                    <div class="company-name">LABORATORIUM QC-ANDEV</div>
+
+                    <!-- Label Content -->
+                    <div class="flex-1 flex flex-col">
+                        <!-- Company Header -->
+                        <div class="flex items-center p-4 border-b border-gray-200">
+                            <div class="w-32 px-2">
+                                <img src="{{ asset('images/logo_b7.png') }}" alt="Logo" class="w-full h-auto">
+                            </div>
+                            <div class="flex-1 text-center font-bold text-lg">
+                                LABORATORIUM QC-ANDEV
+                            </div>
+                        </div>
+
+                        <!-- Info Section -->
+                        <div class="flex-1 p-6 space-y-4 border-b border-gray-200">
+                            <div class="flex">
+                                <span class="w-32 text-gray-600">Nama Reagen</span>
+                                <span class="flex-1">: {{ $data->nameReagen }}</span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-32 text-gray-600">Expired Date</span>
+                                <span class="flex-1">: <span id="expired"></span></span>
+                            </div>
+                            <div class="flex">
+                                <span class="w-32 text-gray-600">Tanggal Buka</span>
+                                <span class="flex-1">: </span>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-4 text-right text-sm text-gray-500">
+                            Distribution List - Lampiran 1:WI-QO-QC-1018.02
+                        </div>
+                    </div>
                 </div>
-                <div class="label-info">
-                    <div class="info-row">
-                        <span class="info-label">Nama Reagen</span>
-                        <span class="info-value">: {{ $data->nameReagen }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Expired Date</span>
-                        <span class="info-value">: <span id="expired"></span></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Tanggal Buka</span>
-                        <span class="info-value">: </span>
-                    </div>
-                </div>
-                <div class="label-footer">
-                    Distribution List - Lampiran 1:WI-QO-QC-1018.02
-                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                <button type="button" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50" 
+                    data-dismiss="modal">
+                    Close
+                </button>
+                <button type="button" 
+                    id="downloadBtn"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download Label
+                </button>
             </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" id="downloadBtn" class="btn btn-primary">
-            <i class="bi bi-download"></i> Download Label
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    $(".btn-show-modal").on('click', function() {
-        const expired = $(this).data('expired');
-        const id = $(this).data('id');
-        
-        $("#expired").text(expired);
-        $("#qrcode").empty();
-        
-        // Using qrcode-generator library
-        var typeNumber = 4;
-        var errorCorrectionLevel = 'L';
-        var qr = qrcode(typeNumber, errorCorrectionLevel);
-        qr.addData("https://reagen.onexternal.com/qrcode/" + id);
-        qr.make();
-        $("#qrcode").html(qr.createImgTag(6));
+function showModal(button) {
+    const modal = document.getElementById('exampleModal');
+    const expired = button.dataset.expired;
+    const id = button.dataset.id;
+    
+    // Update modal content
+    document.getElementById('expired').textContent = expired;
+    const qrcodeDiv = document.getElementById('qrcode');
+    qrcodeDiv.innerHTML = '';
+    
+    // Generate QR Code
+    var typeNumber = 4;
+    var errorCorrectionLevel = 'L';
+    var qr = qrcode(typeNumber, errorCorrectionLevel);
+    qr.addData("https://reagen.onexternal.com/qrcode/" + id);
+    qr.make();
+    qrcodeDiv.innerHTML = qr.createImgTag(6);
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close modal when clicking close button or outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('exampleModal');
+    
+    // Close button click
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(button => {
+        button.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        });
     });
     
-    $("#downloadBtn").on('click', function() {
+    // Click outside modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    });
+    
+    // Download button functionality
+    document.getElementById('downloadBtn').addEventListener('click', function() {
         const element = document.getElementById('modalBody');
         html2canvas(element, {
             scale: 2,
@@ -225,127 +305,5 @@ $(document).ready(function() {
 });
 </script>
 @endpush
-
-<style>
-.card {
-    border: none;
-    border-radius: 10px;
-}
-.list-group-item {
-    padding: 1rem;
-    border-left: 0;
-    border-right: 0;
-}
-.table > :not(caption) > * > * {
-    padding: 1rem 0.75rem;
-}
-.badge {
-    padding: 0.5em 0.8em;
-}
-.modal-content {
-    border: none;
-    border-radius: 10px;
-}
-.hazard-icon {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    transition: transform 0.2s;
-}
-.hazard-icon:hover {
-    transform: scale(1.1);
-}
-
-.label-container {
-    display: flex;
-    gap: 1rem;
-    border: 1px solid #dee2e6;
-    background: white;
-}
-
-.label-qr {
-    padding: 1rem;
-    border-right: 1px solid #dee2e6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.label-qr img {
-    width: 180px !important;
-    height: 180px !important;
-}
-
-.label-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.label-header {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.company-logo {
-    width: 120px;
-    padding: 0.5rem;
-}
-
-.company-name {
-    flex: 1;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-.label-info {
-    padding: 1rem;
-    flex: 1;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.info-row {
-    display: flex;
-    margin-bottom: 0.5rem;
-}
-
-.info-label {
-    width: 120px;
-}
-
-.label-footer {
-    padding: 0.5rem;
-    text-align: right;
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-@media (max-width: 768px) {
-    .label-container {
-        flex-direction: column;
-    }
-    
-    .label-qr {
-        border-right: 0;
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .info-row {
-        flex-direction: column;
-    }
-    
-    .info-label {
-        width: auto;
-        font-weight: 500;
-    }
-    
-    .company-name {
-        font-size: 1rem;
-    }
-}
-</style>
 
 @endsection

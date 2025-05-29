@@ -350,6 +350,6 @@ class ManagementStockController extends Controller
                 return $item;
             });
 
-        return view('dashboard.reagen-expired', compact('reagenExpired'));
+        return view('reagen-expired', compact('reagenExpired'));
     }
 }

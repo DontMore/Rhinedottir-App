@@ -1,366 +1,406 @@
-<body class="flex items-center justify-center w-screen h-screen p-10 space-x-6 bg-gray-300">
+<!-- Main Navigation -->
+<div x-data="{ sidebarOpen: false }">
+    <!-- Desktop Sidebar -->
+    <aside class="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 bg-slate-800 text-white shadow-lg transform transition-transform duration-300">
+        <!-- Logo Area -->
+        <div class="flex items-center justify-between h-16 px-4 border-b border-slate-700">
+            <span class="text-xl font-bold">Rhinedottir</span>
+            <button class="p-2 rounded-lg hover:bg-slate-700">
+                <i class="bi bi-list text-xl"></i>
+            </button>
+        </div>
 
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-16 h-full overflow-hidden text-gray-400 bg-gray-900 rounded">
-		<a class="flex items-center justify-center mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-		</a>
-		<div class="flex flex-col items-center mt-3 border-t border-gray-700">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				 	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 text-gray-200 bg-gray-700 rounded" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-				</svg>
-			</a>
-		</div>
-		<div class="flex flex-col items-center mt-2 border-t border-gray-700">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-				</svg>
-			</a>
-			<a class="relative flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-				</svg>
-				<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-			</a>
-		</div>
-		<a class="flex items-center justify-center w-16 h-16 mt-auto bg-gray-800 hover:bg-gray-700 hover:text-gray-300" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-		</a>
-	</div>
-	<!-- Component End  -->
-	
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-40 h-full overflow-hidden text-gray-400 bg-gray-900 rounded">
-		<a class="flex items-center w-full px-3 mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-			<span class="ml-2 text-sm font-bold">The App</span>
-		</a>
-		<div class="w-full px-2">
-			<div class="flex flex-col items-center w-full mt-3 border-t border-gray-700">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Dasboard</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Search</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 text-gray-200 bg-gray-700 rounded" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Insights</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Docs</span>
-				</a>
-			</div>
-			<div class="flex flex-col items-center w-full mt-2 border-t border-gray-700">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Products</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Settings</span>
-				</a>
-				<a class="relative flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-700 hover:text-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Messages</span>
-					<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-				</a>
-			</div>
-		</div>
-		<a class="flex items-center justify-center w-full h-16 mt-auto bg-gray-800 hover:bg-gray-700 hover:text-gray-300" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-			<span class="ml-2 text-sm font-medium">Account</span>
-		</a>
-	</div>
-	<!-- Component End  -->
-	
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-16 h-full overflow-hidden text-gray-700 bg-gray-100 rounded">
-		<a class="flex items-center justify-center mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-		</a>
-		<div class="flex flex-col items-center mt-3 border-t border-gray-300">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				 	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 bg-gray-300 rounded" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-				</svg>
-			</a>
-		</div>
-		<div class="flex flex-col items-center mt-2 border-t border-gray-300">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-				</svg>
-			</a>
-			<a class="relative flex items-center justify-center w-12 h-12 mt-2 hover:bg-gray-300" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-				</svg>
-				<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-			</a>
-		</div>
-		<a class="flex items-center justify-center w-16 h-16 mt-auto bg-gray-200 hover:bg-gray-300" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-		</a>
-	</div>
-	<!-- Component End  -->
-	
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-40 h-full overflow-hidden text-gray-700 bg-gray-100 rounded">
-		<a class="flex items-center w-full px-3 mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-			<span class="ml-2 text-sm font-bold">The App</span>
-		</a>
-		<div class="w-full px-2">
-			<div class="flex flex-col items-center w-full mt-3 border-t border-gray-300">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Dasboard</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Search</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 bg-gray-300 rounded" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Insights</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Docs</span>
-				</a>
-			</div>
-			<div class="flex flex-col items-center w-full mt-2 border-t border-gray-300">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Products</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Settings</span>
-				</a>
-				<a class="relative flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-gray-300" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Messages</span>
-					<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-				</a>
-			</div>
-		</div>
-		<a class="flex items-center justify-center w-full h-16 mt-auto bg-gray-200 hover:bg-gray-300" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-			<span class="ml-2 text-sm font-medium">Account</span>
-		</a>
-	</div>
-	<!-- Component End  -->
-	
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-16 h-full overflow-hidden text-indigo-300 bg-indigo-900 rounded">
-		<a class="flex items-center justify-center mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-		</a>
-		<div class="flex flex-col items-center mt-3 border-t border-gray-700">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				 	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 text-indigo-100 bg-indigo-700 rounded" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-				</svg>
-			</a>
-		</div>
-		<div class="flex flex-col items-center mt-2 border-t border-gray-700">
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-				</svg>
-			</a>
-			<a class="flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-				</svg>
-			</a>
-			<a class="relative flex items-center justify-center w-12 h-12 mt-2 rounded hover:bg-indigo-700" href="#">
-				<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-				</svg>
-				<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-			</a>
-		</div>
-		<a class="flex items-center justify-center w-16 h-16 mt-auto bg-indigo-800 hover:bg-indigo-700" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-		</a>
-	</div>
-	<!-- Component End  -->
-	
-	<!-- Component Start -->
-	<div class="flex flex-col items-center w-40 h-full overflow-hidden text-indigo-300 bg-indigo-900 rounded">
-		<a class="flex items-center w-full px-3 mt-3" href="#">
-			<svg class="w-8 h-8 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-				<path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-			</svg>
-			<span class="ml-2 text-sm font-bold">The App</span>
-		</a>
-		<div class="w-full px-2">
-			<div class="flex flex-col items-center w-full mt-3 border-t border-gray-700">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Dasboard</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Search</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 text-gray-400 bg-indigo-700 text-indigo-100 rounded" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Insights</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Docs</span>
-				</a>
-			</div>
-			<div class="flex flex-col items-center w-full mt-2 border-t border-gray-700">
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Products</span>
-				</a>
-				<a class="flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Settings</span>
-				</a>
-				<a class="relative flex items-center w-full h-12 px-3 mt-2 rounded hover:bg-indigo-700" href="#">
-					<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-					</svg>
-					<span class="ml-2 text-sm font-medium">Messages</span>
-					<span class="absolute top-0 left-0 w-2 h-2 mt-2 ml-2 bg-indigo-500 rounded-full"></span>
-				</a>
-			</div>
-		</div>
-		<a class="flex items-center justify-center w-full h-16 mt-auto bg-indigo-800 hover:bg-indigo-700" href="#">
-			<svg class="w-6 h-6 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-			</svg>
-			<span class="ml-2 text-sm font-medium">Account</span>
-		</a>
-	</div>
-	<!-- Component End  -->
+        <!-- User Profile -->
+        <div class="p-4 border-b border-slate-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center">
+                    <i class="bi bi-person text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-medium">{{ auth()->user()->name }}</h3>
+                    <p class="text-sm text-slate-400">{{ auth()->user()->role }}</p>
+                </div>
+            </div>
+        </div>
 
-</body>
+        <!-- Navigation Menu -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+            @can('admin')
+            <div class="space-y-2">
+                <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Management
+                </h3>
+                <div class="space-y-1">
+                    <a href="{{ route('dashboard.index') }}" 
+                        class="group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                        {{ request()->is('dashboard*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700' }}">
+                        <i class="bi bi-house mr-3 text-lg"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('management-stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('management-stock*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-box"></i> <span>Stock Management</span>
+                    </a>
+                    <a href="{{ route('stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('stock-opname*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-clipboard-check"></i> <span>Stock Opname</span>
+                    </a>
+                </div>
+            </div>
+            @endcan
+
+            <div class="space-y-2">
+                <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Operations
+                </h3>
+                <div class="space-y-1">
+                    <a href="{{ route('logbook.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('logbook*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-journal-text"></i> <span>Logbook</span>
+                    </a>
+                    @can('admin')
+                    <a href="{{ route('order.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('order*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-cart"></i> <span>Orders</span>
+                    </a>
+                    <a href="{{ route('report.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('report*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-bar-chart"></i> <span>Reports</span>
+                    </a>
+                    <a href="user-list" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('user-list*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-people"></i> <span>Users</span>
+                    </a>
+                    @endcan
+                </div>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-700 p-4 space-y-2">
+            <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition mb-2 {{ Route::currentRouteName() === 'user.edit' ? 'bg-blue-600 text-white' : '' }}">
+                <i class="bi bi-gear"></i> <span>Settings</span>
+            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white transition">
+                    <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu -->
+    <div x-show="sidebarOpen" 
+         class="fixed inset-0 z-40 lg:hidden"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/50" 
+             @click="sidebarOpen = false"
+             x-transition></div>
+
+        <!-- Slide-over menu -->
+        <div class="fixed inset-y-0 left-0 w-screen max-w-xs bg-slate-800 transform transition-transform duration-300"
+             x-transition:enter="transform transition ease-in-out duration-300"
+             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in-out duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="-translate-x-full">
+            
+            <!-- Mobile menu content -->
+            <div class="flex flex-col h-full">
+                <div class="flex items-center justify-between h-16 px-6 border-b border-slate-700">
+                    <span class="text-xl font-bold text-white">Menu</span>
+                    <button @click="sidebarOpen = false" class="p-2 rounded-lg hover:bg-slate-700 text-slate-400">
+                        <i class="bi bi-x text-2xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Mobile Navigation Items -->
+                <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                    @can('admin')
+                    <div class="space-y-2">
+                        <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Management
+                        </h3>
+                        <div class="space-y-1">
+                            <a href="{{ route('dashboard.index') }}" 
+                                class="group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                                {{ request()->is('dashboard*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700' }}">
+                                <i class="bi bi-house mr-3 text-lg"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ route('management-stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('management-stock*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-box"></i> <span>Stock Management</span>
+                            </a>
+                            <a href="{{ route('stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('stock-opname*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-clipboard-check"></i> <span>Stock Opname</span>
+                            </a>
+                        </div>
+                    </div>
+                    @endcan
+
+                    <div class="space-y-2">
+                        <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Operations
+                        </h3>
+                        <div class="space-y-1">
+                            <a href="{{ route('logbook.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('logbook*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-journal-text"></i> <span>Logbook</span>
+                            </a>
+                            @can('admin')
+                            <a href="{{ route('order.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('order*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-cart"></i> <span>Orders</span>
+                            </a>
+                            <a href="{{ route('report.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('report*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-bar-chart"></i> <span>Reports</span>
+                            </a>
+                            <a href="user-list" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('user-list*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-people"></i> <span>Users</span>
+                            </a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed inset-x-0 bottom-0 z-30 bg-white border-t border-gray-200 lg:hidden">
+        <nav class="flex items-center justify-around h-16">
+            <a href="{{ route('dashboard.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('dashboard*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-house-fill text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ route('logbook.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('logbook*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-journal-text text-lg mb-1"></i>
+                <span>Logbook</span>
+            </a>
+            @can('admin')
+            <a href="{{ route('management-stock.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('management-stock*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-box-seam-fill text-lg mb-1"></i>
+                <span>Stock</span>
+            </a>
+            <a href="{{ route('order.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('order*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-cart-fill text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            @endcan
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-64 min-h-screen bg-gray-100">
+        <!-- Your page content here -->
+        {{ $slot ?? '' }}
+    </main>
+</div>
+
+@push('scripts')
+<script src="//unpkg.com/alpinejs" defer></script>
+@endpush
+<!-- Main Navigation -->
+<div x-data="{ sidebarOpen: false }">
+    <!-- Desktop Sidebar -->
+    <aside class="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 bg-slate-800 text-white shadow-lg transform transition-transform duration-300">
+        <!-- Logo Area -->
+        <div class="flex items-center justify-between h-16 px-4 border-b border-slate-700">
+            <span class="text-xl font-bold">Rhinedottir</span>
+            <button class="p-2 rounded-lg hover:bg-slate-700">
+                <i class="bi bi-list text-xl"></i>
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-b border-slate-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center">
+                    <i class="bi bi-person text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-medium">{{ auth()->user()->name }}</h3>
+                    <p class="text-sm text-slate-400">{{ auth()->user()->role }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+            @can('admin')
+            <div class="space-y-2">
+                <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Management
+                </h3>
+                <div class="space-y-1">
+                    <a href="{{ route('dashboard.index') }}" 
+                        class="group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                        {{ request()->is('dashboard*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700' }}">
+                        <i class="bi bi-house mr-3 text-lg"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('management-stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('management-stock*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-box"></i> <span>Stock Management</span>
+                    </a>
+                    <a href="{{ route('stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('stock-opname*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-clipboard-check"></i> <span>Stock Opname</span>
+                    </a>
+                </div>
+            </div>
+            @endcan
+
+            <div class="space-y-2">
+                <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Operations
+                </h3>
+                <div class="space-y-1">
+                    <a href="{{ route('logbook.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('logbook*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-journal-text"></i> <span>Logbook</span>
+                    </a>
+                    @can('admin')
+                    <a href="{{ route('order.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('order*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-cart"></i> <span>Orders</span>
+                    </a>
+                    <a href="{{ route('report.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('report*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-bar-chart"></i> <span>Reports</span>
+                    </a>
+                    <a href="user-list" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('user-list*') ? 'bg-blue-600 text-white' : '' }}">
+                        <i class="bi bi-people"></i> <span>Users</span>
+                    </a>
+                    @endcan
+                </div>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-700 p-4 space-y-2">
+            <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition mb-2 {{ Route::currentRouteName() === 'user.edit' ? 'bg-blue-600 text-white' : '' }}">
+                <i class="bi bi-gear"></i> <span>Settings</span>
+            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white transition">
+                    <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu -->
+    <div x-show="sidebarOpen" 
+         class="fixed inset-0 z-40 lg:hidden"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/50" 
+             @click="sidebarOpen = false"
+             x-transition></div>
+
+        <!-- Slide-over menu -->
+        <div class="fixed inset-y-0 left-0 w-screen max-w-xs bg-slate-800 transform transition-transform duration-300"
+             x-transition:enter="transform transition ease-in-out duration-300"
+             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in-out duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="-translate-x-full">
+            
+            <!-- Mobile menu content -->
+            <div class="flex flex-col h-full">
+                <div class="flex items-center justify-between h-16 px-6 border-b border-slate-700">
+                    <span class="text-xl font-bold text-white">Menu</span>
+                    <button @click="sidebarOpen = false" class="p-2 rounded-lg hover:bg-slate-700 text-slate-400">
+                        <i class="bi bi-x text-2xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Mobile Navigation Items -->
+                <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                    @can('admin')
+                    <div class="space-y-2">
+                        <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Management
+                        </h3>
+                        <div class="space-y-1">
+                            <a href="{{ route('dashboard.index') }}" 
+                                class="group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                                {{ request()->is('dashboard*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700' }}">
+                                <i class="bi bi-house mr-3 text-lg"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ route('management-stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('management-stock*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-box"></i> <span>Stock Management</span>
+                            </a>
+                            <a href="{{ route('stock.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('stock-opname*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-clipboard-check"></i> <span>Stock Opname</span>
+                            </a>
+                        </div>
+                    </div>
+                    @endcan
+
+                    <div class="space-y-2">
+                        <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Operations
+                        </h3>
+                        <div class="space-y-1">
+                            <a href="{{ route('logbook.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('logbook*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-journal-text"></i> <span>Logbook</span>
+                            </a>
+                            @can('admin')
+                            <a href="{{ route('order.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('order*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-cart"></i> <span>Orders</span>
+                            </a>
+                            <a href="{{ route('report.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('report*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-bar-chart"></i> <span>Reports</span>
+                            </a>
+                            <a href="user-list" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 transition {{ request()->is('user-list*') ? 'bg-blue-600 text-white' : '' }}">
+                                <i class="bi bi-people"></i> <span>Users</span>
+                            </a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed inset-x-0 bottom-0 z-30 bg-white border-t border-gray-200 lg:hidden">
+        <nav class="flex items-center justify-around h-16">
+            <a href="{{ route('dashboard.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('dashboard*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-house-fill text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ route('logbook.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('logbook*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-journal-text text-lg mb-1"></i>
+                <span>Logbook</span>
+            </a>
+            @can('admin')
+            <a href="{{ route('management-stock.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('management-stock*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-box-seam-fill text-lg mb-1"></i>
+                <span>Stock</span>
+            </a>
+            <a href="{{ route('order.index') }}" class="flex-1 flex flex-col items-center justify-center text-xs {{ request()->is('order*') ? 'text-blue-600' : 'text-gray-500' }}">
+                <i class="bi bi-cart-fill text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            @endcan
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-64 min-h-screen bg-gray-100">
+        <!-- Your page content here -->
+        {{ $slot ?? '' }}
+    </main>
+</div>
+
+@push('scripts')
+<script src="//unpkg.com/alpinejs" defer></script>
+@endpush

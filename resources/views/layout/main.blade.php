@@ -1,5 +1,4 @@
 @include('partials.header')
-
 @include('sweetalert::alert')
 
 <div class="app-wrapper">
@@ -21,7 +20,8 @@
     flex: 1;
     min-width: 0;
     padding: 1rem;
-    margin-left: 280px;
+    margin-left: 220px;
+    margin-top: 25px;
 }
 
 @media (max-width: 992px) {
