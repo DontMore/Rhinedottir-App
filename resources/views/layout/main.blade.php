@@ -20,7 +20,7 @@
     flex: 1;
     min-width: 0;
     padding: 1rem;
-    margin-left: 220px;
+    margin-left: 250px;
     margin-top: 25px;
 }
 

@@ -1,146 +1,154 @@
 @extends('layout.main')
 
 @section('container')
-
-<!-- baris 1 -->
-<div class="row">
-    <button>Generate Stock</button>
-</div> <!-- End baris 1 -->
-<hr>
-
-<!-- Baris 2 -->
-<div class="row">
-    <!-- Baris 2 kolom 1 -->
-    <div class="col">
-        <h2>Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h2>
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="flex items-center gap-4">
+            <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Generate Stock
+            </button>
+            <h2 class="text-2xl font-bold text-gray-900">Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h2>
+        </div>
+        
+        <div>
+            @if($stockOpname->status ?? 0)
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    Stock Opname Complete
+                </span>
+            @else
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    Stock Opname Not Complete
+                </span>
+            @endif
+        </div>
     </div>
 
-    <!-- Baris 2 kolom 3 -->
-    <div class="col">
-           <?php
-           $stockOpnameStatus = $stockOpname->status ?? 0;
-           if($stockOpnameStatus == 0){
-                echo '<div class="alert alert-warning" role="alert">
-                    Stock Opname Not Complate
-                </div>';
-           }else{
-              echo '<div class="alert alert-success" role="alert">
-                Stock Opname Complate
-              </div>';
-           }
-           ?>
+    <!-- Table Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Catalog</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name Reagen</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merk</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pack Size</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Previous</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">In</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Out</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Current</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">SO</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                @foreach ($reagens as $reagen)
+                    @php
+                        $quantityNow = $reagen->quantity;
+                        $quantityBefore = $reagen->quantity_before;
+                        $quantityIn = $reagen->quantity_in;
+                        $quantityOut = $reagen->quantity_out;
+                    @endphp
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $reagen->noCatalog }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $reagen->reagen->nameReagen }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ $reagen->reagen->merk }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ $reagen->reagen->packSize }}</td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-900">{{ $quantityBefore }}</td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-900">{{ $reagen->quantity_in }}</td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-900">{{ $reagen->quantity_out }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-center text-gray-900">
+                                <span id="quantity_now_{{ $reagen->id }}">{{ $reagen->stock_opname ? $reagen->quantity_actual : $quantityNow }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-500">{{ $reagen->status }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full {{ $reagen->stock_opname ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                    {{ $reagen->stock_opname ? 'Done' : 'Not Done' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button type="button" 
+                                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-amber-500 rounded hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 edit-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal"
+                                    data-id="{{ $reagen->id }}">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
-    <!-- End Baris 2 kolom 3 -->
 
-</div> <!-- End Baris 2 -->
+    <!-- Modal -->
+    <div id="exampleModal" class="modal fade fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Detail Reagen</h3>
+                            
+                            <!-- baris 1 modal -->
+                            <div class="row">
+                                <div class="col"><p>Catalog Number</div><div class="col"> : <span id="no-catalog"></span></p></div>
+                            </div><!-- baris 1 modal -->
+                            <!-- baris 2 modal -->
+                            <div class="row">
+                                <div class="col"><p>Reagen Name</div><div class="col"> : <span id="reagen-name"></span></p></div>
+                            </div><!-- baris 2 modal -->
+                            <!-- baris 3 modal -->
+                            <div class="row">
+                                <div class="col"><p>Current Stock</div><div class="col">: <span id="current-stock"></span></p></div>
+                            </div><!-- baris 3 modal -->
+                            <!-- baris 4 modal -->
+                            <div class="row">
+                                <div class="col"><p>Quantity In</div><div class="col">: <span id="quantity-in"></span></p></div>
+                            </div><!-- baris 4 modal -->
+                            <!-- baris 5 modal -->
+                            <div class="row">
+                               <div class="col"><p>Quantity Out</div><div class="col">: <span id="quantity-out"></span></p></div>
+                            </div><!-- baris 5 modal -->
 
-<!-- baris 3 -->
-<div class="row">
-    <table class="table table-bordered text-center">
-        <thead>
-            <tr>
-                <th>No. Catalog</th>
-                <th>Name Reagen</th>
-                <th>Merk</th>
-                <th>Pack Size</th>
-                <th>Previous month's stock quantity</th>
-                <th>Quantity in</th>
-                <th>Quantity out</th>
-                <th>Current stock</th>
-                <th>Status</th>
-                <th>Stock Opname</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach ($reagens as $reagen)
-            @php
-                $quantityNow = $reagen->quantity;
-                $quantityBefore = $reagen->quantity_before;
-                $quantityIn = $reagen->quantity_in;
-                $quantityOut = $reagen->quantity_out;
-            @endphp
-
-                <tr> 
-                    <td>{{ $reagen->noCatalog }}</td>
-                    <td>{{ $reagen->reagen->nameReagen }}</td>
-                    <td>{{ $reagen->reagen->merk }}</td>
-                    <td>{{ $reagen->reagen->packSize }}</td>
-                    <td>{{ $quantityBefore }}</td>
-                    <td>{{ $reagen->quantity_in }}</td>
-                    <td>{{ $reagen->quantity_out }}</td>
-                    <td><span id="quantity_now_{{ $reagen->id }}">{{ $reagen->stock_opname ? $reagen->quantity_actual : $quantityNow }}</span></td>
-                    <td>{{ $reagen->status }}</td>
-                    <td>{{ $reagen->stock_opname ? 'done' : 'not done' }}</td>
-                    <td>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}">
-                        Edit
-                        </button>
-                    </td>
-                </tr>
-        @endforeach
-    </tbody>
-    </table>
-</div> <!-- End Baris 3 -->
-
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Detail Reagen</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body container">
-        <!-- baris 1 modal -->
-        <div class="row">
-            <div class="col"><p>Catalog Number</div><div class="col"> : <span id="no-catalog"></span></p></div>
-        </div><!-- baris 1 modal -->
-        <!-- baris 2 modal -->
-        <div class="row">
-            <div class="col"><p>Reagen Name</div><div class="col"> : <span id="reagen-name"></span></p></div>
-        </div><!-- baris 2 modal -->
-        <!-- baris 3 modal -->
-        <div class="row">
-            <div class="col"><p>Current Stock</div><div class="col">: <span id="current-stock"></span></p></div>
-        </div><!-- baris 3 modal -->
-        <!-- baris 4 modal -->
-        <div class="row">
-            <div class="col"><p>Quantity In</div><div class="col">: <span id="quantity-in"></span></p></div>
-        </div><!-- baris 4 modal -->
-        <!-- baris 5 modal -->
-        <div class="row">
-           <div class="col"><p>Quantity Out</div><div class="col">: <span id="quantity-out"></span></p></div>
-        </div><!-- baris 5 modal -->
-
-            <form id="updateForm" method="POST" action="{{ route('stock.update') }}">
-            <input type="hidden" id="stock-id" name="stock_id">
-            <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="recipient-name" class="col-form-label">Quantity Actual</label>
-                        <input type="text" class="form-control" id="quantity-actual">
+                            <form id="updateForm" class="mt-4">
+                                <input type="hidden" id="stock-id" name="stock_id">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Quantity Actual</label>
+                                        <input type="text" id="quantity-actual" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Status</label>
+                                        <input type="text" id="status" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700">Note</label>
+                                    <textarea id="note" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
+                                </div>
+                                <input type="hidden" id="user" value="{{ auth()->user()->id }}">
+                            </form>
+                        </div>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label for="recipient-name" class="col-form-label">Status</label>
-                        <input type="text" class="form-control" id="status">
-                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="btn-update-stock" class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">Save changes</button>
+                    <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" data-bs-dismiss="modal">Cancel</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="message-text" class="col-form-label">Note</label>
-                <textarea class="form-control" id="note"></textarea>
-            </div>
-            <input type="hidden" id="user" value="{{ auth()->user()->id }}">
-            </form>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" id="btn-update-stock" class="btn btn-primary">Save</button>
-      </div>
+        </div>
     </div>
-  </div>
-</div>
 
 </body>
 

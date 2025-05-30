@@ -31,7 +31,7 @@ Route::delete('/user/{id}', [AuthenticationController::class, 'deleteUser'])->na
 
 // route user
 Route::get('/user-list', [AuthenticationController::class, 'userList'])->middleware('admin')->name('user.index');
-Route::get('/register', [AuthenticationController::class, 'register'])->middleware('admin');;
+Route::get('/register', [AuthenticationController::class, 'register'])->middleware('admin')->name('user.register');
 Route::get('/register-guest', [AuthenticationController::class, 'registerGuest'])->name('register.guest');
 Route::post('/register', [AuthenticationController::class, 'store']);
 Route::get('/users/edit/{id}', [AuthenticationController::class, 'editUser'])->name('user.edit')->middleware('auth');

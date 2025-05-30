@@ -1,114 +1,105 @@
 @extends('layout.main')
 
 @section('container')
-<div class="container-fluid">
-    <!-- Error alert -->
-    <!-- Modal -->
+<div class="max-w-7xl mx-auto px-4 py-6">
     @if(session('errors') && session('errors')->has('quantity_taken'))
-    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalCenterTitle">Insufficient stock</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Please recheck the stock and the quantity being taken.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    <div id="exampleModalCenter" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-2">Insufficient stock</h3>
+                        <p class="text-sm text-gray-500">Please recheck the stock and the quantity being taken.</p>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    @endif
 
     <script>
-        // Periksa jika pesan kesalahan 'quantity_taken' ada, tampilkan modal
-        $(document).ready(function () {
-            @if(session('errors') && session('errors')->has('quantity_taken'))
-                $('#exampleModalCenter').modal('show');
-            @endif
+        function closeModal() {
+            document.getElementById('exampleModalCenter').classList.add('hidden');
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('exampleModalCenter').classList.remove('hidden');
         });
     </script>
+    @endif
 
-    <div class="row mt-4">
-        <div class="col">
-            <h2>Logbook</h2>
-            <hr>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-900">Logbook</h1>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="row mb-2">
-                <div class="col-5">Catalog Number:</div>
-                <div class="col">{{ $reagen->noCatalog }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-5">Reagent Name:</div>
-                <div class="col">{{ $reagen->nameReagen }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-5">Merk:</div>
-                <div class="col">{{ $reagen->merk }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-5">Stock:</div>
-                <div class="col">{{ optional($reagen->stockReagen)->quantity ?? 'N/A' }}</div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <form action="/take-process-admin" method="post">
-                @csrf
-
-                <div class="mb-3">
-                    <label for="id" class="form-label">Date:</label>
-                    <input type="date" class="form-control" id="id" name="date">
+        <div class="p-6">
+            <div class="grid gap-4 mb-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <span class="text-gray-600">Catalog Number</span>
+                    <span class="text-gray-900">: {{ $reagen->noCatalog }}</span>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <span class="text-gray-600">Reagent Name</span>
+                    <span class="text-gray-900">: {{ $reagen->nameReagen }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <span class="text-gray-600">Merk</span>
+                    <span class="text-gray-900">: {{ $reagen->merk }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <span class="text-gray-600">Stock</span>
+                    <span class="text-gray-900">: {{ optional($reagen->stockReagen)->quantity ?? 'N/A' }}</span>
+                </div>
+            </div>
 
+            <form action="/take-process-admin" method="post" class="space-y-6">
+                @csrf
                 <input type="hidden" value="{{ $reagen->noCatalog }}" name="noCatalog">
-
                 <input type="hidden" value="{{ auth()->user()->id }}" name="user_id">
 
-                <div class="mb-3">
-                    <label for="batchSelect" class="form-label">Batch Number:</label>
-                    <select class="form-control" id="batchSelect" name="batch">
+                <div>
+                    <label for="id" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" id="id" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="batchSelect" class="block text-sm font-medium text-gray-700">Batch Number</label>
+                    <select id="batchSelect" name="batch" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @foreach ($reagen->reagenIn as $stock)
-                        <option value="{{ $stock->batch }}">{{ $stock->batch }}</option>
+                            <option value="{{ $stock->batch }}">{{ $stock->batch }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="exampleFormControlInput1" class="form-label">Quantity Taken:</label>
-                    <input type="number" class="form-control" id="exampleFormControlInput1" name="quantity_taken">
+                <div>
+                    <label for="quantity_taken" class="block text-sm font-medium text-gray-700">Quantity Taken</label>
+                    <input type="number" id="quantity_taken" name="quantity_taken" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
 
-                <div class="mb-3">
-                    <label for="analis" class="form-label">Analis:</label>
-                    <select class="form-control" id="analis" name="analis">
+                <div>
+                    <label for="analis" class="block text-sm font-medium text-gray-700">Analis</label>
+                    <select id="analis" name="analis" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @foreach ($analisList as $id => $name)
                             <option value="{{ $id }}">{{ $name }} - {{ $id }}</option>
                         @endforeach
                     </select>
                 </div>
 
-
-                <div class="mb-3">
-                    <label for="exampleFormControlTextarea1" class="form-label">Notes:</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" name="note" rows="3"></textarea>
+                <div>
+                    <label for="note" class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea id="note" name="note" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <div>
+                    <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Submit
+                    </button>
+                </div>
             </form>
         </div>
     </div>

@@ -1,48 +1,51 @@
 @extends('layout.main')
 
 @section('container')
-<div class="container-fluid px-4 py-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0">Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h4>
-                <div class="d-flex gap-3 align-items-center">
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h1>
+                <div class="flex items-center gap-4">
                     <form action="{{ route('generatedSO') }}" method="POST" class="m-0">
                         @csrf
                         <input type="hidden" name="month" value="{{ $month }}">
                         <input type="hidden" name="year" value="{{ $year }}">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-arrow-clockwise"></i> Generate Stock
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Generate Stock
                         </button>
                     </form>
-                    <div class="status-badge">
+                    <div>
                         @if($stockOpname->status ?? 0)
-                            <span class="badge bg-success px-3 py-2">Stock Opname Complete</span>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Stock Opname Complete</span>
                         @else
-                            <span class="badge bg-warning px-3 py-2">Stock Opname Not Complete</span>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Stock Opname Not Complete</span>
                         @endif
                     </div>
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-dark">
+            <div class="overflow-hidden">
+                <table class="w-full table-fixed">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="text-center">No. Catalog</th>
-                            <th>Name Reagen</th>
-                            <th>Merk</th>
-                            <th>Pack Size</th>
-                            <th class="text-center">Previous Stock</th>
-                            <th class="text-center">In</th>
-                            <th class="text-center">Out</th>
-                            <th class="text-center">Current</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">SO Status</th>
-                            <th class="text-center">Action</th>
+                            <th class="w-[8%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Catalog</th>
+                            <th class="w-[20%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name Reagen</th>
+                            <th class="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merk</th>
+                            <th class="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pack Size</th>
+                            <th class="w-[8%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Previous</th>
+                            <th class="w-[8%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">In</th>
+                            <th class="w-[8%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Out</th>
+                            <th class="w-[8%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Current</th>
+                            <th class="w-[10%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="w-[7%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">SO</th>
+                            <th class="w-[8%] px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200">
                     @foreach ($reagens as $reagen)
                         @php
                             $quantityNow = $reagen->quantity;
@@ -50,30 +53,35 @@
                             $quantityIn = $reagen->quantity_in;
                             $quantityOut = $reagen->quantity_out;
                         @endphp
-                        <tr>
-                            <td class="text-center">{{ $reagen->noCatalog }}</td>
-                            <td>{{ $reagen->reagen->nameReagen }}</td>
-                            <td>{{ $reagen->reagen->merk }}</td>
-                            <td>{{ $reagen->reagen->packSize }}</td>
-                            <td class="text-center">{{ $quantityBefore }}</td>
-                            <td class="text-center">{{ $reagen->quantity_in }}</td>
-                            <td class="text-center">{{ $reagen->quantity_out }}</td>
-                            <td class="text-center fw-bold">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-2 text-sm text-center text-gray-900">{{ $reagen->noCatalog }}</td>
+                            <td class="px-3 py-2 text-sm text-gray-900 break-words">{{ $reagen->reagen->nameReagen }}</td>
+                            <td class="px-3 py-2 text-sm text-gray-500">{{ $reagen->reagen->merk }}</td>
+                            <td class="px-3 py-2 text-sm text-gray-500">{{ $reagen->reagen->packSize }}</td>
+                            <td class="px-3 py-2 text-sm text-center text-gray-900">{{ $quantityBefore }}</td>
+                            <td class="px-3 py-2 text-sm text-center text-gray-900">{{ $reagen->quantity_in }}</td>
+                            <td class="px-3 py-2 text-sm text-center text-gray-900">{{ $reagen->quantity_out }}</td>
+                            <td class="px-3 py-2 text-sm font-medium text-center text-gray-900">
                                 @if ($reagen->stock_opname == 1)
                                     {{ $reagen->quantity_actual }}
                                 @else
                                     <span id="quantity_now_{{ $reagen->id }}">{{ ($quantityIn + $quantityBefore) - $quantityOut }}</span>
                                 @endif
                             </td>
-                            <td class="text-center">{{ $reagen->status }}</td>
-                            <td class="text-center">
-                                <span class="badge {{ $reagen->stock_opname ? 'bg-success' : 'bg-warning' }}">
+                            <td class="px-3 py-2 text-sm text-center text-gray-500">{{ $reagen->status }}</td>
+                            <td class="px-3 py-2 text-center">
+                                <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full {{ $reagen->stock_opname ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                     {{ $reagen->stock_opname ? 'Done' : 'Not Done' }}
                                 </span>
                             </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#exampleModal" data-id="{{ $reagen->id }}" data-bulan="{{ $month }}" data-tahun="{{ $year }}">
-                                    <i class="bi bi-pencil-square"></i> Edit
+                            <td class="px-3 py-2 text-center">
+                                <button type="button" 
+                                    onclick="openModal({{ $reagen->id }}, {{ $month }}, {{ $year }})"
+                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Edit
                                 </button>
                             </td>
                         </tr>
@@ -81,93 +89,134 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
+            
+            <!-- Modal -->
+            <div id="modal" class="fixed inset-0 z-50 hidden">
+                <!-- Background backdrop -->
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Reagen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <div class="row g-3 mb-2">
-                            <div class="col-md-4 text-muted">Catalog Number</div>
-                            <div class="col-md-8 fw-bold" id="no-catalog"></div>
-                        </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-md-4 text-muted">Reagen Name</div>
-                            <div class="col-md-8" id="reagen-name"></div>
-                        </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-md-4 text-muted">Current Stock</div>
-                            <div class="col-md-8" id="current-stock"></div>
-                        </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-md-4 text-muted">Quantity In</div>
-                            <div class="col-md-8" id="quantity-in"></div>
-                        </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-md-4 text-muted">Quantity Out</div>
-                            <div class="col-md-8" id="quantity-out"></div>
+                <!-- Modal panel -->
+                <div class="fixed inset-0 z-50 overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div class="bg-white">
+                                <!-- Modal header -->
+                                <div class="flex items-center justify-between border-b px-4 py-3">
+                                    <h3 class="text-lg font-medium text-gray-900">Detail Reagen</h3>
+                                    <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeModal()">
+                                        <span class="sr-only">Close</span>
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Modal body -->
+                                <div class="px-4 py-5">
+                                    <div class="space-y-3">
+                                        <div class="grid grid-cols-3 gap-4 text-sm">
+                                            <div class="text-gray-500">Catalog Number</div>
+                                            <div class="col-span-2 font-medium text-gray-900" id="no-catalog"></div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4 text-sm">
+                                            <div class="text-gray-500">Reagen Name</div>
+                                            <div class="col-span-2 font-medium text-gray-900" id="reagen-name"></div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4 text-sm">
+                                            <div class="text-gray-500">Current Stock</div>
+                                            <div class="col-span-2 font-medium text-gray-900" id="current-stock"></div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4 text-sm">
+                                            <div class="text-gray-500">Quantity In</div>
+                                            <div class="col-span-2 font-medium text-gray-900" id="quantity-in"></div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-4 text-sm">
+                                            <div class="text-gray-500">Quantity Out</div>
+                                            <div class="col-span-2 font-medium text-gray-900" id="quantity-out"></div>
+                                        </div>
+                                    </div>
+
+                                    <form id="updateForm" class="mt-6">
+                                        <input type="hidden" id="stock-id" name="stock_id">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity Actual</label>
+                                                <input type="text" id="quantity-actual" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                                <input type="text" id="status" readonly class="block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm">
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                                            <textarea id="note" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
+                                        </div>
+                                        <input type="hidden" id="user" value="{{ auth()->user()->id }}">
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal footer -->
+                            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button type="button" 
+                                    id="btn-update-stock" 
+                                    class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">
+                                    Save Changes
+                                </button>
+                                <button type="button" 
+                                    onclick="closeModal()"
+                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <form id="updateForm">
-                        <input type="hidden" id="stock-id" name="stock_id">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Quantity Actual</label>
-                                <input type="text" class="form-control" id="quantity-actual">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Status</label>
-                                <input type="text" class="form-control" id="status" readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Note</label>
-                            <textarea class="form-control" id="note" rows="3"></textarea>
-                        </div>
-                        <input type="hidden" id="user" value="{{ auth()->user()->id }}">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" id="btn-update-stock" class="btn btn-primary">Save Changes</button>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 
 </body>
 
 <script>
-    $(document).ready(function() {
-        // Fungsi modal
-        $('.edit-btn').click(function() {
-            // Ambil data dari tombol
-            var reagenId = $(this).data('id');
-            var bulan = $(this).data('bulan');
-            var tahun = $(this).data('tahun');
+    function openModal(reagenId, bulan, tahun) {
+        document.getElementById('modal').classList.remove('hidden');
+        getReagenData(reagenId, bulan, tahun);
+    }
 
-            // Kirim permintaan GET dengan data bulan dan tahun sebagai parameter query
-            $.get("get-reagen/" + reagenId, { bulan: bulan, tahun: tahun }, function(data) {
-                // Isi data ke modal
-                $('#no-catalog').text(data.reagen.noCatalog);
-                $('#reagen-name').text(data.reagen.nameReagen);
-                $('#current-stock').text(data.stockHistory.stock_opname ? data.stockHistory.quantity_actual : data.stockHistory.quantity);
-                $('#quantity-in').text(data.stockHistory.quantity_in);
-                $('#quantity-out').text(data.stockHistory.quantity_out);
-                $('#stock-id').val(data.stockHistory.id);
-                $('#message-text').val(data.message);
-            });
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+        document.getElementById('updateForm').reset();
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Close modal on escape key press
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    function getReagenData(reagenId, bulan, tahun) {
+        $.get("get-reagen/" + reagenId, { bulan: bulan, tahun: tahun }, function(data) {
+            $('#no-catalog').text(data.reagen.noCatalog);
+            $('#reagen-name').text(data.reagen.nameReagen);
+            $('#current-stock').text(data.stockHistory.stock_opname ? data.stockHistory.quantity_actual : data.stockHistory.quantity);
+            $('#quantity-in').text(data.stockHistory.quantity_in);
+            $('#quantity-out').text(data.stockHistory.quantity_out);
+            $('#stock-id').val(data.stockHistory.id);
+            $('#message-text').val(data.message);
         });
+    }
 
+    $(document).ready(function() {
         // ---------------------------------------------------------------------------------------
         // fungsi status stock opname
         $('#quantity-actual').on('input', function() {
