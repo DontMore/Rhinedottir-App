@@ -45,4 +45,9 @@ class Reagen extends Model
     {
         return $this->hasMany(StockHistory::class, 'noCatalog', 'noCatalog');
     }
+
+    public function stocks()
+    {
+        return $this->hasMany(StockReagen::class, 'noCatalog', 'noCatalog');
+    }
 }

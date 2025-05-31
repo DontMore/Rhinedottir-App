@@ -99,6 +99,18 @@ Route::get('/reagen/{noCatalogUtama}', [OrderController::class, 'getReagenData']
 Route::get('/report', [ReportController::class, 'index'])->middleware('admin')->name('report.index');
 Route::get('/report-detail', [ReportController::class, 'reportDetail'])->name('reportDetail');
 Route::get('/generate-pdf', [ReportController::class, 'generatePDF'])->name('report.print')->middleware('admin');
+Route::post('/filter-logbook', [ReportController::class, 'filterLogbook'])->name('report.filter');
+Route::get('/export-logbook-pdf', [ReportController::class, 'exportLogbookPDF'])->name('report.export-logbook');
+Route::get('/generate-logbook-pdf', [ReportController::class, 'generateLogbookPDF'])->name('report.logbook-pdf');
+Route::get('/export-logbook-excel', [ReportController::class, 'exportExcel'])->name('report.logbook-excel');
+Route::get('/historical-report', [ReportController::class, 'historicalReport'])->name('report.historical');
+Route::get('/reagen-list', [ReportController::class, 'reagenList'])->name('report.reagen-list');
+Route::get('/historical-pdf', [ReportController::class, 'generateHistoricalPDF'])->name('report.historical-pdf');
+Route::get('/historical-excel', [ReportController::class, 'exportHistoricalExcel'])->name('report.historical-excel');
+Route::get('/stock-opname-report', [ReportController::class, 'stockOpnameReport'])->name('report.stock-opname');
+Route::get('/stock-opname-pdf', [ReportController::class, 'generateStockOpnamePDF'])->name('report.stock-opname-pdf');
+Route::get('/stock-opname-excel', [ReportController::class, 'exportStockOpnameExcel'])->name('report.stock-opname-excel');
+
 
 // route stock opname
 Route::get('/stock-opname', [StockOpnameController::class, 'index'])->middleware('admin')->name('stock.index');

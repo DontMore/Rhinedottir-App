@@ -18,7 +18,8 @@ class ReagenIn extends Model
         'quantity',
         'expiredDate',
         'note',
-        'stockUpdateDate'
+        'stockUpdateDate',
+        'user_id',
     ];
 
     // Relationship with the NoKatalogReagen model (Foreign Key).
@@ -30,5 +31,10 @@ class ReagenIn extends Model
     public function stockReagen()
     {
         return $this->belongsTo(StockReagen::class, 'noCatalog', 'noCatalog');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
