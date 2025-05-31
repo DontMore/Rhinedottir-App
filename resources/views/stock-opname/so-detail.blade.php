@@ -7,11 +7,13 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">Stock Reagen {{ \Carbon\Carbon::createFromDate($year, $month)->format('F Y') }}</h1>
                 <div class="flex items-center gap-4">
-                    <form action="{{ route('generatedSO') }}" method="POST" class="m-0">
+                    <form id="generateStockForm" action="{{ route('generatedSO') }}" method="POST" class="m-0">
                         @csrf
                         <input type="hidden" name="month" value="{{ $month }}">
                         <input type="hidden" name="year" value="{{ $year }}">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                onclick="return confirmGenerate(event)">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
@@ -27,6 +29,13 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Hidden form for generate stock -->
+            <form id="generateStockForm" action="{{ route('generatedSO') }}" method="POST" class="hidden">
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="year" value="{{ $year }}">
+            </form>
 
             <div class="overflow-hidden">
                 <table class="w-full table-fixed">
@@ -246,7 +255,7 @@
 
         // -----------------------------------------------------------------------------------------------
         // update stock
-        $('#exampleModal').on('click', '#btn-update-stock', function() {
+        $('#btn-update-stock').on('click', function() {
             // Mendapatkan nilai stock-id dan data lainnya
             var stockId = $('#stock-id').val();
             var quantityActual = $('#quantity-actual').val();
@@ -267,13 +276,7 @@
                     user_id: user
                 },
                 success: function(response) {
-                    // Handle response jika diperlukan
-                    console.log(response);
-                    
-                    // Reset formulir modal
-                    $('#exampleModal').find('form')[0].reset();
-                    // Tutup modal
-                    $('#exampleModal').modal('hide');
+                    closeModal();
                     Swal.fire({
                         title: "Success",
                         text: "Reagent stock successfully updated.",
@@ -285,13 +288,35 @@
                     });
                 },
                 error: function(xhr) {
-                    // Handle error jika diperlukan
-                    console.log(xhr.responseText);
+                    Swal.fire({
+                        title: "Error",
+                        text: "Failed to update stock data.",
+                        icon: "error"
+                    });
+                    console.error(xhr.responseText);
                 }
             });
         });
 
     });
+
+    function confirmGenerate(event) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Generate Stock?',
+            text: "This will regenerate stock data for non-completed items. Completed stock opname data will be preserved.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, generate!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                event.target.form.submit();
+            }
+        });
+        return false;
+    }
 </script>
 
 

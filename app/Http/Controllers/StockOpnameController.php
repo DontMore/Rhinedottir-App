@@ -80,299 +80,244 @@ class StockOpnameController extends Controller
     public function soDetail(Request $request)
     {
         $timezone = config('app.timezone');
-        // Mengambil parameter bulan dan tahun dari request
         $month = $request->input('month') ?? Carbon::now()->format('m');
         $year = $request->input('year') ?? Carbon::now()->format('Y');
 
-        // dd($month);
-
         $noCatalog = StockHistory::where('year', $year)->where('month', $month)->pluck('noCatalog')->toArray();
         $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
-
-        // mencari noCatalog yang tidak ada pada database History Stock
         $missNoCatalog = array_diff($noCatalogStd, $noCatalog);
 
-        // Mengambil semua data reagen beserta relasinya dengan filter bulan dan tahun
-        $reagens = StockHistory::where('year', $year)
-        ->where('month', $month) 
-        ->get();
+        // Get previous month's data first
+        $previousMonth = $month == 1 ? 12 : $month - 1;
+        $previousYear = $month == 1 ? $year - 1 : $year;
+        
+        foreach ($missNoCatalog as $noCatalog) {
+            $previousData = StockHistory::where('year', $previousYear)
+                ->where('month', $previousMonth)
+                ->where('noCatalog', $noCatalog)
+                ->first();
 
-        // Mengambil quantity_actual untuk bulan sebelumnya
-        $previousMonthData = StockHistory::where('year', $year)
-        ->where('month', $month - 1)
-        ->get(['noCatalog', 'quantity_actual']); // Ambil noCatalog dan quantity_actual bulan sebelumnya
-
-        // Mengaitkan quantity_before dengan reagen saat ini
-        $reagens->each(function ($reagen) use ($previousMonthData) {
-        // Mencari data bulan sebelumnya yang cocok dengan noCatalog saat ini
-        $previousData = $previousMonthData->firstWhere('noCatalog', $reagen->noCatalog);
-
-        // Jika data ditemukan, ambil quantity_actual
-        $reagen->quantity_before = $previousData ? $previousData->quantity_actual : null; // Set null jika tidak ada data
-        });
-
-        // Menyimpan bulan yang kurang ke database
-        foreach ($missNoCatalog as $missNoCatalog) {
-            // Find quantity_actual from StockReagen for the previous data
-            $previousData = StockReagen::where('noCatalog', $missNoCatalog)->first();
-            
-            // mentotalkan data reagen masuk
             $reagenInQuantitySum = ReagenIn::whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month)
-                    ->where('noCatalog', $missNoCatalog)
-                    ->sum('quantity');
+                ->whereMonth('created_at', $month)
+                ->where('noCatalog', $noCatalog)
+                ->sum('quantity');
 
-            // mentotalkan data reagen diambil
             $reagenOutQuantitySum = LogbookReagen::whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month)
-                    ->where('noCatalog', $missNoCatalog)
-                    ->sum('quantity_taken');
-            
-            // Retrieve quantity from ReagenIn if it exists, otherwise set to null or default
-            $reagenInData = $reagenInQuantitySum ? $reagenInQuantitySum : 0;
-            $reagenOutData = $reagenOutQuantitySum ? $reagenOutQuantitySum : 0;
-                            
-            // Save the quantity_before in the new record
+                ->whereMonth('created_at', $month)
+                ->where('noCatalog', $noCatalog)
+                ->sum('quantity_taken');
+
             StockHistory::create([
                 'month' => $month,
                 'year' => $year,
-                'noCatalog' => $missNoCatalog,
-                'quantity' => $previousData ? $previousData->quantity : 0,
-                'quantity_in' => $reagenInData,
-                'quantity_out' => $reagenOutData
-                // Add other required attributes here, e.g., 'nameReagen' => 'Default Name', etc.
+                'noCatalog' => $noCatalog,
+                'quantity' => $previousData ? $previousData->quantity_actual : 0,
+                'quantity_in' => $reagenInQuantitySum ?? 0,
+                'quantity_out' => $reagenOutQuantitySum ?? 0,
+                'quantity_actual' => 0,
+                'stock_opname' => 0
             ]);
         }
 
-        // var_dump($reagens->quantity_in);die;
+        $reagens = StockHistory::with('reagen')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->get();
 
         return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
     }
 
     public function generatedSO(Request $request)
     {
-        $timezone = config('app.timezone');
-        // Mengambil parameter bulan dan tahun dari request
-        $month = $request->input('month') ?? Carbon::now()->format('m');
-        $year = $request->input('year') ?? Carbon::now()->format('Y');
-
-        // hapus semua data pada tahun dan bulan yang di input
-        StockHistory::where('year', $year)->where('month', $month)->delete();
-
-        // mengambil semua nomor katalog pada database reagen
-        $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
-
-        // Menyimpan bulan yang kurang ke database
-        foreach ($noCatalogStd as $noCatalog) {
-            // Find quantity_actual from StockReagen for the previous data
-            $previousData = StockHistory::where('year', $year)
-                    ->where('month', $month - 1)
-                    ->where('noCatalog', $noCatalog) // Filter berdasarkan noCatalog yang ditentukan
-                    ->first('quantity_actual'); // Ambil noCatalog dan quantity_actual bulan sebelumnya
+        try {
+            DB::beginTransaction();
             
-            // mentotalkan data reagen masuk
-            $reagenInQuantitySum = ReagenIn::whereYear('created_at', $year)
+            $month = $request->input('month') ?? Carbon::now()->format('m');
+            $year = $request->input('year') ?? Carbon::now()->format('Y');
+            
+            // Calculate previous month/year correctly
+            $previousMonth = $month == 1 ? 12 : $month - 1;
+            $previousYear = $month == 1 ? $year - 1 : $year;
+
+            // Get existing stock histories for this month/year
+            $existingStockHistories = StockHistory::where('year', $year)
+                ->where('month', $month)
+                ->get()
+                ->keyBy('noCatalog');
+
+            // Get all reagents
+            $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
+
+            foreach ($noCatalogStd as $noCatalog) {
+                // Skip if record exists and has been stock opnamed
+                if (isset($existingStockHistories[$noCatalog]) && $existingStockHistories[$noCatalog]->stock_opname == 1) {
+                    continue;
+                }
+
+                // Get previous month's final quantity
+                $previousData = StockHistory::where('year', $previousYear)
+                    ->where('month', $previousMonth)
+                    ->where('noCatalog', $noCatalog)
+                    ->first();
+
+                $quantityBefore = $previousData ? $previousData->quantity_actual : 0;
+                
+                // Calculate current month's movements
+                $reagenInQuantitySum = ReagenIn::whereYear('created_at', $year)
                     ->whereMonth('created_at', $month)
                     ->where('noCatalog', $noCatalog)
                     ->sum('quantity');
 
-            // mentotalkan data reagen diambil
-            $reagenOutQuantitySum = LogbookReagen::whereYear('created_at', $year)
+                $reagenOutQuantitySum = LogbookReagen::whereYear('created_at', $year)
                     ->whereMonth('created_at', $month)
                     ->where('noCatalog', $noCatalog)
                     ->sum('quantity_taken');
 
-            
-            // Retrieve quantity from ReagenIn if it exists, otherwise set to null or default
-            $reagenInData = $reagenInQuantitySum ? $reagenInQuantitySum : 0;
-            $reagenOutData = $reagenOutQuantitySum ? $reagenOutQuantitySum : 0;
-                            
-            // Save the quantity_before in the new record
-            StockHistory::create([
-                'month' => $month,
-                'year' => $year,
-                'noCatalog' => $noCatalog,
-                'quantity' => $previousData ? $previousData->quantity_actual : 0,
-                'quantity_in' => $reagenInData,
-                'quantity_out' => $reagenOutData
-                // Add other required attributes here, e.g., 'nameReagen' => 'Default Name', etc.
-            ]);
+                // Update or create record
+                StockHistory::updateOrCreate(
+                    [
+                        'month' => $month,
+                        'year' => $year,
+                        'noCatalog' => $noCatalog,
+                    ],
+                    [
+                        'quantity' => $quantityBefore,
+                        'quantity_in' => $reagenInQuantitySum ?? 0,
+                        'quantity_out' => $reagenOutQuantitySum ?? 0,
+                        'quantity_actual' => isset($existingStockHistories[$noCatalog]) ? 
+                            $existingStockHistories[$noCatalog]->quantity_actual : 0,
+                        'stock_opname' => isset($existingStockHistories[$noCatalog]) ? 
+                            $existingStockHistories[$noCatalog]->stock_opname : 0,
+                        'user_id' => auth()->user()->id,
+                        'updated_at' => now()
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            $reagens = StockHistory::with('reagen')
+                ->where('year', $year)
+                ->where('month', $month)
+                ->get();
+
+            Alert::success('Success!', 'Stock data has been generated successfully');
+            return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Generate Stock Error: ' . $e->getMessage());
+            Alert::error('Error!', 'Failed to generate stock data');
+            return redirect()->back()->with('error', 'Error generating stock data');
         }
-
-        // Mengambil semua data reagen beserta relasinya dengan filter bulan dan tahun
-        $reagens = StockHistory::where('year', $year)
-            ->where('month', $month) 
-            ->get();
-
-        // Mengambil quantity_actual untuk bulan sebelumnya
-        $previousMonthData = StockHistory::where('year', $year)
-            ->where('month', $month - 1)
-            ->get(['noCatalog', 'quantity_actual']); // Ambil noCatalog dan quantity_actual bulan sebelumnya
-
-        // Mengaitkan quantity_before dengan reagen saat ini
-        $reagens->each(function ($reagen) use ($previousMonthData) {
-        // Mencari data bulan sebelumnya yang cocok dengan noCatalog saat ini
-        $previousData = $previousMonthData->firstWhere('noCatalog', $reagen->noCatalog);
-
-        // Jika data ditemukan, ambil quantity_actual
-        $reagen->quantity_before = $previousData ? $previousData->quantity_actual : null; // Set null jika tidak ada data
-        });
-
-        return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
     }
-
-    // public function generatedSO(Request $request)
-    // {
-    //    // Mengambil bulan dan tahun dari request
-    //     $month = $request->input('month');
-    //     $year = $request->input('year');
-
-    //     // Mengambil semua data noCatalog dari model Reagen
-    //     $noCatalogs = Reagen::select('noCatalog')->get();
-
-        
-
-    //     // Membuat array baru untuk menambahkan bulan dan tahun ke setiap noCatalog
-    //     $dataWithMonthYear = $noCatalogs->map(function ($reagen) use ($month, $year) {
-    //         return [
-    //             'noCatalog' => $reagen->noCatalog,
-    //             'month' => $month,
-    //             'year' => $year,
-    //         ];
-    //     });
-
-    //     // Menggunakan var_dump untuk menampilkan hasil
-    //     var_dump($dataWithMonthYear);
-
-    //     // Jika Anda ingin mengembalikan hasil ke view, bisa dilakukan seperti ini
-    //     // return view('your_view_name', compact('dataWithMonthYear'));
-
-    //     // Misalnya, mengambil data dari database berdasarkan bulan dan tahun
-    //     $data = StockHistory::where('month', $month)->where('year', $year)->get();
-
-    //     return view('stock-opname.generated', compact('data', 'month', 'year'));
-    // }
 
     public function generateStock(Request $request)
     {
-        $timezone = config('app.timezone');
-        // Mengambil parameter bulan dan tahun dari request
-        $month = $request->input('month') ?? Carbon::now()->format('m');
-        $year = $request->input('year') ?? Carbon::now()->format('Y');
+        try {
+            $timezone = config('app.timezone');
+            $month = $request->input('month') ?? Carbon::now()->format('m');
+            $year = $request->input('year') ?? Carbon::now()->format('Y');
 
-        // Mengambil semua data reagen beserta relasinya dengan filter bulan dan tahun
-        $reagens = StockHistory::where('year', $year)
-                            ->where('month', $month)
-                            ->get();
+            // Get previous month/year
+            $previousMonth = $month == 1 ? 12 : $month - 1;
+            $previousYear = $month == 1 ? $year - 1 : $year;
 
-        $reagens->each(function ($reagen) use ($year, $month) {
-            $reagen->quantity_before = StockHistory::where('year', $year)
-                ->where('month', $month - 1)
-                ->sum('quantity');
-        });
+            // Get all reagents with their relationships
+            $reagens = StockHistory::with('reagen')
+                ->where('year', $year)
+                ->where('month', $month)
+                ->get();
 
-        $data = [
-            'title' => 'Report Stock Reagen',
-            'month' => $month,
-            'year' => $year,
-            'reagens' => $reagens,
-        ];
+            // Get previous month's data for each reagent
+            $reagens->each(function ($reagen) use ($previousYear, $previousMonth) {
+                $previousData = StockHistory::where('year', $previousYear)
+                    ->where('month', $previousMonth)
+                    ->where('noCatalog', $reagen->noCatalog)
+                    ->first();
+                
+                $reagen->quantity_before = $previousData ? $previousData->quantity_actual : 0;
+                $reagen->expected_stock = ($reagen->quantity_before + $reagen->quantity_in) - $reagen->quantity_out;
+                $reagen->difference = $reagen->quantity_actual - $reagen->expected_stock;
+            });
 
-        $pdf = PDF::loadView('stock-opname.stock-report', $data);
+            $data = [
+                'title' => 'Report Stock Reagen',
+                'month' => $month,
+                'year' => $year,
+                'reagens' => $reagens,
+                'generated_at' => Carbon::now()->setTimezone($timezone)->format('d/m/Y H:i:s T')
+            ];
 
-        return $pdf->stream('laporan.pdf');
+            $pdf = PDF::loadView('stock-opname.stock-report', $data);
+            return $pdf->stream('stock_opname_report_' . $year . '_' . $month . '.pdf');
+
+        } catch (\Exception $e) {
+            Log::error('Generate Stock Report Error: ' . $e->getMessage());
+            Alert::error('Error!', 'Failed to generate stock report');
+            return redirect()->back()->with('error', 'Error generating stock report');
+        }
     }
 
     public function updateQuantities(Request $request)
     {
+        try {
+            DB::beginTransaction();
 
-    $timezone = config('app.timezone');
-    // Mengambil parameter bulan dan tahun dari request
-    $month = $request->input('month') ?? Carbon::now()->format('m');
-    $year = $request->input('year') ?? Carbon::now()->format('Y');
-    // Retrieve the validated data
-    $quantityActualJson = $request->input('quantity_actual');
+            $month = $request->input('month') ?? Carbon::now()->format('m');
+            $year = $request->input('year') ?? Carbon::now()->format('Y');
+            $quantityActualJson = $request->input('quantity_actual');
+            
+            if (!$quantityActualJson) {
+                throw new \Exception('No quantity data provided');
+            }
 
-    // Decode the JSON data
-    $updatedQuantities = json_decode($quantityActualJson, true);
+            $updatedQuantities = json_decode($quantityActualJson, true);
 
-    // Update the database records
-    foreach ($updatedQuantities as $id => $quantity) {
-        $updateResult = DB::table('stock_histories')
-        ->where('id',  $id)
-        ->update([
-            'quantity' => $quantity,
-        ]);
-    
-    }
+            foreach ($updatedQuantities as $id => $quantity) {
+                $stockHistory = StockHistory::findOrFail($id);
+                $stockHistory->quantity_actual = $quantity;
+                $stockHistory->stock_opname = 1;
+                $stockHistory->save();
+            }
 
-    // Mengambil semua data reagen beserta relasinya dengan filter bulan dan tahun
-    $reagens = StockHistory::where('year', $year)
-        ->where('month', $month)
-        ->get();
+            $reagens = StockHistory::where('year', $year)
+                ->where('month', $month)
+                ->get();
 
-    $reagens->each(function ($reagen) use ($year, $month) {
-    $reagen->quantity_before = StockHistory::where('year', $year)
-        ->where('month', $month - 1)
-        ->sum('quantity');
-    });
+            $dataSesuai = true;
+            $totalSelisih = 0;
 
-    $dataSesuai = true;
+            foreach ($reagens as $reagen) {
+                $expectedStock = ($reagen->quantity + $reagen->quantity_in) - $reagen->quantity_out;
+                $actualStock = $reagen->quantity_actual;
+                $selisih = $actualStock - $expectedStock;
+                $totalSelisih += abs($selisih);
+            }
 
-    foreach ($reagens as $reagen) {
-        $selisih = $reagen->quantity - (($reagen->quantity_before + $reagen->quantity_in) - $reagen->quantity_out);
+            // Update or create stock opname record
+            StockOpname::updateOrCreate(
+                [
+                    'month' => $month,
+                    'year' => $year,
+                    'user_id' => auth()->user()->id
+                ],
+                [
+                    'status' => ($totalSelisih == 0) ? 1 : 0,
+                    'updated_at' => now()
+                ]
+            );
 
-        if ($selisih != 0) {
-            $dataSesuai = false;
-            break;  // Exit the loop early since we already found a non-zero $selisih
+            DB::commit();
+            Alert::success('Success!', 'Data Stock Opname berhasil disimpan');
+            return redirect()->back()->with('success', 'Stock opname updated successfully');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Stock Opname Update Error: ' . $e->getMessage());
+            Alert::error('Error!', 'Terjadi kesalahan saat menyimpan data');
+            return redirect()->back()->with('error', 'Error updating stock opname');
         }
-    }
-
-    if ($dataSesuai) {
-        // Check if the record already exists for the given month and year
-        $existingRecord = StockOpname::where('month', $month)
-            ->where('year', $year)
-            ->where('user_id', auth()->user()->id)
-            ->first();
-
-        if ($existingRecord) {
-            // Update the existing record
-            $existingRecord->update(['status' => 1]);
-        } else {
-            // Create a new record
-            StockOpname::create([
-                'month' => $month,
-                'year' => $year,
-                'user_id' => auth()->user()->id,
-                'status' => 1,
-            ]);
-        }
-    } else {
-        // Check if the record already exists for the given month and year
-        $existingRecord = StockOpname::where('month', $month)
-            ->where('year', $year)
-            ->where('user_id', auth()->user()->id)
-            ->first();
-
-        if ($existingRecord) {
-            // Update the existing record
-            $existingRecord->update(['status' => 1]);
-        } else {
-            // Create a new record
-            StockOpname::create([
-                'month' => $month,
-                'year' => $year,
-                'user_id' => auth()->user()->id,
-                'status' => 0,
-            ]);
-        }
-    }
-
-    // Tambahkan pesan sukses ke dalam sesi
-    Alert::success('Success!', 'Data Stock Opname berhasil disimpan');
-
-    // Return a response indicating success
-    return redirect()->back()->with('success', 'Quantities updated successfully!');
     }
 
     // untuk mengambil data reagen untuk modal
