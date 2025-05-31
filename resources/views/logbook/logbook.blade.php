@@ -62,7 +62,7 @@
                                             </svg>
                                             History
                                         </a>
-                                        @can('auth')
+                                        @auth
                                         <a href="{{ route('data.take', ['noCatalog' => $reagen->noCatalog]) }}" 
                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@
                                             </svg>
                                             Take
                                         </a>
-                                        @endcan
+                                        @endauth
                                     </div>
                                 </td>
                             </tr>

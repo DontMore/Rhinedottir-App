@@ -46,7 +46,7 @@
         </p>
       </div>
       <ul class="py-2 text-sm">
-         @can('auth')
+         @auth
         <li>
           <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" 
              class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
@@ -69,7 +69,7 @@
             </button>
           </form>
         </li>
-        @endcan
+        @endauth
       </ul>
     </div>
   </div>
