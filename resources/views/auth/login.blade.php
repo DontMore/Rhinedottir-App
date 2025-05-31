@@ -61,6 +61,8 @@
                     <a href="kirim-email" class="font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
                     <span class="text-gray-400">|</span>
                     <a href="register-guest" class="font-medium text-blue-600 hover:text-blue-500">Register</a>
+                    <span class="text-gray-400">|</span>
+                    <a href="logbook" class="font-medium text-blue-600 hover:text-blue-500">View as Guest</a>
                 </div>
             </div>
         </div>

@@ -25,7 +25,11 @@
     <div class="hidden absolute right-0 z-50 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg" id="dropdown-user">
       <div class="px-4 py-3 border-b border-gray-700">
         <p class="text-sm font-medium text-white">
-          {{ auth()->user()->name }}
+          @auth
+            {{ auth()->user()->name }}
+          @else
+            Guest
+          @endauth
         </p>
         <p class="text-xs text-gray-400 mt-1">
           <span class="inline-flex items-center">
@@ -33,11 +37,16 @@
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
             </svg>
-            {{ auth()->user()->role }}
+            @auth
+              {{ auth()->user()->role }}
+            @else
+              Guest
+            @endauth
           </span>
         </p>
       </div>
       <ul class="py-2 text-sm">
+         @can('auth')
         <li>
           <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" 
              class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
@@ -60,6 +69,7 @@
             </button>
           </form>
         </li>
+        @endcan
       </ul>
     </div>
   </div>
