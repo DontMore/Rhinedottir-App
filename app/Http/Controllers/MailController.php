@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use App\Mail\MyTestMail;
-use Illuminate\Support\Facades\Mail;
 use App\Models\User;
+use App\Models\EmailSetting;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -14,7 +14,16 @@ use RealRashid\SweetAlert\Facades\Alert;
 
 class MailController extends Controller
 {
-    
+    private function configureMailSettings()
+    {
+        $settings = EmailSetting::first();
+        if ($settings) {
+            Config::set('mail.mailers.smtp.username', $settings->mail_username);
+            Config::set('mail.mailers.smtp.password', $settings->mail_password);
+            Config::set('mail.from.address', $settings->mail_from_address);
+        }
+    }
+
     public function index(){
         return view('auth.forgot-password');
     }
@@ -24,6 +33,8 @@ class MailController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+
+        $this->configureMailSettings();
 
         $status = Password::sendResetLink(
             $request->only('email')

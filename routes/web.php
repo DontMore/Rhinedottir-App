@@ -11,6 +11,7 @@ use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\MailController;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
+use App\Http\Controllers\SettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,3 +115,12 @@ Route::get('kirim-email','App\Http\Controllers\MailController@index');
 Route::get('/reset-password', [MailController::class, 'resetPassword'])->name('password.reset');
 Route::get('/reset-password/{token}', [MailController::class, 'resetPassword'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password',  [MailController::class, 'update'])->middleware('guest')->name('password.update');
+
+// Settings Routes
+Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(function () {
+    Route::get('/', [SettingsController::class, 'index'])->name('index');
+    Route::get('/email', [SettingsController::class, 'emailSettings'])->name('email');
+    Route::post('/email', [SettingsController::class, 'updateEmailSettings'])->name('email.update');
+    Route::get('/profile', [SettingsController::class, 'profileSettings'])->name('profile');
+    Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+});
