@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LogbookExport;
 use App\Exports\HistoricalExport;
 use App\Exports\StockOpnameExport;
+use App\Exports\ExpiredReagenExport;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
@@ -29,13 +30,14 @@ class ReportController extends Controller
     {
         $query = LogbookReagen::with(['reagen', 'user']);
 
-        if ($request->has('start_date')) {
+        // Only apply date filters if dates are provided
+        if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
-        if ($request->has('end_date')) {
+        if ($request->filled('end_date')) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
-        if ($request->has('reagen') && $request->reagen) {
+        if ($request->filled('reagen')) {
             $query->where('noCatalog', $request->reagen);
         }
 
@@ -122,24 +124,74 @@ class ReportController extends Controller
 
     public function historicalReport(Request $request)
     {
-        $query = ReagenIn::with(['reagen'])
+        // Get Reagen In data
+        $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->select('reagens_in.*', 'users.name as user_name');
+            ->select(
+                'reagens_in.created_at',
+                'reagens_in.noCatalog',
+                'reagens_in.Id',
+                DB::raw('CAST(reagens_in.quantity AS SIGNED) as quantity'),
+                DB::raw('NULL as description'),
+                'users.name as user_name',
+                DB::raw("'in' as transaction_type")
+            );
 
-        if ($request->has('start_date')) {
-            $query->whereDate('reagens_in.created_at', '>=', $request->start_date);
+        // Get Logbook (Reagen Out) data
+        $reagenOutQuery = LogbookReagen::with(['reagen'])
+            ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->select(
+                'logbook_reagens.created_at',
+                'logbook_reagens.noCatalog',
+                'logbook_reagens.id as Id',
+                DB::raw('CAST(logbook_reagens.quantity_taken AS SIGNED) as quantity'),
+                'logbook_reagens.note as description',
+                'users.name as user_name',
+                DB::raw("'out' as transaction_type")
+            );
+
+        // Apply filters to both queries
+        if ($request->filled('start_date')) {
+            $reagenInQuery->whereDate('reagens_in.created_at', '>=', $request->start_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '>=', $request->start_date);
         }
-        if ($request->has('end_date')) {
-            $query->whereDate('reagens_in.created_at', '<=', $request->end_date);
+        if ($request->filled('end_date')) {
+            $reagenInQuery->whereDate('reagens_in.created_at', '<=', $request->end_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '<=', $request->end_date);
         }
-        if ($request->has('reagen') && $request->reagen) {
-            $query->where('reagens_in.noCatalog', $request->reagen);
+        if ($request->filled('reagen')) {
+            $reagenInQuery->where('reagens_in.noCatalog', $request->reagen);
+            $reagenOutQuery->where('logbook_reagens.noCatalog', $request->reagen);
         }
 
-        $histories = $query->orderBy('reagens_in.created_at', 'desc')->get();
+        // Combine and sort results
+        $histories = $reagenInQuery->union($reagenOutQuery)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Recalculate summary with explicit casting
+        $summary = [
+            'total_in' => $histories->where('transaction_type', 'in')
+                ->sum('quantity'),
+            'total_out' => $histories->where('transaction_type', 'out')
+                ->sum('quantity'),
+            'per_reagen' => $histories->groupBy(function($item) {
+                    return $item->reagen->noCatalog . '|' . $item->reagen->nameReagen;
+                })
+                ->map(function ($group) {
+                    list($noCatalog, $nameReagen) = explode('|', $group->first()->reagen->noCatalog . '|' . $group->first()->reagen->nameReagen);
+                    return [
+                        'no_catalog' => $noCatalog,
+                        'name' => $nameReagen,
+                        'in' => $group->where('transaction_type', 'in')->sum('quantity'),
+                        'out' => $group->where('transaction_type', 'out')->sum('quantity')
+                    ];
+                })->values()
+        ];
+
         $reagens = Reagen::all();
 
-        return view('report.historical-report', compact('histories', 'reagens'));
+        return view('report.historical-report', compact('histories', 'reagens', 'summary'));
     }
 
     public function reagenList()
@@ -155,31 +207,80 @@ class ReportController extends Controller
 
     public function generateHistoricalPDF(Request $request)
     {
-        $query = ReagenIn::with(['reagen'])
+        // Get Reagen In data
+        $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->select('reagens_in.*', 'users.name as user_name');
+            ->select(
+                'reagens_in.created_at',
+                'reagens_in.noCatalog',
+                'reagens_in.Id',
+                DB::raw('CAST(reagens_in.quantity AS SIGNED) as quantity'),
+                DB::raw('NULL as description'),
+                'users.name as user_name',
+                DB::raw("'in' as transaction_type")
+            );
 
+        // Get Logbook (Reagen Out) data
+        $reagenOutQuery = LogbookReagen::with(['reagen'])
+            ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->select(
+                'logbook_reagens.created_at',
+                'logbook_reagens.noCatalog',
+                'logbook_reagens.id as Id',
+                DB::raw('CAST(logbook_reagens.quantity_taken AS SIGNED) as quantity'),
+                'logbook_reagens.note as description',
+                'users.name as user_name',
+                DB::raw("'out' as transaction_type")
+            );
+
+        // Apply filters to both queries
         if ($request->has('start_date')) {
-            $query->whereDate('reagens_in.created_at', '>=', $request->start_date);
+            $reagenInQuery->whereDate('reagens_in.created_at', '>=', $request->start_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '>=', $request->start_date);
         }
         if ($request->has('end_date')) {
-            $query->whereDate('reagens_in.created_at', '<=', $request->end_date);
+            $reagenInQuery->whereDate('reagens_in.created_at', '<=', $request->end_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '<=', $request->end_date);
         }
         if ($request->has('reagen') && $request->reagen) {
-            $query->where('reagens_in.noCatalog', $request->reagen);
+            $reagenInQuery->where('reagens_in.noCatalog', $request->reagen);
+            $reagenOutQuery->where('logbook_reagens.noCatalog', $request->reagen);
         }
 
-        $histories = $query->orderBy('reagens_in.created_at', 'desc')->get();
+        // Combine both queries
+        $histories = $reagenInQuery->union($reagenOutQuery)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate summary data
+        $summary = [
+            'total_in' => $histories->where('transaction_type', 'in')
+                ->sum('quantity'),
+            'total_out' => $histories->where('transaction_type', 'out')
+                ->sum('quantity'),
+            'per_reagen' => $histories->groupBy(function($item) {
+                    return $item->reagen->noCatalog . '|' . $item->reagen->nameReagen;
+                })
+                ->map(function ($group) {
+                    list($noCatalog, $nameReagen) = explode('|', $group->first()->reagen->noCatalog . '|' . $group->first()->reagen->nameReagen);
+                    return [
+                        'no_catalog' => $noCatalog,
+                        'name' => $nameReagen,
+                        'in' => $group->where('transaction_type', 'in')->sum('quantity'),
+                        'out' => $group->where('transaction_type', 'out')->sum('quantity')
+                    ];
+                })->values()
+        ];
 
         $data = [
             'histories' => $histories,
+            'summary' => $summary,
             'start_date' => $request->start_date ?? 'All time',
             'end_date' => $request->end_date ?? 'All time',
-            'reagen_filter' => $request->reagen ? Reagen::where('noCatalog', $request->reagen)->first()->nameReagen : 'All reagens',
-            'generated_at' => Carbon::now()->format('d/m/Y H:i:s')
+            'generated_at' => now()->format('d/m/Y H:i:s')
         ];
 
-        $pdf = PDF::loadView('report.historical-pdf', $data);
+        $pdf = PDF::loadView('report.historical-pdf', $data)->setPaper('a4', 'landscape');
         return $pdf->stream('historical_report.pdf');
     }
 
@@ -191,7 +292,7 @@ class ReportController extends Controller
                 $request->start_date,
                 $request->end_date,
                 $request->reagen
-            ), 
+            ),
             $filename
         );
     }
@@ -237,6 +338,65 @@ class ReportController extends Controller
         
         $filename = "stock_opname_report_{$year}_{$month}.xlsx";
         return Excel::download(new StockOpnameExport($month, $year), $filename);
+    }
+
+    public function expiredReagen(Request $request)
+    {
+        $query = ReagenIn::with(['reagen'])
+            ->whereNotNull('expiredDate')
+            ->where(function($q) {
+                $q->whereDate('expiredDate', '<=', now()->addMonths(3))
+                  ->orWhereDate('expiredDate', '<', now());
+            });
+
+        if ($request->has('expired_status')) {
+            if ($request->expired_status === 'expired') {
+                $query->whereDate('expiredDate', '<', now());
+            } elseif ($request->expired_status === 'near') {
+                $query->whereDate('expiredDate', '>', now())
+                      ->whereDate('expiredDate', '<=', now()->addMonths(3));
+            }
+        }
+
+        $reagents = $query->orderBy('expiredDate')->get();
+        
+        return view('report.expired-reagen', compact('reagents'));
+    }
+
+    public function exportExpiredPDF(Request $request)
+    {
+        $query = ReagenIn::with(['reagen'])
+            ->whereNotNull('expiredDate')
+            ->where(function($q) {
+                $q->whereDate('expiredDate', '<=', now()->addMonths(3))
+                  ->orWhereDate('expiredDate', '<', now());
+            });
+
+        if ($request->has('expired_status')) {
+            if ($request->expired_status === 'expired') {
+                $query->whereDate('expiredDate', '<', now());
+            } elseif ($request->expired_status === 'near') {
+                $query->whereDate('expiredDate', '>', now())
+                      ->whereDate('expiredDate', '<=', now()->addMonths(3));
+            }
+        }
+
+        $reagents = $query->orderBy('expiredDate')->get();
+
+        $data = [
+            'reagents' => $reagents,
+            'status_filter' => $request->expired_status ?? 'all',
+            'generated_at' => now()->format('d/m/Y H:i:s')
+        ];
+
+        $pdf = PDF::loadView('report.expired-pdf', $data)->setPaper('a4', 'landscape');
+        return $pdf->stream('expired_reagen_report.pdf');
+    }
+
+    public function exportExpiredExcel(Request $request)
+    {
+        $filename = 'expired_reagen_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        return Excel::download(new ExpiredReagenExport($request->expired_status), $filename);
     }
 
 }

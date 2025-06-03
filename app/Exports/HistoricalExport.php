@@ -5,10 +5,14 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use App\Models\ReagenIn;
+use App\Models\LogbookReagen;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
-class HistoricalExport implements FromCollection, WithHeadings, WithMapping
+class HistoricalExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
     protected $start_date;
     protected $end_date;
@@ -23,29 +27,57 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = ReagenIn::with(['reagen'])
+        // Get Reagen In data
+        $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->select('reagens_in.*', 'users.name as user_name');
+            ->select(
+                'reagens_in.created_at',
+                'reagens_in.noCatalog',
+                'reagens_in.Id',
+                DB::raw('CAST(reagens_in.quantity AS SIGNED) as quantity'),
+                DB::raw('NULL as description'),
+                'users.name as user_name',
+                DB::raw("'in' as transaction_type")
+            );
+
+        // Get Logbook (Reagen Out) data
+        $reagenOutQuery = LogbookReagen::with(['reagen'])
+            ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->select(
+                'logbook_reagens.created_at',
+                'logbook_reagens.noCatalog',
+                'logbook_reagens.id as Id',
+                DB::raw('CAST(logbook_reagens.quantity_taken AS SIGNED) as quantity'),
+                'logbook_reagens.note as description',
+                'users.name as user_name',
+                DB::raw("'out' as transaction_type")
+            );
 
         if ($this->start_date) {
-            $query->whereDate('reagens_in.created_at', '>=', $this->start_date);
+            $reagenInQuery->whereDate('reagens_in.created_at', '>=', $this->start_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '>=', $this->start_date);
         }
         if ($this->end_date) {
-            $query->whereDate('reagens_in.created_at', '<=', $this->end_date);
+            $reagenInQuery->whereDate('reagens_in.created_at', '<=', $this->end_date);
+            $reagenOutQuery->whereDate('logbook_reagens.created_at', '<=', $this->end_date);
         }
         if ($this->reagen) {
-            $query->where('reagens_in.noCatalog', $this->reagen);
+            $reagenInQuery->where('reagens_in.noCatalog', $this->reagen);
+            $reagenOutQuery->where('logbook_reagens.noCatalog', $this->reagen);
         }
 
-        return $query->orderBy('reagens_in.created_at', 'desc')->get();
+        return $reagenInQuery->union($reagenOutQuery)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
     public function headings(): array
     {
         return [
             'Date',
+            'Type',
             'Reagen',
-            'Quantity In',
+            'Quantity',
             'Recorded By',
             'Description'
         ];
@@ -55,10 +87,64 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             Carbon::parse($history->created_at)->format('d/m/Y H:i'),
+            $history->transaction_type === 'in' ? 'In' : 'Out',
             $history->reagen->nameReagen,
             $history->quantity,
             $history->user_name,
-            $history->description
+            $history->description ?? '-'
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        $lastRow = $sheet->getHighestRow();
+        $data = $this->collection();
+        
+        // Calculate totals more explicitly
+        $totalIn = $data->where('transaction_type', 'in')
+            ->sum(function($item) {
+                return (int)$item->quantity;
+            });
+        
+        $totalOut = $data->where('transaction_type', 'out')
+            ->sum(function($item) {
+                return (int)$item->quantity;
+            });
+
+        // Add summary rows
+        $summaryRow = $lastRow + 2;
+        $sheet->setCellValue("A{$summaryRow}", 'Summary');
+        
+        $sheet->setCellValue("A" . ($summaryRow + 1), 'Total Overall In:');
+        $sheet->setCellValue("B" . ($summaryRow + 1), $totalIn);
+        $sheet->setCellValue("A" . ($summaryRow + 2), 'Total Overall Out:');
+        $sheet->setCellValue("B" . ($summaryRow + 2), $totalOut);
+
+        // Per reagent calculations
+        $perReagenSummary = $data->groupBy('noCatalog')
+            ->map(function ($group) {
+                return [
+                    'name' => $group->first()->reagen->nameReagen,
+                    'in' => $group->where('transaction_type', 'in')
+                        ->sum(function($item) { return (int)$item->quantity; }),
+                    'out' => $group->where('transaction_type', 'out')
+                        ->sum(function($item) { return (int)$item->quantity; })
+                ];
+            });
+
+        $currentRow = $summaryRow + 4;
+        $sheet->setCellValue("A{$currentRow}", 'Per Reagen Summary:');
+        $currentRow++;
+
+        foreach ($perReagenSummary as $noCatalog => $summary) {
+            $sheet->setCellValue("A{$currentRow}", $summary['name']);
+            $sheet->setCellValue("B{$currentRow}", "In: {$summary['in']} | Out: {$summary['out']}");
+            $currentRow++;
+        }
+
+        return [
+            1 => ['font' => ['bold' => true]],
+            "A{$summaryRow}:B{$currentRow}" => ['font' => ['bold' => true]],
         ];
     }
 }
