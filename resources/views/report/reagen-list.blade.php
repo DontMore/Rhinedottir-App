@@ -25,8 +25,6 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merk</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pack Size</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Current Stock</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Order Level</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -36,22 +34,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900">{{ $reagen->nameReagen }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ $reagen->merk }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ $reagen->packSize }}</td>
-                            <td class="px-6 py-4 text-sm text-center font-medium 
-                                {{ $reagen->total_quantity <= $reagen->orderLevel ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ $reagen->total_quantity }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-center text-gray-900">{{ $reagen->orderLevel }}</td>
-                            <td class="px-6 py-4 text-sm text-center">
-                                @if($reagen->total_quantity <= $reagen->orderLevel)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Low Stock
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        In Stock
-                                    </span>
-                                @endif
-                            </td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-900">{{ $reagen->total_quantity }}</td>
                         </tr>
                         @endforeach
                     </tbody>

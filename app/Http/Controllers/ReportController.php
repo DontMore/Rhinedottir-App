@@ -196,11 +196,17 @@ class ReportController extends Controller
 
     public function reagenList()
     {
-        $reagens = Reagen::select('noCatalog', 'nameReagen', 'merk', 'packSize', 'orderLevel')
-            ->withCount(['stocks as total_quantity' => function($query) {
-                $query->select(DB::raw('SUM(quantity)'));
-            }])
-            ->get();
+        $reagens = Reagen::select(
+            'noCatalog', 
+            'nameReagen', 
+            'merk', 
+            'packSize'
+        )
+        ->withCount(['stocks as total_quantity' => function($query) {
+            $query->select(DB::raw('SUM(quantity)'));
+        }])
+        ->orderBy('nameReagen')
+        ->get();
 
         return view('report.reagen-list', compact('reagens'));
     }
@@ -397,6 +403,18 @@ class ReportController extends Controller
     {
         $filename = 'expired_reagen_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
         return Excel::download(new ExpiredReagenExport($request->expired_status), $filename);
+    }
+
+    public function generateReagenListPDF()
+    {
+        $reagens = Reagen::select('noCatalog', 'nameReagen', 'merk', 'packSize')
+            ->withCount(['stocks as total_quantity' => function($query) {
+                $query->select(DB::raw('SUM(quantity)'));
+            }])
+            ->get();
+
+        $pdf = PDF::loadView('report.reagen-list-pdf', compact('reagens'))->setPaper('a4', 'landscape');
+        return $pdf->stream('reagen_list.pdf');
     }
 
 }

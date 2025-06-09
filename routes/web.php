@@ -113,6 +113,7 @@ Route::get('/stock-opname-excel', [ReportController::class, 'exportStockOpnameEx
 Route::get('/expired-reagen', [ReportController::class, 'expiredReagen'])->name('report.expired-reagen');
 Route::get('/expired-reagen-pdf', [ReportController::class, 'exportExpiredPDF'])->name('report.expired-pdf');
 Route::get('/expired-reagen-excel', [ReportController::class, 'exportExpiredExcel'])->name('report.expired-excel');
+Route::get('/reagen-list-pdf', [ReportController::class, 'generateReagenListPDF'])->name('report.reagen-pdf');
 
 
 // route stock opname
