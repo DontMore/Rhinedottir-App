@@ -6,13 +6,16 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithProperties;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use App\Models\ReagenIn;
 use App\Models\LogbookReagen;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class HistoricalExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class HistoricalExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithProperties
 {
     protected $start_date;
     protected $end_date;
@@ -95,24 +98,87 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
         ];
     }
 
+    public function properties(): array
+    {
+        return [
+            'title' => 'Historical Report',
+            'creator' => config('app.name'),
+            'company' => config('app.name'),
+            'description' => 'Historical Report of Reagen Movement',
+            'subject' => 'Reagen Historical Report',
+            'keywords' => 'reagen,historical,report',
+        ];
+    }
+
     public function styles(Worksheet $sheet)
     {
         $lastRow = $sheet->getHighestRow();
         $data = $this->collection();
         
-        // Calculate totals more explicitly
-        $totalIn = $data->where('transaction_type', 'in')
-            ->sum(function($item) {
-                return (int)$item->quantity;
-            });
+        // Set page setup
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
+        $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+        $sheet->getPageSetup()->setFitToWidth(1);
+        $sheet->getPageSetup()->setFitToHeight(0);
         
+        // Set print area
+        $sheet->getPageSetup()->setPrintArea("A1:F$lastRow");
+        
+        // Set smaller font size and compact layout
+        $sheet->getStyle('A1:F'.$lastRow)->applyFromArray([
+            'font' => [
+                'size' => 8
+            ],
+            'alignment' => [
+                'vertical' => 'center',
+                'indent' => 1
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CCCCCC']
+                ]
+            ]
+        ]);
+
+        // Header styling
+        $sheet->getStyle('A1:F1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 8
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'F3F4F6']
+            ]
+        ]);
+        
+        // Compact dimensions
+        $sheet->getDefaultRowDimension()->setRowHeight(13);
+        $sheet->getRowDimension(1)->setRowHeight(15);
+        
+        $sheet->getColumnDimension('A')->setWidth(11); // Date
+        $sheet->getColumnDimension('B')->setWidth(5);  // Type
+        $sheet->getColumnDimension('C')->setWidth(18); // Reagen
+        $sheet->getColumnDimension('D')->setWidth(7);  // Quantity
+        $sheet->getColumnDimension('E')->setWidth(13); // Recorded By
+        $sheet->getColumnDimension('F')->setWidth(20); // Description
+
+        // Summary section with slim styling
+        $summaryRow = $lastRow + 1;
+        $sheet->getStyle("A{$summaryRow}:F" . ($summaryRow + 8))->applyFromArray([
+            'font' => [
+                'size' => 8
+            ]
+        ]);
+
+        // Calculate totals
+        $totalIn = $data->where('transaction_type', 'in')
+            ->sum(function($item) { return (int)$item->quantity; });
         $totalOut = $data->where('transaction_type', 'out')
-            ->sum(function($item) {
-                return (int)$item->quantity;
-            });
+            ->sum(function($item) { return (int)$item->quantity; });
 
         // Add summary rows
-        $summaryRow = $lastRow + 2;
         $sheet->setCellValue("A{$summaryRow}", 'Summary');
         
         $sheet->setCellValue("A" . ($summaryRow + 1), 'Total Overall In:');
@@ -142,9 +208,18 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
             $currentRow++;
         }
 
+        // Style the per reagen summary
+        $perReagenStartRow = $summaryRow + 4;
+        $sheet->getStyle("A{$perReagenStartRow}:B{$currentRow}")->getFont()->setSize(9);
+
         return [
-            1 => ['font' => ['bold' => true]],
-            "A{$summaryRow}:B{$currentRow}" => ['font' => ['bold' => true]],
+            'A1:F1' => [
+                'font' => ['bold' => true, 'size' => 8],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'F3F4F6']
+                ]
+            ]
         ];
     }
 }

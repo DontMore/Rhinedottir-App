@@ -3,13 +3,60 @@
 <head>
     <title>{{ $title }}</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .filters { margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f5f5f5; }
-        .footer { margin-top: 20px; font-size: 12px; color: #666; }
+        @page { 
+            size: landscape;
+            margin: 1.5cm;
+        }
+        body { 
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            line-height: 1.2;
+            margin: 0;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 14px;
+            margin: 0 0 5px 0;
+        }
+        .filters { 
+            margin-bottom: 10px;
+            font-size: 8px;
+        }
+        table { 
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+        }
+        tr { page-break-inside: avoid; }
+        thead { display: table-header-group; }
+        th, td { 
+            border: 0.5px solid #e5e7eb;
+            padding: 4px 6px;
+            font-size: 8px;
+        }
+        th { 
+            background-color: #f3f4f6;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .footer { 
+            position: running(footer);
+            font-size: 8px;
+            text-align: center;
+            padding: 5px;
+            border-top: 0.5px solid #e5e7eb;
+            color: #666;
+        }
+        @page {
+            @bottom-center {
+                content: element(footer);
+            }
+        }
     </style>
 </head>
 <body>

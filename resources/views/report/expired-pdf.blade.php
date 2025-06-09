@@ -5,60 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expired Reagen Report</title>
     <style>
-        @page { size: landscape; }
+        @page { 
+            size: landscape;
+            margin: 1.5cm;
+        }
         body { 
             font-family: Arial, sans-serif;
-            margin: 2.5cm;
-            font-size: 12px;
+            font-size: 9px;
+            line-height: 1.2;
+            margin: 0;
         }
         .header { 
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 20px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
         }
         .header h2 {
-            font-size: 24px;
+            font-size: 14px;
             color: #1f2937;
-            margin-bottom: 8px;
+            margin: 0 0 5px 0;
         }
         .header p {
             color: #4b5563;
-            font-size: 14px;
+            font-size: 9px;
+            margin: 0;
         }
         table { 
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #ffffff;
+            page-break-inside: auto;
         }
+        tr { page-break-inside: avoid; }
+        thead { display: table-header-group; }
         th, td { 
-            border: 1px solid #e5e7eb;
-            padding: 12px;
+            border: 0.5px solid #e5e7eb;
+            padding: 4px 6px;
+            font-size: 8px;
         }
         th { 
             background-color: #f3f4f6;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 11px;
-            color: #374151;
-        }
-        td {
-            color: #1f2937;
         }
         .text-center { text-align: center; }
         .expired { color: #dc2626; }
         .near-expiry { color: #d97706; }
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 15px;
-            font-size: 10px;
-            color: #6b7280;
+        .footer { 
+            position: running(footer);
+            font-size: 8px;
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            padding: 5px;
+            border-top: 0.5px solid #e5e7eb;
+            color: #6b7280;
+        }
+        @page {
+            @bottom-center {
+                content: element(footer);
+            }
         }
     </style>
 </head>
