@@ -12,6 +12,8 @@ use App\Http\Controllers\MailController;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\OrganizationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,4 +141,15 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
     Route::post('/email', [SettingsController::class, 'updateEmailSettings'])->name('email.update');
     Route::get('/profile', [SettingsController::class, 'profileSettings'])->name('profile');
     Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+});
+
+Route::middleware(['auth', 'can:superadmin'])->group(function () {
+    Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.index');
+    Route::get('/organization/create', [OrganizationController::class, 'create'])->name('organization.create');
+    Route::post('/organization', [OrganizationController::class, 'store'])->name('organization.store');
+    Route::get('/organization/{id}/edit', [OrganizationController::class, 'edit'])->name('organization.edit');
+    Route::put('/organization/{id}', [OrganizationController::class, 'update'])->name('organization.update');
+    Route::delete('/organization/{id}', [OrganizationController::class, 'destroy'])->name('organization.destroy');
+    Route::get('/organization/{id}/settings', [OrganizationController::class, 'settings'])->name('organization.settings');
+    Route::get('/organization/{id}', [OrganizationController::class, 'show'])->name('organization.show');
 });

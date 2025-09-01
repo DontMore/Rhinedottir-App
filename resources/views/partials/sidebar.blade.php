@@ -73,7 +73,6 @@
       </ul>
     </div>
   </div>
-</div>
 
 
     </div>
@@ -83,7 +82,7 @@
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-gray-900 border-r border-gray-700 sm:translate-x-0" aria-label="Sidebar">
    <div class="h-full px-3 pb-4 overflow-y-auto bg-gray-900">
       <ul class="space-y-2 font-medium">
-          @can('admin')
+          @canany(['admin', 'superadmin'])
          <li>
             <a href="{{ route('dashboard.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -108,17 +107,6 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Stock Opname</span>
             </a>
          </li>
-         @endcan
-         <li>
-            <a href="{{ route('logbook.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
-               <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
-               </svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Logbook</span>
-            </a>
-         </li>
-
-         @can('admin')
          <li>
             <a href="{{ route('order.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -152,7 +140,24 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Settings</span>
             </a>
          </li>
-         @endcan
+         <!-- Super Admin Menu -->
+         <li>
+            <a href="{{ route('superadmin.index') }}" class="flex items-center p-2 text-yellow-300 rounded-lg hover:bg-yellow-700 hover:text-white group">
+               <svg class="flex-shrink-0 w-5 h-5 text-yellow-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+               </svg>
+               <span class="flex-1 ms-3 whitespace-nowrap">Super Admin</span>
+            </a>
+         </li>
+         @endcanany
+         <li>
+            <a href="{{ route('logbook.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
+               <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+               </svg>
+               <span class="flex-1 ms-3 whitespace-nowrap">Logbook</span>
+            </a>
+         </li>
       </ul>
    </div>
 </aside>

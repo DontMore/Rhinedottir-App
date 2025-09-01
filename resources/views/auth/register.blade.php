@@ -56,6 +56,7 @@
                     <option value="">Select a role</option>
                     <option value="Admin">Admin</option>
                     <option value="Analis">Analis</option>
+                    <option value="superadmin">Super Admin</option>
                 </select>
             </div>
 

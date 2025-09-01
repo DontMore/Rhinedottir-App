@@ -67,6 +67,8 @@ class AuthenticationController extends Controller
                 return redirect()->intended('dashboard');
             } elseif (Auth::user()->role ===  'Analis') {
                 return redirect()->intended('logbook');
+            } elseif (Auth::user()->role === 'superadmin') {
+                return redirect()->intended('superadmin');
             }
         }
 
@@ -113,7 +115,7 @@ class AuthenticationController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:Admin,Analis',
+            'role' => 'required|in:Admin,Analis,superadmin',
             // Add more validation rules if needed
         ]);
 

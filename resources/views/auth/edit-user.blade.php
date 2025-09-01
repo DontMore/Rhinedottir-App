@@ -72,6 +72,7 @@
                     <option value="">Select a role</option>
                     <option value="Admin" {{ old('role', $user->role) == 'Admin' ? 'selected' : '' }}>Admin</option>
                     <option value="Analis" {{ old('role', $user->role) == 'Analis' ? 'selected' : '' }}>Analis</option>
+                    <option value="superadmin" {{ old('role', $user->role) == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
                 </select>
             </div>
             @endcan
