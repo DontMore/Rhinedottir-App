@@ -11,7 +11,10 @@ class OrderController extends Controller
 {
     // fungsi index
     public function index(){
-        $orders = Order::all(); 
+        $user = auth()->user();
+        $orders = Order::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
         return view('order.order', compact('orders'));
     }
 
@@ -19,14 +22,18 @@ class OrderController extends Controller
         return view('order.new-order-form');
     }
 
-    public function eksistingOrderForm(){  
-        $reagens = Reagen::all();
+    public function eksistingOrderForm(){
+        $user = auth()->user();
+        $reagens = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
         return view('order.eksisting-order-form', compact('reagens'));
     }
 
     public function store(Request $request)
     {
         try {
+            $user = auth()->user();
             // Validasi form
             $validatedData = $request->validate([
                 'noCatalog' => 'required|string',
@@ -35,8 +42,10 @@ class OrderController extends Controller
                 'packSize' => 'required|string',
                 'quantity' => 'required|integer',
                 'status' => 'required',
-                'userId' => 'required|integer',
             ]);
+
+            // Set userId to current user
+            $validatedData['userId'] = $user->id;
 
             // Simpan data ke dalam database menggunakan model Order
             Order::create($validatedData);
@@ -94,7 +103,10 @@ class OrderController extends Controller
 
     public function getReagenData($noCatalogUtama)
     {
-        $reagen = Reagen::where('noCatalog', $noCatalogUtama)->first();
+        $user = auth()->user();
+        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->where('noCatalog', $noCatalogUtama)->first();
 
         if ($reagen) {
             return response()->json($reagen);

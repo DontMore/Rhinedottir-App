@@ -18,12 +18,15 @@ class ManagementStockController extends Controller
 {
     public function index(Request $request){
         $keyword = $request->input('keyword');
-    
-        // Query data Reagen dengan menggunakan Eloquent
+        $user = auth()->user();
+
+        // Query data Reagen dengan menggunakan Eloquent, filter by organization
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
-        }]);
-    
+        }])->whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        });
+
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -32,10 +35,10 @@ class ManagementStockController extends Controller
                     ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
-    
+
         // Menambahkan pagination dengan batasan jumlah item per halaman
         $reagens = $query->paginate(20); // 10 adalah jumlah item per halaman, sesuaikan sesuai kebutuhan
-    
+
         // Mengirim data reagens paginasi ke view
         return view('management-stock.management-stock', compact('reagens'));
     }
@@ -74,16 +77,21 @@ class ManagementStockController extends Controller
     // view data reagen
     public function viewReagen($noCatalog)
     {
-        $data = Reagen::find($noCatalog);
+        $user = auth()->user();
+        $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($noCatalog);
 
         if (!$data) {
-            abort(404, 'Data reagen tidak ditemukan.');
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
         }
 
         $hazardOptions = explode(',', $data->hazardOptions);
 
-        // Ambil data reagenIn, urutkan dari yang terbaru, dan paginasi 10 per halaman
-        $reagenIn = $data->reagenIn()->orderBy('created_at', 'desc')->paginate(10);
+        // Ambil data reagenIn, urutkan dari yang terbaru, dan paginasi 10 per halaman, filter by organization
+        $reagenIn = $data->reagenIn()->whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->orderBy('created_at', 'desc')->paginate(10);
 
         return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
     }
@@ -91,7 +99,15 @@ class ManagementStockController extends Controller
     // edit data reagen
     public function editReagen($noCatalog)
     {
-        $data = Reagen::find($noCatalog);
+        $user = auth()->user();
+        $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($noCatalog);
+
+        if (!$data) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
+
         $hazardOptions = explode(',', $data->hazardOptions);
         return view('management-stock.edit-reagen', compact('data', 'hazardOptions'));
     }
@@ -99,7 +115,15 @@ class ManagementStockController extends Controller
     // delete data reagen
     public function deleteReagen($noCatalog)
     {
-        $data = Reagen::find($noCatalog);
+        $user = auth()->user();
+        $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($noCatalog);
+
+        if (!$data) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
+
         $data->delete();
         return redirect()->route('management-stock.index');
     }
@@ -107,8 +131,15 @@ class ManagementStockController extends Controller
     // update data reagen
     public function updateReagen(Request $request, $noCatalog)
     {
-        // Ambil data reagen berdasarkan nomor katalog
-        $data = Reagen::find($noCatalog);
+        $user = auth()->user();
+        // Ambil data reagen berdasarkan nomor katalog, filter by organization
+        $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($noCatalog);
+
+        if (!$data) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
 
         // Validasi input
         $validatedData = $request->validate([
@@ -138,30 +169,50 @@ class ManagementStockController extends Controller
 
     // add stock reagen
     public function addStockReagen($noCatalog){
-        $reagen = Reagen::where('noCatalog', $noCatalog)->first();
+        $user = auth()->user();
+        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->where('noCatalog', $noCatalog)->first();
+
+        if (!$reagen) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
+
         return view('management-stock.add-stock-reagen', compact('reagen'));
     }
 
     public function getReagenData($noCatalog)
     {
-        $reagen = Reagen::where('noCatalog', $noCatalog)->first();
+        $user = auth()->user();
+        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->where('noCatalog', $noCatalog)->first();
+
+        if (!$reagen) {
+            return response()->json(['error' => 'Data reagen tidak ditemukan atau tidak memiliki akses.'], 404);
+        }
+
         return response()->json($reagen);
     }
 
     public function addStock(Request $request)
     {
-        
-    // Validasi input data
-    $validatedDataStock = $request->validate([
-        'noCatalog' => 'required',
-        'batch' => 'required',
-        'quantity' => 'required|numeric',
-        'expiredDate' => 'required|date',
-        'note' => 'nullable'
-    ]);
+        $user = auth()->user();
 
-    // Simpan data ke tabel ReagenIn
-    $reagenIn = ReagenIn::create($validatedDataStock);
+        // Validasi input data
+        $validatedDataStock = $request->validate([
+            'noCatalog' => 'required',
+            'batch' => 'required',
+            'quantity' => 'required|numeric',
+            'expiredDate' => 'required|date',
+            'note' => 'nullable'
+        ]);
+
+        // Add user_id
+        $validatedDataStock['user_id'] = $user->id;
+
+        // Simpan data ke tabel ReagenIn
+        $reagenIn = ReagenIn::create($validatedDataStock);
 
     // Tambahan kode untuk menambahkan quantity pada stock_reagens
     $stockReagen = StockReagen::where('noCatalog', $validatedDataStock['noCatalog'])->first();
@@ -186,34 +237,53 @@ class ManagementStockController extends Controller
 
     public function generateLabel($id)
     {
-        // Logic to fetch data for label generation based on $id
-        // For example:
-        $data = ReagenIn::find($id);
+        $user = auth()->user();
+        // Logic to fetch data for label generation based on $id, filter by organization
+        $data = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($id);
+
+        if (!$data) {
+            abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
+        }
 
         // Generate QR code
         $qrCode = QrCode::size(100)->generate('http://127.0.0.1:8000/qrcode/'. $id);
 
-        
+
         // Generate PDF
         $pdf = PDF::loadView('management-stock.reagen-label', compact('data', 'qrCode'));
-        
+
         // Download PDF
         return $pdf->stream('reagen-label.pdf');
     }
 
     public function generateQrCode($id)
     {
+        $user = auth()->user();
+        // Check if the ReagenIn belongs to the user's organization
+        $data = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($id);
+
+        if (!$data) {
+            abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
+        }
+
         // Generate QR code
         $qrCode = QrCode::format('png')->generate('http://127.0.0.1:8000/qrcode/' . $id);
-        
+
         // Return QR code as base64 data URL
         return 'data:image/png;base64,' . base64_encode($qrCode);
     }
 
     public function deleteStock($id)
     {
-        // Ambil data stok berdasarkan id
-        $reagenIn = ReagenIn::find($id);
+        $user = auth()->user();
+        // Ambil data stok berdasarkan id, filter by organization
+        $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->find($id);
 
         if ($reagenIn) {
             // Kurangi quantity dari stock_reagens
@@ -259,8 +329,11 @@ class ManagementStockController extends Controller
 
     public function reagenIn()
     {
-        // Ambil data dan urutkan berdasarkan created_at secara desc
-        $reagenIn = ReagenIn::orderBy('created_at', 'desc')
+        $user = auth()->user();
+        // Ambil data dan urutkan berdasarkan created_at secara desc, filter by organization
+        $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->orderBy('created_at', 'desc')
             ->get()
             ->groupBy(function ($item) {
                 return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
@@ -285,8 +358,11 @@ class ManagementStockController extends Controller
 
     public function reagenOut()
     {
-        // Ambil data dan urutkan berdasarkan created_at secara desc
-        $reagenOut = LogbookReagen::orderBy('created_at', 'desc')
+        $user = auth()->user();
+        // Ambil data dan urutkan berdasarkan created_at secara desc, filter by organization
+        $reagenOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->orderBy('created_at', 'desc')
             ->get()
             ->groupBy(function ($item) {
                 return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
@@ -311,8 +387,12 @@ class ManagementStockController extends Controller
     
     public function reagenExpired(Request $request)
     {
+        $user = auth()->user();
         $query = ReagenIn::with('reagen')
-            ->where('quantity', '>', 0);
+            ->where('quantity', '>', 0)
+            ->whereHas('user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            });
 
         // Add search functionality
         if ($request->has('search')) {

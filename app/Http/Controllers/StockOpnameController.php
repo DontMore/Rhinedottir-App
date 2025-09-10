@@ -79,12 +79,15 @@ class StockOpnameController extends Controller
 
     public function soDetail(Request $request)
     {
+        $user = auth()->user();
         $timezone = config('app.timezone');
         $month = $request->input('month') ?? Carbon::now()->format('m');
         $year = $request->input('year') ?? Carbon::now()->format('Y');
 
         $noCatalog = StockHistory::where('year', $year)->where('month', $month)->pluck('noCatalog')->toArray();
-        $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
+        $noCatalogStd = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->pluck('noCatalog')->toArray();
         $missNoCatalog = array_diff($noCatalogStd, $noCatalog);
 
         // Get previous month's data first
@@ -97,15 +100,19 @@ class StockOpnameController extends Controller
                 ->where('noCatalog', $noCatalog)
                 ->first();
 
-            $reagenInQuantitySum = ReagenIn::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->where('noCatalog', $noCatalog)
-                ->sum('quantity');
+            $reagenInQuantitySum = ReagenIn::whereHas('user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            })->whereYear('created_at', $year)
+              ->whereMonth('created_at', $month)
+              ->where('noCatalog', $noCatalog)
+              ->sum('quantity');
 
-            $reagenOutQuantitySum = LogbookReagen::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->where('noCatalog', $noCatalog)
-                ->sum('quantity_taken');
+            $reagenOutQuantitySum = LogbookReagen::whereHas('user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            })->whereYear('created_at', $year)
+              ->whereMonth('created_at', $month)
+              ->where('noCatalog', $noCatalog)
+              ->sum('quantity_taken');
 
             StockHistory::create([
                 'month' => $month,
@@ -145,8 +152,11 @@ class StockOpnameController extends Controller
                 ->get()
                 ->keyBy('noCatalog');
 
-            // Get all reagents
-            $noCatalogStd = Reagen::all()->pluck('noCatalog')->toArray();
+            // Get all reagents, filter by organization
+            $user = auth()->user();
+            $noCatalogStd = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            })->pluck('noCatalog')->toArray();
 
             foreach ($noCatalogStd as $noCatalog) {
                 // Skip if record exists and has been stock opnamed
@@ -162,16 +172,20 @@ class StockOpnameController extends Controller
 
                 $quantityBefore = $previousData ? $previousData->quantity_actual : 0;
                 
-                // Calculate current month's movements
-                $reagenInQuantitySum = ReagenIn::whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month)
-                    ->where('noCatalog', $noCatalog)
-                    ->sum('quantity');
+                // Calculate current month's movements, filter by organization
+                $reagenInQuantitySum = ReagenIn::whereHas('user', function ($q) use ($user) {
+                    $q->where('organization_id', $user->organization_id);
+                })->whereYear('created_at', $year)
+                  ->whereMonth('created_at', $month)
+                  ->where('noCatalog', $noCatalog)
+                  ->sum('quantity');
 
-                $reagenOutQuantitySum = LogbookReagen::whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month)
-                    ->where('noCatalog', $noCatalog)
-                    ->sum('quantity_taken');
+                $reagenOutQuantitySum = LogbookReagen::whereHas('user', function ($q) use ($user) {
+                    $q->where('organization_id', $user->organization_id);
+                })->whereYear('created_at', $year)
+                  ->whereMonth('created_at', $month)
+                  ->where('noCatalog', $noCatalog)
+                  ->sum('quantity_taken');
 
                 // Update or create record
                 StockHistory::updateOrCreate(

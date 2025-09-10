@@ -151,5 +151,7 @@ Route::middleware(['auth', 'can:superadmin'])->group(function () {
     Route::put('/organization/{id}', [OrganizationController::class, 'update'])->name('organization.update');
     Route::delete('/organization/{id}', [OrganizationController::class, 'destroy'])->name('organization.destroy');
     Route::get('/organization/{id}/settings', [OrganizationController::class, 'settings'])->name('organization.settings');
+    Route::get('/organization/{id}/add-user', [OrganizationController::class, 'addUser'])->name('organization.adduser');
+    Route::post('/organization/{id}/add-user', [OrganizationController::class, 'storeUser'])->name('organization.storeuser');
     Route::get('/organization/{id}', [OrganizationController::class, 'show'])->name('organization.show');
 });

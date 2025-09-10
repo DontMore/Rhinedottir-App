@@ -25,6 +25,12 @@ class OrganizationController extends Controller
         return redirect()->route('superadmin.index')->with('success', 'Organization created successfully');
     }
 
+    public function show($id)
+    {
+        $organization = Organization::findOrFail($id);
+        return view('organization.show', compact('organization'));
+    }
+
     public function edit($id)
     {
         $organization = Organization::findOrFail($id);
@@ -57,7 +63,33 @@ class OrganizationController extends Controller
     {
         $organization = Organization::findOrFail($id);
         $users = User::where('organization_id', $id)->get();
-        
+
         return view('organization.settings', compact('organization', 'users'));
+    }
+
+    public function addUser($id)
+    {
+        $organization = Organization::findOrFail($id);
+        return view('organization.add-user', compact('organization'));
+    }
+
+    public function storeUser(Request $request, $id)
+    {
+        $organization = Organization::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|string',
+        ]);
+
+        $validated['password'] = bcrypt($validated['password']);
+        $validated['organization_id'] = $id;
+
+        User::create($validated);
+
+        return redirect()->route('organization.settings', $id)->with('success', 'User added successfully');
     }
 }

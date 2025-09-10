@@ -28,7 +28,12 @@ class ReportController extends Controller
 
     public function reportDetail(Request $request)
     {
-        $query = LogbookReagen::with(['reagen', 'user']);
+        $user = auth()->user();
+
+        $query = LogbookReagen::with(['reagen', 'user'])
+            ->whereHas('user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            });
 
         // Only apply date filters if dates are provided
         if ($request->filled('start_date')) {
@@ -42,7 +47,10 @@ class ReportController extends Controller
         }
 
         $logbooks = $query->orderBy('created_at', 'desc')->get();
-        $reagens = Reagen::all();
+
+        $reagens = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
 
         return view('report.report-detail', compact('logbooks', 'reagens'));
     }
@@ -82,7 +90,12 @@ class ReportController extends Controller
 
     public function generateLogbookPDF(Request $request)
     {
-        $query = LogbookReagen::with(['reagen', 'user']);
+        $user = auth()->user();
+
+        $query = LogbookReagen::with(['reagen', 'user'])
+            ->whereHas('user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            });
 
         if ($request->has('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
@@ -124,9 +137,12 @@ class ReportController extends Controller
 
     public function historicalReport(Request $request)
     {
-        // Get Reagen In data
+        $user = auth()->user();
+
+        // Get Reagen In data, filter by organization
         $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
             ->select(
                 'reagens_in.created_at',
                 'reagens_in.noCatalog',
@@ -137,9 +153,10 @@ class ReportController extends Controller
                 DB::raw("'in' as transaction_type")
             );
 
-        // Get Logbook (Reagen Out) data
+        // Get Logbook (Reagen Out) data, filter by organization
         $reagenOutQuery = LogbookReagen::with(['reagen'])
             ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
             ->select(
                 'logbook_reagens.created_at',
                 'logbook_reagens.noCatalog',
@@ -189,19 +206,26 @@ class ReportController extends Controller
                 })->values()
         ];
 
-        $reagens = Reagen::all();
+        $reagens = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
 
         return view('report.historical-report', compact('histories', 'reagens', 'summary'));
     }
 
     public function reagenList()
     {
+        $user = auth()->user();
+
         $reagens = Reagen::select(
             'noCatalog', 
             'nameReagen', 
             'merk', 
             'packSize'
         )
+        ->whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })
         ->withCount(['stocks as total_quantity' => function($query) {
             $query->select(DB::raw('SUM(quantity)'));
         }])
@@ -213,9 +237,12 @@ class ReportController extends Controller
 
     public function generateHistoricalPDF(Request $request)
     {
-        // Get Reagen In data
+        $user = auth()->user();
+
+        // Get Reagen In data, filter by organization
         $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
             ->select(
                 'reagens_in.created_at',
                 'reagens_in.noCatalog',
@@ -226,9 +253,10 @@ class ReportController extends Controller
                 DB::raw("'in' as transaction_type")
             );
 
-        // Get Logbook (Reagen Out) data
+        // Get Logbook (Reagen Out) data, filter by organization
         $reagenOutQuery = LogbookReagen::with(['reagen'])
             ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
             ->select(
                 'logbook_reagens.created_at',
                 'logbook_reagens.noCatalog',
@@ -407,7 +435,12 @@ class ReportController extends Controller
 
     public function generateReagenListPDF()
     {
+        $user = auth()->user();
+
         $reagens = Reagen::select('noCatalog', 'nameReagen', 'merk', 'packSize')
+            ->whereHas('reagenIn.user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            })
             ->withCount(['stocks as total_quantity' => function($query) {
                 $query->select(DB::raw('SUM(quantity)'));
             }])

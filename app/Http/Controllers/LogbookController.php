@@ -16,12 +16,15 @@ class LogbookController extends Controller
 {
     public function index(Request $request){
         $keyword = $request->input('keyword');
-    
-        // Query data Reagen dengan menggunakan Eloquent
+        $user = auth()->user();
+
+        // Query data Reagen dengan menggunakan Eloquent, filter by organization
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
-        }]);
-    
+        }])->whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        });
+
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -30,37 +33,50 @@ class LogbookController extends Controller
                     ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
-    
+
         // Menambahkan pagination
         $reagens = $query->paginate(20); // Mengatur jumlah item per halaman, misalnya 10
-    
+
         return view('logbook.logbook', compact('reagens'));
     }
 
     // Fungsi takeReagen
-    public function takeReagen($noCatalog){   
+    public function takeReagen($noCatalog){
+        $user = auth()->user();
         $reagen = Reagen::with(['stockReagen' => function ($query) {
                 $query->select('noCatalog', 'quantity');
             }])
+            ->whereHas('reagenIn.user', function ($q) use ($user) {
+                $q->where('organization_id', $user->organization_id);
+            })
             ->where('noCatalog', $noCatalog)
             ->first();
-    
+
+        if (!$reagen) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
+
         return view('logbook.logbook-take', compact('reagen'));
-    }         
+    }
 
     public function store(Request $request)
     {
+    $user = auth()->user();
     // Validasi form
     $validatedData = $request->validate([
         'noCatalog' => 'required',
-        'user_id' => 'required',
         'batch' => 'required',
         'quantity_taken' => 'required|numeric|min:1',
         'note' => 'nullable|string',
     ]);
 
-    // Check if there is sufficient stock in the stock_reagens table
-    $availableStock = StockReagen::where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
+    // Set user_id to current user
+    $validatedData['user_id'] = $user->id;
+
+    // Check if there is sufficient stock in the stock_reagens table, filter by organization
+    $availableStock = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+        $q->where('organization_id', $user->organization_id);
+    })->where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
 
     if ($availableStock < $validatedData['quantity_taken']) {
         // Redirect back with an error message if the requested quantity exceeds the available stock
@@ -71,8 +87,10 @@ class LogbookController extends Controller
     // Create a new entry in the LogbookReagen table
     LogbookReagen::create($validatedData);
 
-    // Update the stock_reagens table by reducing the quantity
-    StockReagen::where('noCatalog', $validatedData['noCatalog'])
+    // Update the stock_reagens table by reducing the quantity, filter by organization
+    StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+        $q->where('organization_id', $user->organization_id);
+    })->where('noCatalog', $validatedData['noCatalog'])
         ->orderBy('created_at') // You may need to adjust the order based on your business logic
         ->decrement('quantity', $validatedData['quantity_taken']);
 
@@ -84,8 +102,11 @@ class LogbookController extends Controller
 
     public function logbookHistory($noCatalog)
     {
-        // Ambil data logbook dengan pagination
-        $logbookReagens = LogbookReagen::where('noCatalog', $noCatalog)
+        $user = auth()->user();
+        // Ambil data logbook dengan pagination, filter by organization
+        $logbookReagens = LogbookReagen::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->where('noCatalog', $noCatalog)
             ->orderBy('created_at', 'desc')
             ->paginate(15)
             ->through(function ($logbook) {
@@ -96,8 +117,15 @@ class LogbookController extends Controller
         $reagen = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
         }])
+        ->whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })
         ->where('noCatalog', $noCatalog)
         ->first();
+
+        if (!$reagen) {
+            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+        }
 
         return view('logbook.logbook-history', compact('reagen', 'logbookReagens'));
     }
@@ -114,13 +142,19 @@ class LogbookController extends Controller
 
     public function takeAdmin($noCatalog)
     {
-        // Lakukan logika sesuai kebutuhan dengan menggunakan $noCatalog
-        
-        // Contoh: Ambil data reagen berdasarkan nomor katalog
-        $reagen = Reagen::where('noCatalog', $noCatalog)->first();
+        $user = auth()->user();
 
-        // Ambil data analis dari database
-        $analisList = DB::table('users')->pluck('name', 'id');
+        // Lakukan logika sesuai kebutuhan dengan menggunakan $noCatalog
+
+        // Contoh: Ambil data reagen berdasarkan nomor katalog, filter by organization
+        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->where('noCatalog', $noCatalog)->first();
+
+        // Ambil data analis dari database, filter by organization
+        $analisList = DB::table('users')
+            ->where('organization_id', $user->organization_id)
+            ->pluck('name', 'id');
 
         // Jika reagen tidak ditemukan, redirect ke halaman lain atau berikan pesan error
         if (!$reagen) {
@@ -134,6 +168,8 @@ class LogbookController extends Controller
     // menyimpan data take reagen admin
     public function storeTakeAdmin(Request $request)
     {
+        $user = auth()->user();
+
         // Validasi form
     $validatedData = $request->validate([
         'noCatalog' => 'required',
@@ -145,8 +181,10 @@ class LogbookController extends Controller
         'date' => 'required|date', // pastikan ini valid
     ]);
 
-    // Check if there is sufficient stock in the stock_reagens table
-    $availableStock = StockReagen::where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
+    // Check if there is sufficient stock in the stock_reagens table, filter by organization
+    $availableStock = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+        $q->where('organization_id', $user->organization_id);
+    })->where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
 
     if ($availableStock < $validatedData['quantity_taken']) {
         // Redirect back with an error message if the requested quantity exceeds the available stock
@@ -199,8 +237,10 @@ class LogbookController extends Controller
         'created_at' => $validatedData['date'], // Set `created_at` manually
     ]);
 
-    // Update the stock_reagens table by reducing the quantity
-    StockReagen::where('noCatalog', $validatedData['noCatalog'])
+    // Update the stock_reagens table by reducing the quantity, filter by organization
+    StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+        $q->where('organization_id', $user->organization_id);
+    })->where('noCatalog', $validatedData['noCatalog'])
         ->orderBy('created_at') // Adjust order based on your logic
         ->decrement('quantity', $validatedData['quantity_taken']);
 

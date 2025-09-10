@@ -17,25 +17,37 @@ class DashboardController extends Controller
     // index
     public function index()
     {
-        $totalReagen = Reagen::count();
-        
+        $user = auth()->user();
+
+        $totalReagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->count();
+
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        // Get total stock quantity
-        $totalQuantity = StockReagen::sum('quantity');
+        // Get total stock quantity, filter by organization
+        $totalQuantity = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->sum('quantity');
 
-        // Calculate total Reagen In for current month
-        $totalQuantityIn = ReagenIn::whereMonth('created_at', $currentMonth)
-                                  ->whereYear('created_at', $currentYear)
-                                  ->sum('quantity');
+        // Calculate total Reagen In for current month, filter by organization
+        $totalQuantityIn = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->whereMonth('created_at', $currentMonth)
+          ->whereYear('created_at', $currentYear)
+          ->sum('quantity');
 
-        // Calculate total Reagen Taken for current month
-        $totalQuantityOut = LogbookReagen::whereMonth('created_at', $currentMonth)
-                                        ->whereYear('created_at', $currentYear)
-                                        ->sum('quantity_taken');
+        // Calculate total Reagen Taken for current month, filter by organization
+        $totalQuantityOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->whereMonth('created_at', $currentMonth)
+          ->whereYear('created_at', $currentYear)
+          ->sum('quantity_taken');
 
-        $logbook = LogbookReagen::all();
+        $logbook = LogbookReagen::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
 
         $zeroStockReagen = StockHistory::where('month', $currentMonth)
                             ->where('year', $currentYear)
@@ -60,9 +72,13 @@ class DashboardController extends Controller
         $labels = array_keys($chartData);
         $data = array_values($chartData);
 
-        $reagenOrder = Order::all();
+        $reagenOrder = Order::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->get();
 
-        $reagenED = ReagenIn::orderBy('expiredDate', 'asc')->take(10)->get();
+        $reagenED = ReagenIn::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_id', $user->organization_id);
+        })->orderBy('expiredDate', 'asc')->take(10)->get();
 
         return view('dashboard.dashboard', compact(
             'totalReagen',
@@ -116,9 +132,15 @@ class DashboardController extends Controller
 
     public function getReagentList()
     {
+        $user = auth()->user();
+
         $reagents = DB::table('reagens')
-            ->select('noCatalog', 'nameReagen')
-            ->orderBy('nameReagen', 'asc')  // Sort alphabetically by name
+            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
+            ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
+            ->select('reagens.noCatalog', 'reagens.nameReagen')
+            ->distinct()
+            ->orderBy('reagens.nameReagen', 'asc')  // Sort alphabetically by name
             ->get();
 
         if ($reagents->isEmpty()) {
@@ -168,9 +190,15 @@ class DashboardController extends Controller
 
     public function getLogbookReagentList()
     {
+        $user = auth()->user();
+
         $reagents = DB::table('reagens')
-            ->select('noCatalog', 'nameReagen')
-            ->orderBy('nameReagen', 'asc')  // Sort alphabetically by name
+            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
+            ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_id', $user->organization_id)
+            ->select('reagens.noCatalog', 'reagens.nameReagen')
+            ->distinct()
+            ->orderBy('reagens.nameReagen', 'asc')  // Sort alphabetically by name
             ->get();
 
         if ($reagents->isEmpty()) {

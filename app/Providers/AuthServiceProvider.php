@@ -37,6 +37,16 @@ class AuthServiceProvider extends ServiceProvider
             return $user->role === 'Admin';
         });
 
+        // access with organization
+
+        // Gate::define('access-with-organization', function ($user) {
+        //     return !is_null($user->organization_id);
+        // });
+
+        // Gate::define('admin-with-organization', function ($user) {
+        //     return in_array($user->role, ['admin', 'superadmin']) && !is_null($user->organization_id);
+        // });
+
         // ...other gates if needed...
     }
 }
