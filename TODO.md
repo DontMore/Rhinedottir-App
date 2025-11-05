@@ -1,9 +1,13 @@
-# TODO: Implement Organization-Based Data Isolation
+# TODO: Tambahkan Komentar dalam Bahasa Indonesia pada AuthenticationController.php
 
-## Tasks
-- [x] Update ManagementStockController.php index method to filter Reagen data by user's organization_id
-- [x] Update other methods in ManagementStockController.php that fetch Reagen data (e.g., viewReagen, editReagen, etc.) to include organization_id filter
-- [x] Check and update other controllers if needed (e.g., LogbookController, OrderController, etc.) to ensure data isolation
-- [ ] Test the changes by logging in as users from different organizations
-- [ ] Add organization_id to Reagen model fillable if not present (based on migration)
-- [ ] Update related models (ReagenIn, StockReagen, etc.) to include organization_id filtering if applicable
+- [x] Tambahkan komentar tingkat kelas untuk menjelaskan tujuan AuthenticationController
+- [x] Tambahkan komentar untuk metode login()
+- [x] Tambahkan komentar untuk metode register()
+- [x] Tambahkan komentar untuk metode registerGuest()
+- [x] Tambahkan komentar untuk metode store(Request $request)
+- [x] Tambahkan komentar untuk metode authenticate(Request $request)
+- [x] Tambahkan komentar untuk metode logout(Request $request)
+- [x] Tambahkan komentar untuk metode userList()
+- [x] Tambahkan komentar untuk metode editUser($id)
+- [x] Tambahkan komentar untuk metode update(Request $request, $id)
+- [x] Tambahkan komentar untuk metode deleteUser($userId)

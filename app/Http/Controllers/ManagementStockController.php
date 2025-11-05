@@ -20,12 +20,10 @@ class ManagementStockController extends Controller
         $keyword = $request->input('keyword');
         $user = auth()->user();
 
-        // Query data Reagen dengan menggunakan Eloquent, filter by organization
+        // Query data Reagen dengan filter organization_id langsung
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
-        }])->whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        });
+        }])->where('organization_id', $user->organization_id);
 
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
@@ -36,10 +34,9 @@ class ManagementStockController extends Controller
             });
         }
 
-        // Menambahkan pagination dengan batasan jumlah item per halaman
-        $reagens = $query->paginate(20); // 10 adalah jumlah item per halaman, sesuaikan sesuai kebutuhan
+        // Pagination
+        $reagens = $query->paginate(20);
 
-        // Mengirim data reagens paginasi ke view
         return view('management-stock.management-stock', compact('reagens'));
     }
 

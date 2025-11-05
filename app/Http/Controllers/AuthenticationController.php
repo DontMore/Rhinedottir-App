@@ -9,21 +9,47 @@ use Illuminate\Support\Facades\Hash;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Controller untuk menangani autentikasi dan manajemen pengguna.
+ * Kelas ini bertanggung jawab atas proses login, registrasi, logout,
+ * serta operasi CRUD untuk pengguna dalam aplikasi.
+ */
 class AuthenticationController extends Controller
 {
+    /**
+     * Menampilkan halaman login.
+     *
+     * @return \Illuminate\View\View
+     */
     public function login(){
         return view('auth.login');
     }
 
+    /**
+     * Menampilkan halaman registrasi pengguna.
+     *
+     * @return \Illuminate\View\View
+     */
     public function register(){
         return view('auth.register');
     }
 
-    
+    /**
+     * Menampilkan halaman registrasi tamu.
+     *
+     * @return \Illuminate\View\View
+     */
     public function registerGuest(){
         return view('auth.register-guest');
     }
 
+    /**
+     * Menyimpan data pengguna baru ke dalam database.
+     * Melakukan validasi input dan menangani kesalahan validasi.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         try {
@@ -50,9 +76,15 @@ class AuthenticationController extends Controller
 
             return redirect()->back()->withInput()->with('error', $errorMessage);
         }
-    }   
+    }
 
-    // fungsi authentifikasi/login
+    /**
+     * Mengotentikasi pengguna berdasarkan kredensial yang diberikan.
+     * Mengarahkan pengguna ke halaman yang sesuai berdasarkan peran mereka.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function authenticate(Request $request){
 
         $credentials = $request->validate([
@@ -75,8 +107,13 @@ class AuthenticationController extends Controller
         return back()->with('loginError', 'Login failed!');
     }
 
-
-    // fungsi logout
+    /**
+     * Melakukan logout pengguna dan mengakhiri sesi.
+     * Mengarahkan pengguna kembali ke halaman login.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request){
         Auth::logout();
 
@@ -87,6 +124,11 @@ class AuthenticationController extends Controller
         return redirect('/login');
     }
 
+    /**
+     * Menampilkan daftar semua pengguna.
+     *
+     * @return \Illuminate\View\View
+     */
     public function userList()
     {
         $users = User::all(); // Mengambil semua data pengguna dari tabel users
@@ -94,6 +136,12 @@ class AuthenticationController extends Controller
         return view('auth.user-list', compact('users'));
     }
 
+    /**
+     * Menampilkan halaman edit untuk pengguna tertentu.
+     *
+     * @param int $id ID pengguna yang akan diedit
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function editUser($id){
         // Fetch the user by ID
         $user = User::find($id);
@@ -107,7 +155,14 @@ class AuthenticationController extends Controller
         return view('auth.edit-user', compact('user'));
     }
 
-    // Method untuk menyimpan perubahan pada user
+    /**
+     * Menyimpan perubahan data pengguna ke dalam database.
+     * Melakukan validasi input dan menangani pembaruan password jika diperlukan.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id ID pengguna yang akan diperbarui
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
@@ -138,6 +193,12 @@ class AuthenticationController extends Controller
         return redirect()->route('user.edit', ['id' => $id])->with('success', 'User updated successfully');
     }
 
+    /**
+     * Menghapus pengguna dari database berdasarkan ID.
+     *
+     * @param int $userId ID pengguna yang akan dihapus
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function deleteUser($userId)
     {
     $deleted = User::destroy($userId);
