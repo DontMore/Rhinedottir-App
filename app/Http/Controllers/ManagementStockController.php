@@ -71,27 +71,53 @@ class ManagementStockController extends Controller
         return redirect()->route('management-stock.index');
     }
 
-    // view data reagen
-    public function viewReagen($noCatalog)
-    {
-        $user = auth()->user();
-        $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->find($noCatalog);
+public function viewReagen($noCatalog)
+{
+    $user = auth()->user();
+    
+    // Debug: Cek data di database
+    $exists = Reagen::where('noCatalog', $noCatalog)->exists();
+    $existsInOrg = Reagen::where('noCatalog', $noCatalog)
+        ->where('organization_id', $user->organization_id)
+        ->exists();
 
-        if (!$data) {
-            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
+    \Log::info('Reagen Check', [
+        'noCatalog' => $noCatalog,
+        'exists' => $exists,
+        'exists_in_org' => $existsInOrg,
+        'user_org' => $user->organization_id
+    ]);
+
+    // Query yang lebih sederhana
+    $data = Reagen::with(['reagenIn' => function($query) use ($user) {
+            $query->where('organization_id', $user->organization_id)
+                  ->with('user')
+                  ->orderBy('created_at', 'desc');
+        }])
+        ->where('noCatalog', $noCatalog)
+        ->where('organization_id', $user->organization_id)
+        ->first();
+
+    if (!$data) {
+        // Berikan informasi yang lebih spesifik
+        if (!Reagen::where('noCatalog', $noCatalog)->exists()) {
+            abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan dalam sistem.");
+        } else {
+            abort(403, "Anda tidak memiliki akses ke reagen ini atau reagen tidak berada di organisasi Anda.");
         }
-
-        $hazardOptions = explode(',', $data->hazardOptions);
-
-        // Ambil data reagenIn, urutkan dari yang terbaru, dan paginasi 10 per halaman, filter by organization
-        $reagenIn = $data->reagenIn()->whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->orderBy('created_at', 'desc')->paginate(10);
-
-        return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
     }
+
+    // Cek jika tidak ada data reagenIn
+    if ($data->reagenIn->isEmpty()) {
+        \Log::warning('No reagenIn records found', ['noCatalog' => $noCatalog]);
+        // Bisa tetap dilanjutkan, hanya tampilkan pesan warning di view
+    }
+
+    $hazardOptions = $data->hazardOptions ? explode(',', $data->hazardOptions) : [];
+    $reagenIn = $data->reagenIn()->paginate(10);
+
+    return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
+}
 
     // edit data reagen
     public function editReagen($noCatalog)
@@ -164,19 +190,33 @@ class ManagementStockController extends Controller
         return redirect()->route('data.view', ['noCatalog' => $data->noCatalog]);
     }
 
-    // add stock reagen
-    public function addStockReagen($noCatalog){
-        $user = auth()->user();
-        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->where('noCatalog', $noCatalog)->first();
-
-        if (!$reagen) {
-            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
-        }
-
-        return view('management-stock.add-stock-reagen', compact('reagen'));
+public function addStockReagen($noCatalog)
+{
+    $user = auth()->user();
+    
+    // Validasi dasar
+    if (empty($noCatalog)) {
+        abort(400, 'Nomor katalog tidak valid.');
     }
+
+    // Query yang lebih sederhana dan jelas
+    $reagen = Reagen::where('noCatalog', $noCatalog)
+        ->where('organization_id', $user->organization_id)
+        ->first();
+
+    if (!$reagen) {
+        // Berikan pesan error yang lebih informatif
+        $existsInSystem = Reagen::where('noCatalog', $noCatalog)->exists();
+        
+        if ($existsInSystem) {
+            abort(403, 'Anda tidak memiliki akses ke reagen ini. Pastikan reagen berada di organisasi Anda.');
+        } else {
+            abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan.");
+        }
+    }
+
+    return view('management-stock.add-stock-reagen', compact('reagen'));
+}
 
     public function getReagenData($noCatalog)
     {
