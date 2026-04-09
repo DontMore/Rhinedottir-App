@@ -15,7 +15,7 @@ class Administrator
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(!auth()->check() || !auth()->user()->role == 'Admin'){
+        if (!auth()->check() || !in_array(auth()->user()->role, ['Admin', 'superadmin'])) {
             abort(403);
         }
         return $next($request);

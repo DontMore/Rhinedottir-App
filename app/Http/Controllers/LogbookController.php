@@ -22,7 +22,7 @@ class LogbookController extends Controller
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
         }])->whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         });
 
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian

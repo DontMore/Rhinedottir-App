@@ -8,7 +8,7 @@
         </div>
         
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <form method="POST" action="/register" class="space-y-6">
+            <form method="POST" action="register" class="space-y-6">
                 @csrf
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>

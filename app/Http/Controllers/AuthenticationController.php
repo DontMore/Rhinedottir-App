@@ -86,7 +86,6 @@ class AuthenticationController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function authenticate(Request $request){
-
         $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required'
@@ -94,13 +93,23 @@ class AuthenticationController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            // Periksa peran pengguna setelah otentikasi
-            if (Auth::user()->role === 'Admin') {
-                return redirect()->intended('dashboard');
-            } elseif (Auth::user()->role ===  'Analis') {
-                return redirect()->intended('logbook');
-            } elseif (Auth::user()->role === 'superadmin') {
-                return redirect()->intended('superadmin');
+            
+            // Normalisasi role ke lowercase untuk perbandingan konsisten
+            $role = strtolower(Auth::user()->role);
+            
+            switch ($role) {
+                case 'admin':
+                    return redirect()->route('dashboard.index');
+                case 'analis':
+                    return redirect()->route('logbook.index');
+                case 'superadmin':
+                    return redirect()->route('superadmin.index');
+                default:
+                    // Handle role tidak dikenal: logout + error
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return back()->with('loginError', 'Role tidak dikenali. Hubungi administrator.');
             }
         }
 

@@ -39,11 +39,11 @@
                                 <div class="text-sm text-gray-500">{{ $org->created_at->format('d M Y') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <a href="{{ route('organization.show', $org->id) }}" 
+                                <a href="{{ route('organization.show', $org->guid) }}" 
                                 class="text-indigo-600 hover:text-indigo-900">
                                     View
                                 </a>
-                                <a href="{{ route('organization.settings', $org->id) }}" 
+                                <a href="{{ route('organization.settings', $org->guid) }}" 
                                    class="text-green-600 hover:text-green-900">
                                     <span class="inline-flex items-center">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,9 +53,9 @@
                                         Settings
                                     </span>
                                 </a>
-                                <a href="{{ route('organization.edit', $org->id) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                <button onclick="deleteOrganization({{ $org->id }})" class="text-red-600 hover:text-red-900">Delete</button>
-                                <form id="delete-form-{{ $org->id }}" action="{{ route('organization.destroy', $org->id) }}" method="POST" class="hidden">
+                                <a href="{{ route('organization.edit', $org->guid) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+                                <button onclick="deleteOrganization({{ $org->guid }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                <form id="delete-form-{{ $org->guid }}" action="{{ route('organization.destroy', $org->guid) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -77,9 +77,9 @@
 
 @push('scripts')
 <script>
-    function deleteOrganization(id) {
+    function deleteOrganization(guid) {
         if (confirm('Are you sure you want to delete this organization?')) {
-            document.getElementById('delete-form-' + id).submit();
+            document.getElementById('delete-form-' + guid).submit();
         }
     }
 </script>

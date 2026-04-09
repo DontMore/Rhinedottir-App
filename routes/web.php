@@ -143,15 +143,15 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
     Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
 });
 
-Route::middleware(['auth', 'can:superadmin'])->group(function () {
-    Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.index');
-    Route::get('/organization/create', [OrganizationController::class, 'create'])->name('organization.create');
-    Route::post('/organization', [OrganizationController::class, 'store'])->name('organization.store');
-    Route::get('/organization/{id}/edit', [OrganizationController::class, 'edit'])->name('organization.edit');
-    Route::put('/organization/{id}', [OrganizationController::class, 'update'])->name('organization.update');
-    Route::delete('/organization/{id}', [OrganizationController::class, 'destroy'])->name('organization.destroy');
-    Route::get('/organization/{id}/settings', [OrganizationController::class, 'settings'])->name('organization.settings');
-    Route::get('/organization/{id}/add-user', [OrganizationController::class, 'addUser'])->name('organization.adduser');
-    Route::post('/organization/{id}/add-user', [OrganizationController::class, 'storeUser'])->name('organization.storeuser');
-    Route::get('/organization/{id}', [OrganizationController::class, 'show'])->name('organization.show');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.index')->middleware('admin');
+    Route::get('/organization/create', [OrganizationController::class, 'create'])->name('organization.create')->middleware('admin');
+    Route::post('/organization', [OrganizationController::class, 'store'])->name('organization.store')->middleware('admin');
+    Route::get('/organization/{id}/edit', [OrganizationController::class, 'edit'])->name('organization.edit')->middleware('admin');
+    Route::put('/organization/{id}', [OrganizationController::class, 'update'])->name('organization.update')->middleware('admin');
+    Route::delete('/organization/{id}', [OrganizationController::class, 'destroy'])->name('organization.destroy')->middleware('admin');
+    Route::get('/organization/{id}/settings', [OrganizationController::class, 'settings'])->name('organization.settings')->middleware('admin');
+    Route::get('/organization/{id}/add-user', [OrganizationController::class, 'addUser'])->name('organization.adduser')->middleware('admin');
+    Route::post('/organization/{id}/add-user', [OrganizationController::class, 'storeUser'])->name('organization.storeuser')->middleware('admin');
+    Route::get('/organization/{id}', [OrganizationController::class, 'show'])->name('organization.show')->middleware('admin');
 });

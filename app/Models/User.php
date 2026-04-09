@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -29,7 +28,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'organization_id',
+        'organization_guid',
     ];
 
     /**
@@ -52,6 +51,17 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * ✅ OVERRIDE: Tell Laravel to use 'username' for authentication
+     */
+    public function username()
+    {
+        return 'username';
+    }
+
+    /**
+     * Boot method to auto-generate UUID for guid
+     */
     protected static function boot()
     {
         parent::boot();
@@ -62,4 +72,9 @@ class User extends Authenticatable
             }
         });
     }
+
+    // ✅ Opsional: Tambahkan relationships jika digunakan di Controller
+    // public function reagenIn() { return $this->hasMany(ReagenIn::class, 'user_id', 'id'); }
+    // public function logbook() { return $this->hasMany(LogbookReagen::class, 'user_id', 'id'); }
+    // public function orders() { return $this->hasMany(Order::class, 'user_id', 'id'); }
 }

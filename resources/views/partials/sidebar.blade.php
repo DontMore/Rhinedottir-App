@@ -38,7 +38,7 @@
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
             </svg>
             @auth
-              {{ auth()->user()->role }} - Org: {{ auth()->user()->organization_id }}
+              {{ auth()->user()->role }} - Org: {{ auth()->user()->organization_guid }}
             @else
               Guest
             @endauth
@@ -82,9 +82,9 @@
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-gray-900 border-r border-gray-700 sm:translate-x-0" aria-label="Sidebar">
    <div class="h-full px-3 pb-4 overflow-y-auto bg-gray-900">
       <ul class="space-y-2 font-medium">
-          {{-- Dashboard - Admin & Superadmin dengan organization check --}}
+          {{-- Dashboard - Admin & Superadmin dengan organization_guid check --}}
           @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_id)
+            @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('dashboard.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -96,9 +96,9 @@
             @endif
           @endcanany
           
-          {{-- Stock Management - Admin & Superadmin dengan organization check --}}
+          {{-- Stock Management - Admin & Superadmin dengan organization_guid check --}}
           @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_id)
+            @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('management-stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -110,8 +110,8 @@
             @endif
           @endcanany
           
-          {{-- Stock Opname - Semua role dengan organization check --}}
-          @if(auth()->user()->organization_id)
+          {{-- Stock Opname - Semua role dengan organization_guid check --}}
+          @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -122,8 +122,8 @@
          </li>
           @endif
           
-          {{-- Orders - Semua role dengan organization check --}}
-          @if(auth()->user()->organization_id)
+          {{-- Orders - Semua role dengan organization_guid check --}}
+          @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('order.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -134,9 +134,9 @@
          </li>
           @endif
           
-          {{-- Reports - Admin & Superadmin dengan organization check --}}
+          {{-- Reports - Admin & Superadmin dengan organization_guid check --}}
           @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_id)
+            @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('report.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -148,9 +148,9 @@
             @endif
           @endcanany
           
-          {{-- Users - Admin & Superadmin dengan organization check --}}
+          {{-- Users - Admin & Superadmin dengan organization_guid check --}}
           @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_id)
+            @if(auth()->user()->organization_guid)
          <li>
             <a href="user-list" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -162,8 +162,8 @@
             @endif
           @endcanany
           
-          {{-- Settings - Semua role dengan organization check --}}
-          @if(auth()->user()->organization_id)
+          {{-- Settings - Semua role dengan organization_guid check --}}
+          @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('settings.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -175,7 +175,7 @@
          </li>
           @endif
           
-          {{-- Super Admin Menu - Hanya Superadmin tanpa organization check (global access) --}}
+          {{-- Super Admin Menu - Hanya Superadmin tanpa organization_guid check (global access) --}}
           @can('superadmin')
          <li>
             <a href="{{ route('superadmin.index') }}" class="flex items-center p-2 text-yellow-300 rounded-lg hover:bg-yellow-700 hover:text-white group">
@@ -187,8 +187,8 @@
          </li>
           @endcan
           
-          {{-- Logbook - Semua role dengan organization check --}}
-          @if(auth()->user()->organization_id)
+          {{-- Logbook - Semua role dengan organization_guid check --}}
+          @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('logbook.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
