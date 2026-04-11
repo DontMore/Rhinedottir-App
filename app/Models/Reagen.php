@@ -22,7 +22,8 @@ class Reagen extends Model
         'packSize',
         'hazardOptions',
         'msds',
-        'price'
+        'price',
+        'organization_guid', // ✅ Tambahkan ini
     ];
 
     protected static function boot()
@@ -36,7 +37,13 @@ class Reagen extends Model
         });
     }
 
-    // Relasi dengan model StockReagen
+    // ✅ Tambahkan relasi ke Organization (jika model Organization ada)
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class, 'organization_guid');
+    }
+
+    // Relasi existing
     public function reagenIn()
     {
         return $this->hasMany(ReagenIn::class, 'guid', 'guid');

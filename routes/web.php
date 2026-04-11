@@ -31,6 +31,8 @@ Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('/login', [AuthenticationController::class, 'authenticate']);
 Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout')->middleware('admin');
 Route::delete('/user/{id}', [AuthenticationController::class, 'deleteUser'])->name('user.delete')->middleware('admin');
+// Toggle status user
+Route::patch('/user/{id}/toggle-status', [AuthenticationController::class, 'toggleStatus'])->name('user.toggle-status');
 
 // route user
 Route::get('/user-list', [AuthenticationController::class, 'userList'])->middleware('admin')->name('user.index');

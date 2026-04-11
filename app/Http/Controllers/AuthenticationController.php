@@ -5,98 +5,85 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Controller untuk menangani autentikasi dan manajemen pengguna.
- * Kelas ini bertanggung jawab atas proses login, registrasi, logout,
- * serta operasi CRUD untuk pengguna dalam aplikasi.
- */
 class AuthenticationController extends Controller
 {
     /**
      * Menampilkan halaman login.
-     *
-     * @return \Illuminate\View\View
      */
-    public function login(){
+    public function login()
+    {
         return view('auth.login');
     }
 
     /**
      * Menampilkan halaman registrasi pengguna.
-     *
-     * @return \Illuminate\View\View
      */
-    public function register(){
+    public function register()
+    {
         return view('auth.register');
     }
 
     /**
      * Menampilkan halaman registrasi tamu.
-     *
-     * @return \Illuminate\View\View
      */
-    public function registerGuest(){
+    public function registerGuest()
+    {
         return view('auth.register-guest');
     }
 
     /**
      * Menyimpan data pengguna baru ke dalam database.
-     * Melakukan validasi input dan menangani kesalahan validasi.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         try {
             $validatedData = $request->validate([
-                'name' => 'required',
-                'username' => 'required|unique:users',
-                'email' => 'required|email|unique:users',
+                'name'     => 'required|string|max:255',
+                'username' => 'required|string|max:255|unique:users',
+                'email'    => 'required|email|max:255|unique:users',
                 'password' => 'required|min:6',
                 'repassword' => 'required|same:password',
-                'role' => 'required'
+                'role'     => 'required|in:Admin,Analis,superadmin'
             ]);
-
             unset($validatedData['repassword']);
 
+            // is_active akan otomatis true karena default di migration & model boot()
             User::create($validatedData);
 
             Alert::success('Success', 'User has been created successfully!');
-
             return redirect()->back()->with('success', 'User created successfully.');
         } catch (ValidationException $e) {
             $errorMessage = $e->validator->errors()->first();
-            // Menggunakan Alert::error untuk menampilkan alert error
             Alert::error('Error', $errorMessage)->showConfirmButton('OK', '#3085d6');
-
             return redirect()->back()->withInput()->with('error', $errorMessage);
         }
     }
 
     /**
      * Mengotentikasi pengguna berdasarkan kredensial yang diberikan.
-     * Mengarahkan pengguna ke halaman yang sesuai berdasarkan peran mereka.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
-    public function authenticate(Request $request){
+    public function authenticate(Request $request)
+    {
         $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required'
         ]);
 
         if (Auth::attempt($credentials)) {
+            // 🔒 Cek status aktif/non-aktif
+            if (!Auth::user()->is_active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->with('loginError', 'Akun Anda tidak aktif. Hubungi administrator.');
+            }
+
             $request->session()->regenerate();
-            
-            // Normalisasi role ke lowercase untuk perbandingan konsisten
             $role = strtolower(Auth::user()->role);
-            
+
             switch ($role) {
                 case 'admin':
                     return redirect()->route('dashboard.index');
@@ -105,7 +92,6 @@ class AuthenticationController extends Controller
                 case 'superadmin':
                     return redirect()->route('superadmin.index');
                 default:
-                    // Handle role tidak dikenal: logout + error
                     Auth::logout();
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();
@@ -117,108 +103,134 @@ class AuthenticationController extends Controller
     }
 
     /**
-     * Melakukan logout pengguna dan mengakhiri sesi.
-     * Mengarahkan pengguna kembali ke halaman login.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Melakukan logout pengguna.
      */
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         Auth::logout();
-
-        request()->session()->invalidate();
-
-        request()->session()->regenerateToken();
-
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect('/login');
     }
 
     /**
-     * Menampilkan daftar semua pengguna.
-     *
-     * @return \Illuminate\View\View
+     * Menampilkan daftar semua pengguna dengan search & filter.
      */
-    public function userList()
+    public function userList(Request $request)
     {
-        $users = User::all(); // Mengambil semua data pengguna dari tabel users
+        $query = User::query();
+
+        // 🔍 Search by username, name, or email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 🔽 Filter by Role
+        if ($request->filled('role') && $request->role !== 'all') {
+            $query->where('role', $request->role);
+        }
+
+        // 🔽 Filter by Status (is_active)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        // 📊 Paginate & preserve query params
+        $users = $query->orderBy('is_active', 'desc')
+                       ->orderBy('name', 'asc')
+                       ->paginate(10)
+                       ->withQueryString();
 
         return view('auth.user-list', compact('users'));
     }
 
     /**
      * Menampilkan halaman edit untuk pengguna tertentu.
-     *
-     * @param int $id ID pengguna yang akan diedit
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function editUser($id){
-        // Fetch the user by ID
+    public function editUser($id)
+    {
         $user = User::find($id);
-
-        // Check if the user is found
         if (!$user) {
-            // You may handle the case where the user is not found, for example, redirect to the user list page
             return redirect()->route('user.index')->with('error', 'User not found.');
         }
-
         return view('auth.edit-user', compact('user'));
     }
 
     /**
-     * Menyimpan perubahan data pengguna ke dalam database.
-     * Melakukan validasi input dan menangani pembaruan password jika diperlukan.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id ID pengguna yang akan diperbarui
-     * @return \Illuminate\Http\RedirectResponse
+     * Menyimpan perubahan data pengguna.
      */
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . $id,
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'name'     => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $id . ',guid',
+            'email'    => 'required|string|email|max:255|unique:users,email,' . $id . ',guid',
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:Admin,Analis,superadmin',
-            // Add more validation rules if needed
+            'role'     => 'required|in:Admin,Analis,superadmin',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $user = User::find($id);
-        $user->name = $request->input('name');
+        if (!$user) {
+            return redirect()->route('user.index')->with('error', 'User not found.');
+        }
+
+        $user->name  = $request->input('name');
         $user->username = $request->input('username');
         $user->email = $request->input('email');
-        $user->role = $request->input('role');
+        $user->role  = $request->input('role');
 
-        // Check if the password is not empty before updating
+        // Update status aktif/non-aktif jika dikirim
+        if ($request->has('is_active')) {
+            $user->is_active = $request->boolean('is_active');
+        }
+
         if ($request->filled('password')) {
-            $user->password = bcrypt($request->input('password')); // Gunakan bcrypt untuk mengenkripsi password
+            $user->password = bcrypt($request->input('password'));
         }
 
         $user->save();
 
-        // Pemberitahuan sukses menggunakan SweetAlert
         alert()->success('Success', 'User has been updated successfully!');
-
         return redirect()->route('user.edit', ['id' => $id])->with('success', 'User updated successfully');
     }
 
     /**
-     * Menghapus pengguna dari database berdasarkan ID.
-     *
-     * @param int $userId ID pengguna yang akan dihapus
-     * @return \Illuminate\Http\RedirectResponse
+     * Menghapus pengguna dari database.
      */
     public function deleteUser($userId)
     {
-    $deleted = User::destroy($userId);
-    
-    if (!$deleted) {
-        // Handle user not found or deletion failed
-        return redirect()->back()->with('error', 'User not found or deletion failed.');
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found or deletion failed.');
+        }
+
+        $user->delete();
+
+        Alert::success('Deleted', 'User has been deleted successfully!');
+        return redirect()->back()->with('success', 'User deleted successfully.');
     }
 
-    Alert::success('Deleted', 'User has been deleted successfully!');
+    /**
+     * Toggle status aktif/non-aktif pengguna.
+     */
+    public function toggleStatus($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
 
-    return redirect()->back()->with('success', 'User deleted successfully.');
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $status = $user->is_active ? 'activated' : 'deactivated';
+        Alert::success('Success', "User has been {$status} successfully!");
+        return redirect()->back()->with('success', "User {$status} successfully.");
     }
 }

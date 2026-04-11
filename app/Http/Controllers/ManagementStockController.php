@@ -20,10 +20,10 @@ class ManagementStockController extends Controller
         $keyword = $request->input('keyword');
         $user = auth()->user();
 
-        // Query data Reagen dengan filter organization_id langsung
+        // Query data Reagen dengan filter organization_guid langsung
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
-        }])->where('organization_id', $user->organization_id);
+        }])->where('organization_guid', $user->organization_guid);
 
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
@@ -78,24 +78,24 @@ public function viewReagen($noCatalog)
     // Debug: Cek data di database
     $exists = Reagen::where('noCatalog', $noCatalog)->exists();
     $existsInOrg = Reagen::where('noCatalog', $noCatalog)
-        ->where('organization_id', $user->organization_id)
+        ->where('organization_guid', $user->organization_guid)
         ->exists();
 
     \Log::info('Reagen Check', [
         'noCatalog' => $noCatalog,
         'exists' => $exists,
         'exists_in_org' => $existsInOrg,
-        'user_org' => $user->organization_id
+        'user_org' => $user->organization_guid
     ]);
 
     // Query yang lebih sederhana
     $data = Reagen::with(['reagenIn' => function($query) use ($user) {
-            $query->where('organization_id', $user->organization_id)
+            $query->where('organization_guid', $user->organization_guid)
                   ->with('user')
                   ->orderBy('created_at', 'desc');
         }])
         ->where('noCatalog', $noCatalog)
-        ->where('organization_id', $user->organization_id)
+        ->where('organization_guid', $user->organization_guid)
         ->first();
 
     if (!$data) {
@@ -124,7 +124,7 @@ public function viewReagen($noCatalog)
     {
         $user = auth()->user();
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
 
         if (!$data) {
@@ -140,7 +140,7 @@ public function viewReagen($noCatalog)
     {
         $user = auth()->user();
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
 
         if (!$data) {
@@ -157,7 +157,7 @@ public function viewReagen($noCatalog)
         $user = auth()->user();
         // Ambil data reagen berdasarkan nomor katalog, filter by organization
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
 
         if (!$data) {
@@ -201,7 +201,7 @@ public function addStockReagen($noCatalog)
 
     // Query yang lebih sederhana dan jelas
     $reagen = Reagen::where('noCatalog', $noCatalog)
-        ->where('organization_id', $user->organization_id)
+        ->where('organization_guid', $user->organization_guid)
         ->first();
 
     if (!$reagen) {
@@ -222,7 +222,7 @@ public function addStockReagen($noCatalog)
     {
         $user = auth()->user();
         $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->where('noCatalog', $noCatalog)->first();
 
         if (!$reagen) {
@@ -277,7 +277,7 @@ public function addStockReagen($noCatalog)
         $user = auth()->user();
         // Logic to fetch data for label generation based on $id, filter by organization
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($id);
 
         if (!$data) {
@@ -300,7 +300,7 @@ public function addStockReagen($noCatalog)
         $user = auth()->user();
         // Check if the ReagenIn belongs to the user's organization
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($id);
 
         if (!$data) {
@@ -319,7 +319,7 @@ public function addStockReagen($noCatalog)
         $user = auth()->user();
         // Ambil data stok berdasarkan id, filter by organization
         $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->find($id);
 
         if ($reagenIn) {
@@ -369,7 +369,7 @@ public function addStockReagen($noCatalog)
         $user = auth()->user();
         // Ambil data dan urutkan berdasarkan created_at secara desc, filter by organization
         $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->orderBy('created_at', 'desc')
             ->get()
             ->groupBy(function ($item) {
@@ -398,7 +398,7 @@ public function addStockReagen($noCatalog)
         $user = auth()->user();
         // Ambil data dan urutkan berdasarkan created_at secara desc, filter by organization
         $reagenOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
+            $q->where('organization_guid', $user->organization_guid);
         })->orderBy('created_at', 'desc')
             ->get()
             ->groupBy(function ($item) {
@@ -428,7 +428,7 @@ public function addStockReagen($noCatalog)
         $query = ReagenIn::with('reagen')
             ->where('quantity', '>', 0)
             ->whereHas('user', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
+                $q->where('organization_guid', $user->organization_guid);
             });
 
         // Add search functionality

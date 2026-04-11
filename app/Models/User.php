@@ -16,11 +16,6 @@ class User extends Authenticatable
     public $incrementing = false;
     protected $keyType = 'string';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'guid',
         'name',
@@ -29,39 +24,52 @@ class User extends Authenticatable
         'password',
         'role',
         'organization_guid',
+        'is_active', // ✅ Tambahkan ini
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean', // ✅ Cast sebagai boolean
     ];
 
-    /**
-     * ✅ OVERRIDE: Tell Laravel to use 'username' for authentication
-     */
     public function username()
     {
         return 'username';
     }
 
-    /**
-     * Boot method to auto-generate UUID for guid
-     */
+    // ✅ Scopes untuk query aktif/non-aktif
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    // ✅ Helper methods
+    public function isActive(): bool
+    {
+        return $this->is_active === true;
+    }
+
+    public function activate(): void
+    {
+        $this->update(['is_active' => true]);
+    }
+
+    public function deactivate(): void
+    {
+        $this->update(['is_active' => false]);
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -70,11 +78,10 @@ class User extends Authenticatable
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
             }
+            // ✅ Default is_active = true saat registrasi
+            if (!isset($model->is_active)) {
+                $model->is_active = true;
+            }
         });
     }
-
-    // ✅ Opsional: Tambahkan relationships jika digunakan di Controller
-    // public function reagenIn() { return $this->hasMany(ReagenIn::class, 'user_id', 'id'); }
-    // public function logbook() { return $this->hasMany(LogbookReagen::class, 'user_id', 'id'); }
-    // public function orders() { return $this->hasMany(Order::class, 'user_id', 'id'); }
 }

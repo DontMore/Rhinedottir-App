@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Paginator
-        Paginator::useBootstrap();
+        Paginator::useTailwind(); // Tambahkan ini di dalam method boot
 
         Gate::define('admin', function(User $user){
             return $user->role === 'Admin';
