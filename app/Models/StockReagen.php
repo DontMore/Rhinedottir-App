@@ -22,7 +22,8 @@ class StockReagen extends Model
         'quantity',
         'expiredDate',
         'note',
-        'stockUpdateDate'
+        'stockUpdateDate',
+        'organization_guid',  // 👈 Tambahkan ini agar tersimpan saat create()
     ];
 
     protected static function boot()

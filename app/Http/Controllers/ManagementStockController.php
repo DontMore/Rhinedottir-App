@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -16,35 +17,37 @@ use App\Models\LogbookReagen;
 
 class ManagementStockController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $keyword = $request->input('keyword');
         $user = auth()->user();
-
+        
         // Query data Reagen dengan filter organization_guid langsung
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('noCatalog', 'quantity');
         }])->where('organization_guid', $user->organization_guid);
-
+        
         // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('noCatalog', 'LIKE', '%' . $keyword . '%')
-                    ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
-                    ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
+                  ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
-
+        
         // Pagination
         $reagens = $query->paginate(20);
-
         return view('management-stock.management-stock', compact('reagens'));
     }
 
-    public function addReagen(){
+    public function addReagen()
+    {
         return view('management-stock.add-reagen');
     }
 
-    public function addReagenStore(Request $request){
+    public function addReagenStore(Request $request)
+    {
         // Validasi jika diperlukan
         $validatedData = $request->validate([
             'noCatalog' => 'required',
@@ -56,40 +59,38 @@ class ManagementStockController extends Controller
             'price' => 'required'
             // tambahkan validasi lainnya jika diperlukan
         ]);
-
+        
         // Check if 'hazardOptions' key exists in the request data
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
-
         // konversi array menjadi string
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
-
+        
         Reagen::create($validatedData);
-
+        
         // Tambahkan pesan sukses ke dalam sesi
         Alert::success('Success!', 'Data has been added successfully');
-
         return redirect()->route('management-stock.index');
     }
 
-public function viewReagen($noCatalog)
-{
-    $user = auth()->user();
-    
-    // Debug: Cek data di database
-    $exists = Reagen::where('noCatalog', $noCatalog)->exists();
-    $existsInOrg = Reagen::where('noCatalog', $noCatalog)
-        ->where('organization_guid', $user->organization_guid)
-        ->exists();
-
-    \Log::info('Reagen Check', [
-        'noCatalog' => $noCatalog,
-        'exists' => $exists,
-        'exists_in_org' => $existsInOrg,
-        'user_org' => $user->organization_guid
-    ]);
-
-    // Query yang lebih sederhana
-    $data = Reagen::with(['reagenIn' => function($query) use ($user) {
+    public function viewReagen($noCatalog)
+    {
+        $user = auth()->user();
+        
+        // Debug: Cek data di database
+        $exists = Reagen::where('noCatalog', $noCatalog)->exists();
+        $existsInOrg = Reagen::where('noCatalog', $noCatalog)
+                             ->where('organization_guid', $user->organization_guid)
+                             ->exists();
+                             
+        \Log::info('Reagen Check', [
+            'noCatalog' => $noCatalog,
+            'exists' => $exists,
+            'exists_in_org' => $existsInOrg,
+            'user_org' => $user->organization_guid
+        ]);
+        
+        // Query yang lebih sederhana
+        $data = Reagen::with(['reagenIn' => function($query) use ($user) {
             $query->where('organization_guid', $user->organization_guid)
                   ->with('user')
                   ->orderBy('created_at', 'desc');
@@ -97,27 +98,26 @@ public function viewReagen($noCatalog)
         ->where('noCatalog', $noCatalog)
         ->where('organization_guid', $user->organization_guid)
         ->first();
-
-    if (!$data) {
-        // Berikan informasi yang lebih spesifik
-        if (!Reagen::where('noCatalog', $noCatalog)->exists()) {
-            abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan dalam sistem.");
-        } else {
-            abort(403, "Anda tidak memiliki akses ke reagen ini atau reagen tidak berada di organisasi Anda.");
+        
+        if (!$data) {
+            // Berikan informasi yang lebih spesifik
+            if (!Reagen::where('noCatalog', $noCatalog)->exists()) {
+                abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan dalam sistem.");
+            } else {
+                abort(403, "Anda tidak memiliki akses ke reagen ini atau reagen tidak berada di organisasi Anda.");
+            }
         }
+        
+        // Cek jika tidak ada data reagenIn
+        if ($data->reagenIn->isEmpty()) {
+            \Log::warning('No reagenIn records found', ['noCatalog' => $noCatalog]);
+        }
+        
+        $hazardOptions = $data->hazardOptions ? explode(',', $data->hazardOptions) : [];
+        $reagenIn = $data->reagenIn()->paginate(10);
+        
+        return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
     }
-
-    // Cek jika tidak ada data reagenIn
-    if ($data->reagenIn->isEmpty()) {
-        \Log::warning('No reagenIn records found', ['noCatalog' => $noCatalog]);
-        // Bisa tetap dilanjutkan, hanya tampilkan pesan warning di view
-    }
-
-    $hazardOptions = $data->hazardOptions ? explode(',', $data->hazardOptions) : [];
-    $reagenIn = $data->reagenIn()->paginate(10);
-
-    return view('management-stock.view-reagen', compact('data', 'hazardOptions', 'reagenIn'));
-}
 
     // edit data reagen
     public function editReagen($noCatalog)
@@ -126,15 +126,15 @@ public function viewReagen($noCatalog)
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
-
+        
         if (!$data) {
             abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
         }
-
+        
         $hazardOptions = explode(',', $data->hazardOptions);
         return view('management-stock.edit-reagen', compact('data', 'hazardOptions'));
     }
-    
+
     // delete data reagen
     public function deleteReagen($noCatalog)
     {
@@ -142,11 +142,11 @@ public function viewReagen($noCatalog)
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
-
+        
         if (!$data) {
             abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
         }
-
+        
         $data->delete();
         return redirect()->route('management-stock.index');
     }
@@ -155,15 +155,16 @@ public function viewReagen($noCatalog)
     public function updateReagen(Request $request, $noCatalog)
     {
         $user = auth()->user();
+        
         // Ambil data reagen berdasarkan nomor katalog, filter by organization
         $data = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($noCatalog);
-
+        
         if (!$data) {
             abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
         }
-
+        
         // Validasi input
         $validatedData = $request->validate([
             'noCatalog' => 'required',
@@ -175,48 +176,44 @@ public function viewReagen($noCatalog)
             'price' => 'required'
             // Tambahkan validasi lainnya jika diperlukan
         ]);
-
+        
         // Check if 'hazardOptions' key exists in the request data
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
-
         // konversi array menjadi string
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
-
+        
         // Perbarui data reagen
         $data->update($validatedData);
-
+        
         Alert::success('SUCCESS!', 'Reagen Save');
-
         return redirect()->route('data.view', ['noCatalog' => $data->noCatalog]);
     }
 
-public function addStockReagen($noCatalog)
-{
-    $user = auth()->user();
-    
-    // Validasi dasar
-    if (empty($noCatalog)) {
-        abort(400, 'Nomor katalog tidak valid.');
-    }
-
-    // Query yang lebih sederhana dan jelas
-    $reagen = Reagen::where('noCatalog', $noCatalog)
-        ->where('organization_guid', $user->organization_guid)
-        ->first();
-
-    if (!$reagen) {
-        // Berikan pesan error yang lebih informatif
-        $existsInSystem = Reagen::where('noCatalog', $noCatalog)->exists();
-        
-        if ($existsInSystem) {
-            abort(403, 'Anda tidak memiliki akses ke reagen ini. Pastikan reagen berada di organisasi Anda.');
-        } else {
-            abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan.");
+    public function addStockReagen($noCatalog)
+    {
+        $user = auth()->user();
+        // Validasi dasar
+        if (empty($noCatalog)) {
+            abort(400, 'Nomor katalog tidak valid.');
         }
+        
+        // Query yang lebih sederhana dan jelas
+        $reagen = Reagen::where('noCatalog', $noCatalog)
+                        ->where('organization_guid', $user->organization_guid)
+                        ->first();
+                        
+        if (!$reagen) {
+            // Berikan pesan error yang lebih informatif
+            $existsInSystem = Reagen::where('noCatalog', $noCatalog)->exists();
+            if ($existsInSystem) {
+                abort(403, 'Anda tidak memiliki akses ke reagen ini. Pastikan reagen berada di organisasi Anda.');
+            } else {
+                abort(404, "Reagen dengan nomor katalog {$noCatalog} tidak ditemukan.");
+            }
+        }
+        
+        return view('management-stock.add-stock-reagen', compact('reagen'));
     }
-
-    return view('management-stock.add-stock-reagen', compact('reagen'));
-}
 
     public function getReagenData($noCatalog)
     {
@@ -224,19 +221,18 @@ public function addStockReagen($noCatalog)
         $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->where('noCatalog', $noCatalog)->first();
-
+        
         if (!$reagen) {
             return response()->json(['error' => 'Data reagen tidak ditemukan atau tidak memiliki akses.'], 404);
         }
-
+        
         return response()->json($reagen);
     }
 
     public function addStock(Request $request)
     {
         $user = auth()->user();
-
-        // Validasi input data
+        
         $validatedDataStock = $request->validate([
             'noCatalog' => 'required',
             'batch' => 'required',
@@ -245,31 +241,31 @@ public function addStockReagen($noCatalog)
             'note' => 'nullable'
         ]);
 
-        // Add user_id
+        // Tambahkan user_id & organization_guid untuk ReagenIn
         $validatedDataStock['user_id'] = $user->id;
+        $validatedDataStock['organization_guid'] = $user->organization_guid;
 
-        // Simpan data ke tabel ReagenIn
-        $reagenIn = ReagenIn::create($validatedDataStock);
+        // 1️⃣ Simpan ke tabel ReagenIn
+        ReagenIn::create($validatedDataStock);
 
-    // Tambahan kode untuk menambahkan quantity pada stock_reagens
-    $stockReagen = StockReagen::where('noCatalog', $validatedDataStock['noCatalog'])->first();
+        // 2️⃣ Update atau Buat record di tabel StockReagen (DENGAN FILTER ORGANISASI)
+        $stockReagen = StockReagen::where('noCatalog', $validatedDataStock['noCatalog'])
+                                ->where('organization_guid', $user->organization_guid)
+                                ->first();
 
-    if ($stockReagen) {
-        // Jika data sudah ada, tambahkan quantity
-        $stockReagen->quantity += $validatedDataStock['quantity'];
-        $stockReagen->save();
-    } else {
-        // Jika data belum ada, buat data baru
-        StockReagen::create([
-            'noCatalog' => $validatedDataStock['noCatalog'],
-            'quantity' => $validatedDataStock['quantity'],
-            // Tambahkan kolom-kolom lain sesuai kebutuhan
-        ]);
-    }
+        if ($stockReagen) {
+            $stockReagen->quantity += $validatedDataStock['quantity'];
+            $stockReagen->save();
+        } else {
+            StockReagen::create([
+                'noCatalog' => $validatedDataStock['noCatalog'],
+                'quantity' => $validatedDataStock['quantity'],
+                'organization_guid' => $user->organization_guid, // ✅ Wajib disertakan
+            ]);
+        }
 
-    Alert::success('SUCCESS!', 'Reagen Saved');
-
-    return redirect()->back();
+        Alert::success('SUCCESS!', 'Stok berhasil ditambahkan');
+        return redirect()->back();
     }
 
     public function generateLabel($id)
@@ -279,18 +275,17 @@ public function addStockReagen($noCatalog)
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($id);
-
+        
         if (!$data) {
             abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
         }
-
+        
         // Generate QR code
         $qrCode = QrCode::size(100)->generate('http://127.0.0.1:8000/qrcode/'. $id);
-
-
+        
         // Generate PDF
         $pdf = PDF::loadView('management-stock.reagen-label', compact('data', 'qrCode'));
-
+        
         // Download PDF
         return $pdf->stream('reagen-label.pdf');
     }
@@ -302,14 +297,14 @@ public function addStockReagen($noCatalog)
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($id);
-
+        
         if (!$data) {
             abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
         }
-
+        
         // Generate QR code
         $qrCode = QrCode::format('png')->generate('http://127.0.0.1:8000/qrcode/' . $id);
-
+        
         // Return QR code as base64 data URL
         return 'data:image/png;base64,' . base64_encode($qrCode);
     }
@@ -321,7 +316,7 @@ public function addStockReagen($noCatalog)
         $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($id);
-
+        
         if ($reagenIn) {
             // Kurangi quantity dari stock_reagens
             $stockReagen = StockReagen::where('noCatalog', $reagenIn->noCatalog)->first();
@@ -332,17 +327,17 @@ public function addStockReagen($noCatalog)
                 }
                 $stockReagen->save();
             }
-
+            
             // Dapatkan bulan dan tahun saat ini
             $currentMonth = Carbon::now()->format('m');
             $currentYear = Carbon::now()->format('Y');
-
+            
             // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
             $stockHistory = StockHistory::where('noCatalog', $reagenIn->noCatalog)
-                ->where('month', $currentMonth)
-                ->where('year', $currentYear)
-                ->first();
-
+                                        ->where('month', $currentMonth)
+                                        ->where('year', $currentYear)
+                                        ->first();
+                                        
             if ($stockHistory) {
                 // Update data stock_histories
                 $stockHistory->quantity -= $reagenIn->quantity;
@@ -352,44 +347,42 @@ public function addStockReagen($noCatalog)
                 }
                 $stockHistory->save();
             }
-
+            
             // Hapus data reagenIn
             $reagenIn->delete();
-
             Alert::success('SUCCESS!', 'Stock deleted successfully');
         } else {
             Alert::error('Error', 'Stock not found');
         }
-
+        
         return redirect()->route('management-stock.index');
     }
 
     public function reagenIn()
     {
         $user = auth()->user();
-        // Ambil data dan urutkan berdasarkan created_at secara desc, filter by organization
-        $reagenIn = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy(function ($item) {
-                return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
-            });
-
-        // Convert hasil groupBy ke collection
+        
+        // Menggunakan filter langsung dan Eager Loading (with)
+        $reagenIn = ReagenIn::with('reagen')
+          ->where('organization_guid', $user->organization_guid)
+          ->orderBy('created_at', 'desc')
+          ->get()
+          ->groupBy(function ($item) {
+              return $item->created_at->format('Y-m-d'); 
+          });
+          
         $groupedData = collect($reagenIn);
-
-        // Pagination manual
-        $currentPage = request()->get('page', 1); // Ambil halaman saat ini
-        $perPage = 10; // Jumlah grup per halaman
+        
+        $currentPage = request()->get('page', 1); 
+        $perPage = 10; 
         $paginatedData = new LengthAwarePaginator(
-            $groupedData->forPage($currentPage, $perPage), // Data untuk halaman saat ini
-            $groupedData->count(), // Total jumlah grup
-            $perPage, // Jumlah grup per halaman
-            $currentPage, // Halaman saat ini
-            ['path' => request()->url()] // URL untuk pagination
+            $groupedData->forPage($currentPage, $perPage), 
+            $groupedData->count(), 
+            $perPage, 
+            $currentPage, 
+            ['path' => request()->url()] 
         );
-
+        
         return view('management-stock.reagen-in', compact('paginatedData'));
     }
 
@@ -400,14 +393,14 @@ public function addStockReagen($noCatalog)
         $reagenOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy(function ($item) {
-                return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
-            });
-    
+           ->get()
+           ->groupBy(function ($item) {
+               return $item->created_at->format('Y-m-d'); // Grup berdasarkan tanggal (format YYYY-MM-DD)
+           });
+           
         // Convert hasil groupBy ke collection
         $groupedData = collect($reagenOut);
-    
+        
         // Pagination manual
         $currentPage = request()->get('page', 1); // Ambil halaman saat ini
         $perPage = 10; // Jumlah grup per halaman
@@ -418,19 +411,19 @@ public function addStockReagen($noCatalog)
             $currentPage, // Halaman saat ini
             ['path' => request()->url()] // URL untuk pagination
         );
-    
+        
         return view('management-stock.reagen-out', compact('paginatedData'));
     }
-    
+
     public function reagenExpired(Request $request)
     {
         $user = auth()->user();
         $query = ReagenIn::with('reagen')
-            ->where('quantity', '>', 0)
-            ->whereHas('user', function ($q) use ($user) {
-                $q->where('organization_guid', $user->organization_guid);
-            });
-
+                         ->where('quantity', '>', 0)
+                         ->whereHas('user', function ($q) use ($user) {
+                             $q->where('organization_guid', $user->organization_guid);
+                         });
+                         
         // Add search functionality
         if ($request->has('search')) {
             $search = $request->search;
@@ -439,34 +432,34 @@ public function addStockReagen($noCatalog)
                   ->orWhere('noCatalog', 'LIKE', "%{$search}%");
             });
         }
-
+        
         // Get results with pagination
         $reagenExpired = $query->orderBy('expiredDate', 'asc')
-            ->paginate(15)
-            ->through(function ($item) {
-                $today = now();
-                $expDate = Carbon::parse($item->expiredDate);
-                $daysUntilExpired = $today->diffInDays($expDate, false);
-
-                // Add status and color based on expiry timeframe
-                if ($daysUntilExpired < 0) {
-                    $item->status = 'Expired';
-                    $item->status_color = 'dark';
-                } elseif ($daysUntilExpired <= 7) {
-                    $item->status = 'Akan Expired (< 1 minggu)';
-                    $item->status_color = 'danger';
-                } elseif ($daysUntilExpired <= 30) {
-                    $item->status = 'Akan Expired (< 1 bulan)';
-                    $item->status_color = 'warning';
-                } else {
-                    $item->status = 'Tidak Expired';
-                    $item->status_color = 'success';
-                }
-
-                $item->days_until_expired = $daysUntilExpired;
-                return $item;
-            });
-
+                               ->paginate(15)
+                               ->through(function ($item) {
+                                   $today = now();
+                                   $expDate = Carbon::parse($item->expiredDate);
+                                   $daysUntilExpired = $today->diffInDays($expDate, false);
+                                   
+                                   // Add status and color based on expiry timeframe
+                                   if ($daysUntilExpired < 0) {
+                                       $item->status = 'Expired';
+                                       $item->status_color = 'dark';
+                                   } elseif ($daysUntilExpired <= 7) {
+                                       $item->status = 'Akan Expired (< 1 minggu)';
+                                       $item->status_color = 'danger';
+                                   } elseif ($daysUntilExpired <= 30) {
+                                       $item->status = 'Akan Expired (< 1 bulan)';
+                                       $item->status_color = 'warning';
+                                   } else {
+                                       $item->status = 'Tidak Expired';
+                                       $item->status_color = 'success';
+                                   }
+                                   
+                                   $item->days_until_expired = $daysUntilExpired;
+                                   return $item;
+                               });
+                               
         return view('dashboard.reagen-expired', compact('reagenExpired'));
     }
 }

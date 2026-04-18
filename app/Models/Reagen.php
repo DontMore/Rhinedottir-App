@@ -56,7 +56,7 @@ class Reagen extends Model
 
     public function stockReagen()
     {
-        return $this->hasOne(StockReagen::class, 'guid', 'guid');
+        return $this->hasOne(StockReagen::class, 'noCatalog', 'noCatalog');
     }
 
     public function stockHistories()
