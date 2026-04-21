@@ -40,7 +40,7 @@ class StockReagen extends Model
     // Relationship with the NoKatalogReagen model (Foreign Key).
     public function reagen()
     {
-        return $this->belongsTo(Reagen::class, 'guid', 'guid');
+        return $this->belongsTo(Reagen::class, 'reagen_guid', 'guid');
     }
 
     public function logbookReagen()

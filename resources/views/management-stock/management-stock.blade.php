@@ -69,11 +69,19 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('data.view', ['noCatalog' => $item->noCatalog]) }}" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium transition">View</a>
-                            <a href="{{ route('reagen.addstock', ['noCatalog' => $item->noCatalog]) }}" class="px-3 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium transition">Add</a>
-                            <a href="{{ route('data.edit', ['noCatalog' => $item->noCatalog]) }}" class="px-3 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 text-xs font-medium transition">Edit</a>
-                            <form action="{{ route('data.delete', ['noCatalog' => $item->noCatalog]) }}" method="POST" class="inline">
+                            {{-- Detail View --}}
+                            <a href="{{ route('data.view', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium transition">View</a>
+
+                            {{-- Add Stock --}}
+                            <a href="{{ route('reagen.addstock', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium transition">Add</a>
+
+                            {{-- Edit Data --}}
+                            <a href="{{ route('data.edit', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 text-xs font-medium transition">Edit</a>
+
+                            {{-- Delete Data --}}
+                            <form action="{{ route('data.delete', ['guid' => $item->guid]) }}" method="POST" class="inline">
                                 @csrf
+                                @method('DELETE')
                                 <button type="button" class="confirm-button px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium transition">Delete</button>
                             </form>
                         </div>

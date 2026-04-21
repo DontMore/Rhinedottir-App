@@ -14,6 +14,18 @@
         </div>
         
         <div class="px-6 py-6">
+
+        @if ($errors->any())
+            <div class="mb-4 rounded-md bg-red-50 p-4">
+                <h3 class="text-sm font-medium text-red-800">Ada kesalahan dalam input data:</h3>
+                <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
             <form action="add-reagen" method="POST">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

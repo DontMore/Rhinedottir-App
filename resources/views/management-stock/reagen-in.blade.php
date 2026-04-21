@@ -43,28 +43,34 @@
                     <!-- Items for this date -->
                     <div class="mt-6 space-y-3">
                         @foreach ($items as $reagen)
-                        <a href="{{ route('data.view', ['noCatalog' => $reagen->noCatalog]) }}" 
-                           class="block p-4 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition duration-150">
-                            <div class="grid grid-cols-12 gap-4 items-center">
-                                <div class="col-span-2 text-gray-600 text-sm">{{ $reagen->noCatalog }}</div>
-                                <div class="col-span-3 font-medium text-gray-900">{{ $reagen->reagen->nameReagen }}</div>
-                                <div class="col-span-2 text-gray-600">{{ $reagen->batch }}</div>
-                                <div class="col-span-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3"/>
+                            {{-- ✅ Route menggunakan guid, tapi fallback aman jika relasi null --}}
+                            <a href="{{ route('data.view', ['guid' => $reagen->reagen_guid ?? $reagen->guid]) }}" 
+                            class="block p-4 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition duration-150">
+                                <div class="grid grid-cols-12 gap-4 items-center">
+                                    <div class="col-span-2 text-gray-600 text-sm">{{ $reagen->noCatalog }}</div>
+                                    
+                                    {{-- ✅ Tambahkan null coalescing untuk mencegah crash --}}
+                                    <div class="col-span-3 font-medium text-gray-900">
+                                        {{ $reagen->reagen->nameReagen ?? 'Master Data Not Found' }}
+                                    </div>
+                                    
+                                    <div class="col-span-2 text-gray-600">{{ $reagen->batch }}</div>
+                                    <div class="col-span-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <svg class="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3"/>
+                                            </svg>
+                                            {{ $reagen->quantity }}
+                                        </span>
+                                    </div>
+                                    <div class="col-span-3 text-sm text-gray-500 flex items-center">
+                                        <svg class="mr-1.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        {{ $reagen->quantity }}
-                                    </span>
+                                        {{ $reagen->created_at->format('d M Y H:i') }}
+                                    </div>
                                 </div>
-                                <div class="col-span-3 text-sm text-gray-500 flex items-center">
-                                    <svg class="mr-1.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    {{ $reagen->created_at->format('d M Y H:i') }}
-                                </div>
-                            </div>
-                        </a>
+                            </a>
                         @endforeach
                     </div>
                 </div>

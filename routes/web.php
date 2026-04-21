@@ -62,12 +62,14 @@ Route::get('/logbook-chart', function () {
 Route::get('/management-stock', [ManagementStockController::class, 'index'])->name('management-stock.index')->middleware('admin');
 Route::get('/add-reagen', [ManagementStockController::class, 'addReagen'])->middleware('admin');
 Route::post('/add-reagen', [ManagementStockController::class, 'addReagenStore'])->middleware('admin');
-Route::get('/add-stock-reagen/{noCatalog}', [ManagementStockController::class, 'addStockReagen'])->name('reagen.addstock')->middleware('admin');
-Route::get('/view/{noCatalog}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
-Route::get('/edit/{noCatalog}', [ManagementStockController::class, 'editReagen'])->name('data.edit')->middleware('admin');
-Route::post('/delete/{noCatalog}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
-Route::post('/update/{noCatalog}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');
-Route::post('/reagen/{noCatalog}', [ManagementStockController::class, 'getReagenData'])->middleware('admin');
+Route::get('/add-stock-reagen/{guid}', [ManagementStockController::class, 'addStockReagen'])->name('reagen.addstock')->middleware('admin');
+
+Route::get('/view/{guid}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
+Route::get('/edit/{guid}', [ManagementStockController::class, 'editReagen'])->name('data.edit')->middleware('admin');
+Route::post('/delete/{guid}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
+Route::post('/update/{guid}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');
+Route::post('/reagen/{guid}', [ManagementStockController::class, 'getReagenData'])->middleware('admin');
+
 Route::post('/add-stock-reagen', [ManagementStockController::class, 'addStock'])->name('reagen.addstockreagen')->middleware('admin');
 Route::get('/generated-label/{id}', [ManagementStockController::class, 'generateLabel']);
 Route::get('/generate-qr-code/{id}', [ManagementStockController::class, 'generateQrCode']);
@@ -78,12 +80,12 @@ Route::get('/reagen-expired', [ManagementStockController::class, 'reagenExpired'
 
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index'); // Route untuk menampilkan data logbook
-Route::get('/take/{noCatalog}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');
+Route::get('/take/{guid}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');
 Route::get('/qrcode/{id}', [LogbookController::class, 'takeQRCode'])->name('qrcode')->middleware('auth')->middleware('auth');
 Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth')->name('take.process')->middleware('auth');
-Route::get('/logbook-history/{noCatalog}', [LogbookController::class, 'logbookHistory'])->name('data.history');
+Route::get('/logbook-history/{guid}', [LogbookController::class, 'logbookHistory'])->name('data.history');
 // Tambahkan rute ini jika belum ada
-Route::get('/take-admin/{noCatalog}', [LogbookController::class, 'takeAdmin'])->name('take-admin')->middleware('auth');
+Route::get('/take-admin/{guid}', [LogbookController::class, 'takeAdmin'])->name('take-admin')->middleware('auth');
 // Route untuk menyimpan data dari form
 Route::post('/take-process-admin', [LogbookController::class, 'storeTakeAdmin'])->middleware('auth');
 
@@ -96,7 +98,7 @@ Route::post('/order', [OrderController::class, 'store'])->middleware('admin')->n
 Route::get('/view-order/{id}', [OrderController::class, 'viewOrder'])->middleware('admin')->name('order.view');
 Route::post('/update-order/{id}', [OrderController::class, 'update'])->middleware('admin')->name('order.update');
 Route::delete('/order-delete/{id}', [OrderController::class, 'destroy'])->middleware('admin')->name('order.delete');
-Route::get('/reagen/{noCatalogUtama}', [OrderController::class, 'getReagenData'])->middleware('admin');
+Route::get('/reagen/{guidUtama}', [OrderController::class, 'getReagenData'])->middleware('admin');
 
 
 // route report

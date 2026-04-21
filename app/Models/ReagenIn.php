@@ -15,17 +15,17 @@ class ReagenIn extends Model
     protected $keyType = 'string';
 
     // Define fillable columns.
-    // app/Models/ReagenIn.php
     protected $fillable = [
         'guid',
-        'noCatalog',          // 👈 Wajib ditambahkan (mengatasi error 1364)
+        'noCatalog',
+        'reagen_guid',      // ✅ Tambahkan
         'batch',
         'quantity',
         'expiredDate',
         'note',
         'stockUpdateDate',
         'user_id',
-        'organization_guid',  // 👈 Tambahkan ini agar tersimpan saat create()
+        'organization_guid',
     ];
 
     protected static function boot()
@@ -39,10 +39,10 @@ class ReagenIn extends Model
         });
     }
 
-    // Relasi ke Reagen (Gunakan noCatalog)
+    // ✅ Relasi ke Reagen menggunakan GUID
     public function reagen()
     {
-        return $this->belongsTo(Reagen::class, 'noCatalog', 'noCatalog');
+        return $this->belongsTo(Reagen::class, 'reagen_guid', 'guid');
     }
 
     public function stockReagen()
@@ -50,8 +50,9 @@ class ReagenIn extends Model
         return $this->belongsTo(StockReagen::class, 'guid', 'guid');
     }
 
+    // ✅ Perbaiki relasi User (sebelumnya salah pakai guid,guid)
     public function user()
     {
-        return $this->belongsTo(User::class, 'guid', 'guid');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
