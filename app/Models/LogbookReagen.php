@@ -17,12 +17,12 @@ class LogbookReagen extends Model
 
     public $timestamps = true;
 
-    // ✅ TAMBAHKAN user_guid KE FILLABLE
+    // ✅ PERBAIKAN: Tambahkan 'noCatalog' ke fillable
     protected $fillable = [
         'guid',
+        'noCatalog',        // 👈 WAJIB: agar bisa di-mass-assign
         'reagen_guid',
         'user_id',
-        'user_guid',      // 👈 Tambahkan ini
         'organization_guid', // 👈 Pastikan ini juga ada
         'batch',
         'quantity_taken',
@@ -52,10 +52,5 @@ class LogbookReagen extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
-    }
-
-    public function stockReagen()
-    {
-        return $this->hasOne(StockReagen::class, 'reagen_guid', 'reagen_guid');
     }
 }

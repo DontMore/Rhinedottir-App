@@ -58,6 +58,7 @@ class LogbookController extends Controller
     {
         $user = auth()->user();
 
+        // Validasi form
         $validatedData = $request->validate([
             'noCatalog' => 'required',
             'batch' => 'required',
@@ -65,36 +66,55 @@ class LogbookController extends Controller
             'note' => 'nullable|string',
         ]);
 
+        // Set user_id & organization_guid
         $validatedData['user_id'] = $user->id;
-        $validatedData['organization_guid'] = $user->organization_guid; // ✅ Tambahkan
+        $validatedData['organization_guid'] = $user->organization_guid;
 
-        // ✅ Cek stok dengan filter organization_guid
-        $availableStock = StockReagen::whereHas('reagen', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+        // ✅ PERBAIKAN 1: Cek stok dengan query sederhana & langsung
+        // Jangan gunakan whereHas yang berbelit. Filter langsung pakai noCatalog & org_guid
+        $availableStock = StockReagen::where('noCatalog', $validatedData['noCatalog'])
+            ->where('organization_guid', $user->organization_guid)
             ->sum('quantity');
 
+        // Debug: Jika stok 0, berarti data di tabel stock_reagens kosong atau noCatalog tidak cocok
         if ($availableStock < $validatedData['quantity_taken']) {
-            Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
+            Alert::error('Failed', 'Stok tidak mencukupi. Tersedia: ' . $availableStock . ', Diminta: ' . $validatedData['quantity_taken'])->showCloseButton();
             return redirect()->back();
         }
 
-        // ✅ Simpan ke LogbookReagen dengan reagen_guid
-        LogbookReagen::create([
-            'reagen_guid' => $validatedData['reagen_guid'] ?? null,
-            'noCatalog' => $validatedData['noCatalog'],
-            'user_id' => $user->id,
-            'batch' => $validatedData['batch'],
-            'quantity_taken' => $validatedData['quantity_taken'],
-            'note' => $validatedData['note'],
-            'organization_guid' => $user->organization_guid,
-        ]);
+        // Opsional: Ambil guid reagen untuk disimpan ke logbook
+        $masterReagen = Reagen::where('noCatalog', $validatedData['noCatalog'])->first();
+        if ($masterReagen) {
+            $validatedData['reagen_guid'] = $masterReagen->guid;
+        }
 
-        // ✅ Update stock_reagens dengan filter organization_guid
-        StockReagen::whereHas('reagen', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
-            ->decrement('quantity', $validatedData['quantity_taken']);
+        // Create a new entry in the LogbookReagen table
+        LogbookReagen::create($validatedData);
+
+        // ✅ PERBAIKAN 2: Kurangi stok dengan logika FIFO (First In First Out)
+        // Ambil semua stok untuk reagen ini
+        $stockItems = StockReagen::where('noCatalog', $validatedData['noCatalog'])
+            ->where('organization_guid', $user->organization_guid)
+            ->orderBy('created_at', 'asc') // Ambil stok yang paling lama dulu
+            ->get();
+
+        $remainingQtyToTake = $validatedData['quantity_taken'];
+
+        foreach ($stockItems as $stockItem) {
+            if ($remainingQtyToTake <= 0) break;
+
+            if ($stockItem->quantity >= $remainingQtyToTake) {
+                // Stok di batch ini cukup
+                $stockItem->quantity -= $remainingQtyToTake;
+                $stockItem->save();
+                $remainingQtyToTake = 0;
+            } else {
+                // Stok di batch ini kurang, ambil semua sisanya
+                $remainingQtyToTake -= $stockItem->quantity;
+                $stockItem->quantity = 0;
+                $stockItem->save();
+            }
+        }
 
         Alert::success('Success', 'Information has been successfully saved.');
         return redirect()->route('logbook.index');
@@ -138,21 +158,20 @@ class LogbookController extends Controller
     }
 
     // ✅ TAKE ADMIN: Parameter $guid
-    public function takeAdmin($guid)
+    public function takeAdmin($guid) // ✅ Ganti parameter menjadi $guid
     {
         $user = auth()->user();
 
+        // ✅ Query menggunakan guid & organization_guid
         $reagen = Reagen::where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
-            ->first();
+            ->firstOrFail();
 
+        // ✅ Filter analis berdasarkan organisasi user
         $analisList = DB::table('users')
-            ->where('organization_guid', $user->organization_guid) // ✅ organization_guid
+            ->where('organization_guid', $user->organization_guid)
             ->pluck('name', 'id');
 
-        if (!$reagen) {
-            return redirect()->route('logbook.index')->with('error', 'Reagen not found');
-        }
         return view('logbook.logbook-take-admin', compact('reagen', 'analisList'));
     }
 
