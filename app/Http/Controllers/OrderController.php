@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Order;
 use App\Models\Reagen;
 use Carbon\Carbon;
@@ -10,7 +11,8 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     // fungsi index
-    public function index(){
+    public function index()
+    {
         $user = auth()->user();
         $orders = Order::whereHas('user', function ($q) use ($user) {
             $q->where('organization_id', $user->organization_id);
@@ -18,11 +20,13 @@ class OrderController extends Controller
         return view('order.order', compact('orders'));
     }
 
-    public function newOrderForm(){  
+    public function newOrderForm()
+    {
         return view('order.new-order-form');
     }
 
-    public function eksistingOrderForm(){
+    public function eksistingOrderForm()
+    {
         $user = auth()->user();
         $reagens = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_id', $user->organization_id);
@@ -63,7 +67,8 @@ class OrderController extends Controller
     }
 
 
-    public function viewOrder($id){  
+    public function viewOrder($id)
+    {
         $order = Order::find($id);
 
         // Lakukan manipulasi waktu menggunakan Carbon

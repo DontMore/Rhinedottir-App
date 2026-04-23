@@ -1,35 +1,32 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class StockReagen extends Model
 {
-    protected $table = 'stock_reagens'; // Replace 'stock_reagents' with the actual table name as needed.
-
-    protected $primaryKey = 'guid'; // The column used as the primary key.
+    protected $table = 'stock_reagens';
+    protected $primaryKey = 'guid';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // Define fillable columns.
+    // ✅ PERBAIKAN: Tambahkan 'noCatalog' ke fillable
     protected $fillable = [
         'guid',
+        'noCatalog',        // 👈 WAJIB: agar bisa di-mass-assign
         'reagen_guid',
         'batch',
         'quantity',
         'expiredDate',
         'note',
         'stockUpdateDate',
-        'organization_guid',  // 👈 Tambahkan ini agar tersimpan saat create()
+        'organization_guid',
     ];
 
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
@@ -37,14 +34,15 @@ class StockReagen extends Model
         });
     }
 
-    // Relationship with the NoKatalogReagen model (Foreign Key).
+    // Relasi ke Reagen menggunakan GUID
     public function reagen()
     {
         return $this->belongsTo(Reagen::class, 'reagen_guid', 'guid');
     }
 
+    // Perbaiki juga relasi ini (sebelumnya salah pakai guid,guid)
     public function logbookReagen()
     {
-        return $this->belongsTo(LogbookReagen::class, 'guid', 'guid');
+        return $this->belongsTo(LogbookReagen::class, 'noCatalog', 'noCatalog');
     }
 }

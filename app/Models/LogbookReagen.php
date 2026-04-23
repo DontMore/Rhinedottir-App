@@ -15,21 +15,26 @@ class LogbookReagen extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // Jika Anda ingin mengisi timestamp secara manual
-    public $timestamps = true; // Atau bisa dibiarkan default
+    public $timestamps = true;
 
-    // Specify the fields that are mass assignable
+    // ✅ TAMBAHKAN user_guid KE FILLABLE
     protected $fillable = [
-        'guid', 'reagen_guid', 'user_id', 'batch', 'quantity_taken', 'note', 'created_at'
+        'guid',
+        'reagen_guid',
+        'user_id',
+        'user_guid',      // 👈 Tambahkan ini
+        'organization_guid', // 👈 Pastikan ini juga ada
+        'batch',
+        'quantity_taken',
+        'note',
+        'created_at'
     ];
 
-    // Specify the fields that should be cast to dates
     protected $dates = ['created_at', 'updated_at'];
 
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();

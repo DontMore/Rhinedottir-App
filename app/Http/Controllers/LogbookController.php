@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\DB;
 use App\Models\Reagen;
 use App\Models\StockReagen;
@@ -9,23 +10,20 @@ use App\Models\LogbookReagen;
 use App\Models\StockHistory;
 use RealRashid\SweetAlert\Facades\Alert;
 use Carbon\Carbon;
-
 use Illuminate\Http\Request;
 
 class LogbookController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $keyword = $request->input('keyword');
         $user = auth()->user();
 
-        // Query data Reagen dengan menggunakan Eloquent, filter by organization
+        // ✅ Query menggunakan organization_guid
         $query = Reagen::with(['stockReagen' => function ($query) {
-            $query->select('noCatalog', 'quantity');
-        }])->whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        });
+            $query->select('reagen_guid', 'quantity'); // ✅ foreign key wajib ada
+        }])->where('organization_guid', $user->organization_guid);
 
-        // Jika ada kata kunci pencarian, tambahkan kondisi pencarian
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('noCatalog', 'LIKE', '%' . $keyword . '%')
@@ -34,79 +32,83 @@ class LogbookController extends Controller
             });
         }
 
-        // Menambahkan pagination
-        $reagens = $query->paginate(20); // Mengatur jumlah item per halaman, misalnya 10
-
+        $reagens = $query->paginate(20);
         return view('logbook.logbook', compact('reagens'));
     }
 
-    // Fungsi takeReagen
-    public function takeReagen($noCatalog){
+    // ✅ TAKE REAGEN: Parameter diubah ke $guid
+    public function takeReagen($guid)
+    {
         $user = auth()->user();
+
         $reagen = Reagen::with(['stockReagen' => function ($query) {
-                $query->select('noCatalog', 'quantity');
-            }])
-            ->whereHas('reagenIn.user', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
-            })
-            ->where('noCatalog', $noCatalog)
+            $query->select('reagen_guid', 'quantity');
+        }])
+            ->where('guid', $guid) // ✅ Filter by guid
+            ->where('organization_guid', $user->organization_guid) // ✅ organization_guid
             ->first();
 
         if (!$reagen) {
             abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
         }
-
         return view('logbook.logbook-take', compact('reagen'));
     }
 
     public function store(Request $request)
     {
-    $user = auth()->user();
-    // Validasi form
-    $validatedData = $request->validate([
-        'noCatalog' => 'required',
-        'batch' => 'required',
-        'quantity_taken' => 'required|numeric|min:1',
-        'note' => 'nullable|string',
-    ]);
+        $user = auth()->user();
 
-    // Set user_id to current user
-    $validatedData['user_id'] = $user->id;
+        $validatedData = $request->validate([
+            'noCatalog' => 'required',
+            'batch' => 'required',
+            'quantity_taken' => 'required|numeric|min:1',
+            'note' => 'nullable|string',
+        ]);
 
-    // Check if there is sufficient stock in the stock_reagens table, filter by organization
-    $availableStock = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-        $q->where('organization_id', $user->organization_id);
-    })->where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
+        $validatedData['user_id'] = $user->id;
+        $validatedData['organization_guid'] = $user->organization_guid; // ✅ Tambahkan
 
-    if ($availableStock < $validatedData['quantity_taken']) {
-        // Redirect back with an error message if the requested quantity exceeds the available stock
-        Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
-        return redirect()->back();
+        // ✅ Cek stok dengan filter organization_guid
+        $availableStock = StockReagen::whereHas('reagen', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+            ->sum('quantity');
+
+        if ($availableStock < $validatedData['quantity_taken']) {
+            Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
+            return redirect()->back();
+        }
+
+        // ✅ Simpan ke LogbookReagen dengan reagen_guid
+        LogbookReagen::create([
+            'reagen_guid' => $validatedData['reagen_guid'] ?? null,
+            'noCatalog' => $validatedData['noCatalog'],
+            'user_id' => $user->id,
+            'batch' => $validatedData['batch'],
+            'quantity_taken' => $validatedData['quantity_taken'],
+            'note' => $validatedData['note'],
+            'organization_guid' => $user->organization_guid,
+        ]);
+
+        // ✅ Update stock_reagens dengan filter organization_guid
+        StockReagen::whereHas('reagen', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+            ->decrement('quantity', $validatedData['quantity_taken']);
+
+        Alert::success('Success', 'Information has been successfully saved.');
+        return redirect()->route('logbook.index');
     }
 
-    // Create a new entry in the LogbookReagen table
-    LogbookReagen::create($validatedData);
-
-    // Update the stock_reagens table by reducing the quantity, filter by organization
-    StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-        $q->where('organization_id', $user->organization_id);
-    })->where('noCatalog', $validatedData['noCatalog'])
-        ->orderBy('created_at') // You may need to adjust the order based on your business logic
-        ->decrement('quantity', $validatedData['quantity_taken']);
-
-        Alert::success('Success', 'Informasi has been successfully saved.');
-
-    // Redirect with a success message or handle it based on your requirements
-    return redirect()->route('logbook.index');
-    }
-
-    public function logbookHistory($noCatalog)
+    // ✅ LOGBOOK HISTORY: Parameter $guid, query pakai organization_guid
+    public function logbookHistory($guid)
     {
         $user = auth()->user();
-        // Ambil data logbook dengan pagination, filter by organization
-        $logbookReagens = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->where('noCatalog', $noCatalog)
+
+        // ✅ Ambil data logbook dengan filter organization_guid
+        $logbookReagens = LogbookReagen::with(['reagen', 'user'])
+            ->where('reagen_guid', $guid) // ✅ Filter by reagen_guid
+            ->where('organization_guid', $user->organization_guid) // ✅ organization_guid
             ->orderBy('created_at', 'desc')
             ->paginate(15)
             ->through(function ($logbook) {
@@ -114,140 +116,125 @@ class LogbookController extends Controller
                 return $logbook;
             });
 
+        // ✅ Ambil data master reagen berdasarkan guid
         $reagen = Reagen::with(['stockReagen' => function ($query) {
-            $query->select('noCatalog', 'quantity');
+            $query->select('reagen_guid', 'quantity'); // ✅ foreign key wajib ada
         }])
-        ->whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })
-        ->where('noCatalog', $noCatalog)
-        ->first();
-
-        if (!$reagen) {
-            abort(404, 'Data reagen tidak ditemukan atau tidak memiliki akses.');
-        }
+            ->where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
 
         return view('logbook.logbook-history', compact('reagen', 'logbookReagens'));
     }
 
-
-    // Fungsi takeReagen
-    public function takeQRCode($id){
-        // Mengambil data reagen berdasarkan ID
-        $reagenIn = ReagenIn::findOrFail($id);
-
-        // Mengirimkan data reagen ke view
-        return view('logbook.logbook-qrcode', compact('reagenIn'));
-    }
-
-    public function takeAdmin($noCatalog)
+    public function takeQRCode($id)
     {
         $user = auth()->user();
 
-        // Lakukan logika sesuai kebutuhan dengan menggunakan $noCatalog
+        $reagenIn = ReagenIn::where('organization_guid', $user->organization_guid)
+            ->findOrFail($id);
 
-        // Contoh: Ambil data reagen berdasarkan nomor katalog, filter by organization
-        $reagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->where('noCatalog', $noCatalog)->first();
+        return view('logbook.logbook-qrcode', compact('reagenIn'));
+    }
 
-        // Ambil data analis dari database, filter by organization
+    // ✅ TAKE ADMIN: Parameter $guid
+    public function takeAdmin($guid)
+    {
+        $user = auth()->user();
+
+        $reagen = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->first();
+
         $analisList = DB::table('users')
-            ->where('organization_id', $user->organization_id)
+            ->where('organization_guid', $user->organization_guid) // ✅ organization_guid
             ->pluck('name', 'id');
 
-        // Jika reagen tidak ditemukan, redirect ke halaman lain atau berikan pesan error
         if (!$reagen) {
-            return redirect()->route('order.index')->with('error', 'Reagen not found');
+            return redirect()->route('logbook.index')->with('error', 'Reagen not found');
         }
-
-        // Kirim data reagen ke view take-admin.blade.php
         return view('logbook.logbook-take-admin', compact('reagen', 'analisList'));
     }
 
-    // menyimpan data take reagen admin
+    // ✅ STORE TAKE ADMIN: Gunakan organization_guid
     public function storeTakeAdmin(Request $request)
     {
         $user = auth()->user();
 
-        // Validasi form
-    $validatedData = $request->validate([
-        'noCatalog' => 'required',
-        'user_id' => 'required',
-        'batch' => 'required',
-        'quantity_taken' => 'required|numeric|min:1',
-        'analis' => 'required|exists:users,id',
-        'note' => 'nullable|string',
-        'date' => 'required|date', // pastikan ini valid
-    ]);
+        $validatedData = $request->validate([
+            'noCatalog' => 'required',
+            'user_id' => 'required',
+            'batch' => 'required',
+            'quantity_taken' => 'required|numeric|min:1',
+            'analis' => 'required|exists:users,id',
+            'note' => 'nullable|string',
+            'date' => 'required|date',
+        ]);
 
-    // Check if there is sufficient stock in the stock_reagens table, filter by organization
-    $availableStock = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-        $q->where('organization_id', $user->organization_id);
-    })->where('noCatalog', $validatedData['noCatalog'])->sum('quantity');
+        // ✅ Cek stok dengan filter organization_guid
+        $availableStock = StockReagen::whereHas('reagen', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+            ->sum('quantity');
 
-    if ($availableStock < $validatedData['quantity_taken']) {
-        // Redirect back with an error message if the requested quantity exceeds the available stock
-        Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
-        return redirect()->back();
-    }
+        if ($availableStock < $validatedData['quantity_taken']) {
+            Alert::error('Failed', 'Please recheck the stock and the quantity being taken.')->showCloseButton();
+            return redirect()->back();
+        }
 
-    // Dapatkan bulan dan tahun saat ini
-    $currentMonth = Carbon::now()->format('m');
-    $currentYear = Carbon::now()->format('Y');
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
 
-    // Cek apakah sudah ada entri pada stock_histories dengan bulan dan tahun saat ini
-    $stockHistory = DB::table('stock_histories')
-        ->where('noCatalog', $validatedData['noCatalog'])
-        ->where('month', $currentMonth)
-        ->where('year', $currentYear)
-        ->first();
-
-    if ($stockHistory) {
-        // Update data
-        DB::table('stock_histories')
-            ->where('noCatalog', $validatedData['noCatalog'])
+        // ✅ Update stock_histories dengan filter organization_guid
+        $stockHistory = StockHistory::where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+            ->where('organization_guid', $user->organization_guid)
             ->where('month', $currentMonth)
             ->where('year', $currentYear)
-            ->update([
-                'quantity' => $stockHistory->quantity - $validatedData['quantity_taken'],
-                'quantity_out' => $stockHistory->quantity_out + $validatedData['quantity_taken'],
-                'updated_at' => now(),
+            ->first();
+
+        if ($stockHistory) {
+            DB::table('stock_histories')
+                ->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+                ->where('organization_guid', $user->organization_guid)
+                ->where('month', $currentMonth)
+                ->where('year', $currentYear)
+                ->update([
+                    'quantity' => $stockHistory->quantity - $validatedData['quantity_taken'],
+                    'quantity_out' => $stockHistory->quantity_out + $validatedData['quantity_taken'],
+                    'updated_at' => now(),
+                ]);
+        } else {
+            StockHistory::create([
+                'reagen_guid' => $validatedData['reagen_guid'] ?? null,
+                'noCatalog' => $validatedData['noCatalog'],
+                'quantity' => 0,
+                'quantity_in' => 0,
+                'quantity_out' => $validatedData['quantity_taken'],
+                'month' => $currentMonth,
+                'year' => $currentYear,
+                'organization_guid' => $user->organization_guid, // ✅ Tambahkan
             ]);
-    } else {
-        // Jika belum ada, buat entri baru pada stock_histories
-        StockHistory::create([
+        }
+
+        // ✅ Simpan ke LogbookReagen
+        LogbookReagen::create([
+            'reagen_guid' => $validatedData['reagen_guid'] ?? null,
             'noCatalog' => $validatedData['noCatalog'],
-            'quantity' => 0,
-            'quantity_in' => 0,
-            'quantity_out' => $validatedData['quantity_taken'],
-            'month' => $currentMonth,
-            'year' => $currentYear,
+            'user_id' => $validatedData['user_id'],
+            'batch' => $validatedData['batch'],
+            'quantity_taken' => $validatedData['quantity_taken'],
+            'note' => $validatedData['note'],
+            'organization_guid' => $user->organization_guid,
+            'created_at' => $validatedData['date'],
         ]);
+
+        // ✅ Update stock_reagens
+        StockReagen::whereHas('reagen', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('reagen_guid', $validatedData['reagen_guid'] ?? null)
+            ->decrement('quantity', $validatedData['quantity_taken']);
+
+        Alert::success('Success', 'Information has been successfully saved.');
+        return redirect()->route('logbook.index');
     }
-
-    // Create a new entry in the LogbookReagen table
-    LogbookReagen::create([
-        'noCatalog' => $validatedData['noCatalog'],
-        'user_id' => $validatedData['user_id'],
-        'batch' => $validatedData['batch'],
-        'quantity_taken' => $validatedData['quantity_taken'],
-        'user_id' => $validatedData['analis'], // Assuming `analis` is an ID
-        'note' => $validatedData['note'],
-        'created_at' => $validatedData['date'], // Set `created_at` manually
-    ]);
-
-    // Update the stock_reagens table by reducing the quantity, filter by organization
-    StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-        $q->where('organization_id', $user->organization_id);
-    })->where('noCatalog', $validatedData['noCatalog'])
-        ->orderBy('created_at') // Adjust order based on your logic
-        ->decrement('quantity', $validatedData['quantity_taken']);
-
-    Alert::success('Success', 'Information has been successfully saved.');
-
-    // Redirect with a success message or handle it based on your requirements
-    return redirect()->route('logbook.index');
-    }
-
 }

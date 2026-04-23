@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -19,7 +20,7 @@ class ManagementStockController extends Controller
     {
         $keyword = $request->input('keyword');
         $user = auth()->user();
-        
+
         $query = Reagen::with(['stockReagen' => function ($query) {
             $query->select('reagen_guid', 'quantity');
         }])->where('organization_guid', $user->organization_guid);
@@ -27,8 +28,8 @@ class ManagementStockController extends Controller
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('noCatalog', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
+                    ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
 
@@ -67,16 +68,18 @@ class ManagementStockController extends Controller
     public function viewReagen($guid)
     {
         $user = auth()->user();
-        
+
         // ✅ Tambahkan 'reagenIn' ke with() agar tidak terjadi N+1 query problem
         $data = Reagen::with([
-            'stockReagen', 
-            'stockHistories' => function($q) { $q->orderBy('created_at', 'desc'); },
-            'reagenIn' 
+            'stockReagen',
+            'stockHistories' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            },
+            'reagenIn'
         ])
-        ->where('guid', $guid)
-        ->where('organization_guid', $user->organization_guid)
-        ->firstOrFail();
+            ->where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
 
         // ✅ Konversi string dari DB menjadi array untuk blade
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
@@ -90,9 +93,9 @@ class ManagementStockController extends Controller
     {
         $user = auth()->user();
         $data = Reagen::where('guid', $guid)
-                    ->where('organization_guid', $user->organization_guid)
-                    ->firstOrFail();
-                    
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
         return view('management-stock.edit-reagen', compact('data', 'hazardOptions'));
     }
@@ -102,9 +105,9 @@ class ManagementStockController extends Controller
     {
         $user = auth()->user();
         $data = Reagen::where('guid', $guid)
-                      ->where('organization_guid', $user->organization_guid)
-                      ->firstOrFail();
-                      
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
         $data->delete();
         Alert::success('Success!', 'Data has been deleted successfully');
         return redirect()->route('management-stock.index');
@@ -115,8 +118,8 @@ class ManagementStockController extends Controller
     {
         $user = auth()->user();
         $data = Reagen::where('guid', $guid)
-                      ->where('organization_guid', $user->organization_guid)
-                      ->firstOrFail();
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
 
         $validatedData = $request->validate([
             'noCatalog' => 'required',
@@ -141,9 +144,9 @@ class ManagementStockController extends Controller
     {
         $user = auth()->user();
         $reagen = Reagen::where('guid', $guid)
-                        ->where('organization_guid', $user->organization_guid)
-                        ->first();
-                        
+            ->where('organization_guid', $user->organization_guid)
+            ->first();
+
         if (!$reagen) {
             return response()->json(['error' => 'Data not found'], 404);
         }
@@ -163,8 +166,8 @@ class ManagementStockController extends Controller
 
         // Ambil GUID master reagen berdasarkan noCatalog yang diinput user
         $masterReagen = Reagen::where('noCatalog', $validatedDataStock['noCatalog'])
-                            ->where('organization_guid', $user->organization_guid)
-                            ->firstOrFail();
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
 
         // ✅ Simpan relasi GUID ke tabel ReagenIn
         $validatedDataStock['reagen_guid'] = $masterReagen->guid;
@@ -175,9 +178,9 @@ class ManagementStockController extends Controller
 
         // Update/Cbuat total stock di tabel StockReagen
         $stockReagen = StockReagen::where('reagen_guid', $masterReagen->guid)
-                                ->where('organization_guid', $user->organization_guid)
-                                ->first();
-                                
+            ->where('organization_guid', $user->organization_guid)
+            ->first();
+
         if ($stockReagen) {
             $stockReagen->quantity += $validatedDataStock['quantity'];
             $stockReagen->save();
@@ -194,16 +197,34 @@ class ManagementStockController extends Controller
         return redirect()->back();
     }
 
+    // app/Http/Controllers/ManagementStockController.php
+
+    public function addStockReagen($guid) // ✅ Ganti menjadi $guid
+    {
+        $user = auth()->user();
+
+        // Query menggunakan guid, bukan noCatalog
+        $reagen = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->first();
+
+        if (!$reagen) {
+            abort(404, "Data reagen tidak ditemukan atau Anda tidak memiliki akses.");
+        }
+
+        return view('management-stock.add-stock-reagen', compact('reagen'));
+    }
+
     public function generateLabel($id)
     {
         $user = auth()->user();
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($id);
-        
+
         if (!$data) abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
 
-        $qrCode = QrCode::size(100)->generate(url('/qrcode/'. $id));
+        $qrCode = QrCode::size(100)->generate(url('/qrcode/' . $id));
         $pdf = PDF::loadView('management-stock.reagen-label', compact('data', 'qrCode'));
         return $pdf->stream('reagen-label.pdf');
     }
@@ -214,7 +235,7 @@ class ManagementStockController extends Controller
         $data = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->find($id);
-        
+
         if (!$data) abort(404, 'Data tidak ditemukan atau tidak memiliki akses.');
 
         $qrCode = QrCode::format('png')->generate(url('/qrcode/' . $id));
@@ -230,8 +251,8 @@ class ManagementStockController extends Controller
 
         if ($reagenIn) {
             $stockReagen = StockReagen::where('noCatalog', $reagenIn->noCatalog)
-                                      ->where('organization_guid', $user->organization_guid)
-                                      ->first();
+                ->where('organization_guid', $user->organization_guid)
+                ->first();
             if ($stockReagen) {
                 $stockReagen->quantity -= $reagenIn->quantity;
                 if ($stockReagen->quantity < 0) $stockReagen->quantity = 0;
@@ -241,9 +262,9 @@ class ManagementStockController extends Controller
             $currentMonth = Carbon::now()->format('m');
             $currentYear = Carbon::now()->format('Y');
             $stockHistory = StockHistory::where('noCatalog', $reagenIn->noCatalog)
-                                        ->where('month', $currentMonth)
-                                        ->where('year', $currentYear)
-                                        ->first();
+                ->where('month', $currentMonth)
+                ->where('year', $currentYear)
+                ->first();
             if ($stockHistory) {
                 $stockHistory->quantity -= $reagenIn->quantity;
                 $stockHistory->quantity_in -= $reagenIn->quantity;
@@ -286,24 +307,29 @@ class ManagementStockController extends Controller
     public function reagenOut()
     {
         $user = auth()->user();
-        $reagenOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->orderBy('created_at', 'desc')
-        ->get()
-        ->groupBy(function ($item) {
-            return $item->created_at->format('Y-m-d');
-        });
+
+        // ✅ WAJIB ADA ->with(['reagen', 'user'])
+        $reagenOut = LogbookReagen::with(['reagen', 'user'])
+            ->whereHas('user', function ($q) use ($user) {
+                $q->where('organization_guid', $user->organization_guid);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d');
+            });
 
         $groupedData = collect($reagenOut);
         $currentPage = request()->get('page', 1);
         $perPage = 10;
-        $paginatedData = new LengthAwarePaginator(
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $groupedData->forPage($currentPage, $perPage),
             $groupedData->count(),
             $perPage,
             $currentPage,
             ['path' => request()->url()]
         );
+
         return view('management-stock.reagen-out', compact('paginatedData'));
     }
 
@@ -318,9 +344,9 @@ class ManagementStockController extends Controller
 
         if ($request->has('search')) {
             $search = $request->search;
-            $query->whereHas('reagen', function($q) use ($search) {
+            $query->whereHas('reagen', function ($q) use ($search) {
                 $q->where('nameReagen', 'LIKE', "%{$search}%")
-                  ->orWhere('noCatalog', 'LIKE', "%{$search}%");
+                    ->orWhere('noCatalog', 'LIKE', "%{$search}%");
             });
         }
 

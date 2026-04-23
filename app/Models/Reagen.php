@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,8 +15,15 @@ class Reagen extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'guid', 'noCatalog', 'nameReagen', 'merk', 'packSize',
-        'hazardOptions', 'msds', 'price', 'organization_guid',
+        'guid',
+        'noCatalog',
+        'nameReagen',
+        'merk',
+        'packSize',
+        'hazardOptions',
+        'msds',
+        'price',
+        'organization_guid',
     ];
 
     protected static function boot()
@@ -33,8 +41,9 @@ class Reagen extends Model
         return $this->belongsTo(Organization::class, 'organization_guid');
     }
 
-    // ✅ PERBAIKAN: Semua relasi menggunakan 'reagen_guid' → 'guid'
-    
+    // ✅ PERBAIKAN PENTING:
+    // Semua hasMany harus menunjuk ke foreign_key di tabel anak yaitu 'reagen_guid'
+
     public function reagenIn()
     {
         return $this->hasMany(ReagenIn::class, 'reagen_guid', 'guid');
