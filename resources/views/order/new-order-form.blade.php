@@ -1,67 +1,88 @@
 @extends('layout.main')
-
 @section('container')
-        
-<!-- Baris 1 -->
-<div class=" row d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">New Order Form</h1>
-</div><!-- Baris 1 -->
 
-<!-- Baris 2 -->
-<div class="row mb-3">
-    <!-- baris 2 kolom 1 -->
-    <div class="mr-3">
-        <a href="/new-order-form"><button class="btn btn-primary">New Order</button></a>
-    </div><!-- baris 2 kolom 1 -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    {{-- Header Section --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">New Order Form</h1>
+            <p class="text-sm text-gray-500 mt-1">Fill in the details below to submit a new reagent order request.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('order.eksisting') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                <i class="bi bi-box-arrow-in-right"></i> Existing Order
+            </a>
+            <a href="{{ route('order.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
 
-    <!-- baris 2 kolom 2 -->
-    <div class="">
-        <a href="/eksisting-order-form"><button class="btn btn-info">Eksisting Order</button></a>
-    </div><!-- baris 2 kolom 2 -->
-</div><!-- Baris 2 -->
-
-<!-- baris 3 -->
-<div class="row">
-    <!-- baris 3 kolom 1 -->
-    <div class="col">
-        <form action="{{ route('orders.store') }}" method="POST">
+    {{-- Form Card --}}
+    <form action="{{ route('orders.store') }}" method="POST" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
         @csrf
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {{-- No Catalog --}}
+            <div class="space-y-1">
+                <label for="noCatalog" class="block text-sm font-medium text-gray-700">No Catalog</label>
+                <input type="text" name="noCatalog" id="noCatalog" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('noCatalog') border-red-500 @enderror"
+                       value="{{ old('noCatalog') }}" placeholder="e.g., 1000142500">
+                @error('noCatalog') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
 
-        <div class="form-group row">
-            <label for="noCatalog">No Catalog:</label>
-            <input type="text" class="form-control" id="noCatalog" name="noCatalog" required>
+            {{-- Name Reagen --}}
+            <div class="space-y-1">
+                <label for="nameReagen" class="block text-sm font-medium text-gray-700">Reagent Name</label>
+                <input type="text" name="nameReagen" id="nameReagen" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('nameReagen') border-red-500 @enderror"
+                       value="{{ old('nameReagen') }}" placeholder="e.g., Ethanol Absolute">
+                @error('nameReagen') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Merk --}}
+            <div class="space-y-1">
+                <label for="merk" class="block text-sm font-medium text-gray-700">Brand / Merk</label>
+                <input type="text" name="merk" id="merk" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('merk') border-red-500 @enderror"
+                       value="{{ old('merk') }}" placeholder="e.g., Merck, Sigma">
+                @error('merk') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Pack Size --}}
+            <div class="space-y-1">
+                <label for="packSize" class="block text-sm font-medium text-gray-700">Pack Size</label>
+                <input type="text" name="packSize" id="packSize" required
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('packSize') border-red-500 @enderror"
+                       value="{{ old('packSize') }}" placeholder="e.g., 500 mL, 1 kg">
+                @error('packSize') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Quantity --}}
+            <div class="space-y-1 md:col-span-2">
+                <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                <input type="number" name="quantity" id="quantity" min="1" required
+                       class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('quantity') border-red-500 @enderror"
+                       value="{{ old('quantity') }}" placeholder="1">
+                @error('quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+            </div>
         </div>
 
-        <div class="form-group row">
-            <label for="nameReagen">Name Reagen:</label>
-            <input type="text" class="form-control" id="nameReagen" name="nameReagen" required>
+        {{-- Hidden Fields --}}
+        <input type="hidden" name="status" value="0">
+        <input type="hidden" name="userId" value="{{ auth()->id() }}">
+
+        {{-- Actions --}}
+        <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3">
+            <a href="{{ route('order.index') }}" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-center">
+                Cancel
+            </a>
+            <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Submit Order
+            </button>
         </div>
-
-        <div class="form-group row">
-            <label for="merk">Merk:</label>
-            <input type="text" class="form-control" id="merk" name="merk" required>
-        </div>
-
-        <div class="form-group row">
-            <label for="packSize">Pack Size:</label>
-            <input type="text" class="form-control" id="packSize" name="packSize" required>
-        </div>
-
-        <div class="form-group row">
-            <label for="quantity">Quantity:</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" required>
-        </div>
-
-        <div class="form-group">
-            <input type="hidden" class="form-control" id="status" name="status" value="0" readonly>
-            <input type="hidden" class="form-control" id="userId" name="userId" value="{{ auth()->user()->id }}" readonly>
-        </div>
-
-        <button type="submit" class="btn btn-primary row">Submit</button>
-        </form>
-    </div>    <!-- baris 3 kolom 1 -->
-</div><!-- baris 3 -->
-
-
+    </form>
+</div>
 
 @endsection

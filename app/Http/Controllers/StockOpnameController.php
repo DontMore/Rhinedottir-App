@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,7 @@ use Validator;
 
 class StockOpnameController extends Controller
 {
-    private function getMonthName($monthNumber) 
+    private function getMonthName($monthNumber)
     {
         return Carbon::create()->month($monthNumber)->format('F');
     }
@@ -64,9 +65,9 @@ class StockOpnameController extends Controller
 
         // Get filtered data with ordering and pagination
         $data = $query->orderBy('year', 'desc')
-                      ->orderBy('month', 'desc')
-                      ->paginate(15)
-                      ->withQueryString();
+            ->orderBy('month', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         // Add month names to the collection
         $data->getCollection()->transform(function ($item) {
@@ -80,56 +81,78 @@ class StockOpnameController extends Controller
     public function soDetail(Request $request)
     {
         $user = auth()->user();
-        $timezone = config('app.timezone');
         $month = $request->input('month') ?? Carbon::now()->format('m');
         $year = $request->input('year') ?? Carbon::now()->format('Y');
 
         $noCatalog = StockHistory::where('year', $year)->where('month', $month)->pluck('noCatalog')->toArray();
-        $noCatalogStd = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_id', $user->organization_id);
-        })->pluck('noCatalog')->toArray();
-        $missNoCatalog = array_diff($noCatalogStd, $noCatalog);
 
-        // Get previous month's data first
+        // ✅ PERBAIKAN: Ambil noCatalog DAN guid dari tabel reagens
+        $reagents = DB::table('reagens')
+            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
+            ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_guid', $user->organization_guid)
+            ->select('reagens.noCatalog', 'reagens.guid as reagen_guid') // ✅ Ambil guid juga
+            ->distinct()
+            ->get();
+
+        $missNoCatalog = $reagents->filter(function ($item) use ($noCatalog) {
+            return !in_array($item->noCatalog, $noCatalog);
+        });
+
         $previousMonth = $month == 1 ? 12 : $month - 1;
         $previousYear = $month == 1 ? $year - 1 : $year;
-        
-        foreach ($missNoCatalog as $noCatalog) {
+
+        foreach ($missNoCatalog as $item) {
+            $noCatalog = $item->noCatalog;
+            $reagenGuid = $item->reagen_guid; // ✅ Simpan guid dari query
+
+            if (empty($noCatalog)) continue;
+
             $previousData = StockHistory::where('year', $previousYear)
                 ->where('month', $previousMonth)
                 ->where('noCatalog', $noCatalog)
                 ->first();
 
-            $reagenInQuantitySum = ReagenIn::whereHas('user', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
-            })->whereYear('created_at', $year)
-              ->whereMonth('created_at', $month)
-              ->where('noCatalog', $noCatalog)
-              ->sum('quantity');
+            $reagenInQuantitySum = DB::table('reagens_in')
+                ->join('users', 'reagens_in.user_id', '=', 'users.id')
+                ->where('users.organization_guid', $user->organization_guid)
+                ->where('reagens_in.noCatalog', $noCatalog)
+                ->whereYear('reagens_in.created_at', $year)
+                ->whereMonth('reagens_in.created_at', $month)
+                ->sum('reagens_in.quantity');
 
-            $reagenOutQuantitySum = LogbookReagen::whereHas('user', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
-            })->whereYear('created_at', $year)
-              ->whereMonth('created_at', $month)
-              ->where('noCatalog', $noCatalog)
-              ->sum('quantity_taken');
+            $reagenOutQuantitySum = DB::table('logbook_reagens')
+                ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+                ->where('users.organization_guid', $user->organization_guid)
+                ->where('logbook_reagens.noCatalog', $noCatalog)
+                ->whereYear('logbook_reagens.created_at', $year)
+                ->whereMonth('logbook_reagens.created_at', $month)
+                ->sum('logbook_reagens.quantity_taken');
 
-            StockHistory::create([
-                'month' => $month,
-                'year' => $year,
-                'noCatalog' => $noCatalog,
-                'quantity' => $previousData ? $previousData->quantity_actual : 0,
-                'quantity_in' => $reagenInQuantitySum ?? 0,
-                'quantity_out' => $reagenOutQuantitySum ?? 0,
-                'quantity_actual' => 0,
-                'stock_opname' => 0
-            ]);
+            // ✅ updateOrCreate dengan menyertakan reagen_guid di array update/insert
+            StockHistory::updateOrCreate(
+                [
+                    'month' => $month,
+                    'year' => $year,
+                    'noCatalog' => $noCatalog,
+                ],
+                [
+                    'reagen_guid' => $reagenGuid, // ✅ Wajib disimpan agar relasi tidak null
+                    'quantity' => $previousData ? $previousData->quantity_actual : 0,
+                    'quantity_in' => $reagenInQuantitySum ?? 0,
+                    'quantity_out' => $reagenOutQuantitySum ?? 0,
+                    'quantity_actual' => 0,
+                    'stock_opname' => 0,
+                    'updated_at' => now(),
+                ]
+            );
         }
 
         $reagens = StockHistory::with('reagen')
             ->where('year', $year)
             ->where('month', $month)
-            ->get();
+            ->get()
+            ->filter(fn($item) => $item->reagen !== null);
 
         return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
     }
@@ -138,56 +161,59 @@ class StockOpnameController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+            $user = auth()->user();
             $month = $request->input('month') ?? Carbon::now()->format('m');
             $year = $request->input('year') ?? Carbon::now()->format('Y');
-            
-            // Calculate previous month/year correctly
+
             $previousMonth = $month == 1 ? 12 : $month - 1;
             $previousYear = $month == 1 ? $year - 1 : $year;
 
-            // Get existing stock histories for this month/year
             $existingStockHistories = StockHistory::where('year', $year)
                 ->where('month', $month)
                 ->get()
                 ->keyBy('noCatalog');
 
-            // Get all reagents, filter by organization
-            $user = auth()->user();
-            $noCatalogStd = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
-            })->pluck('noCatalog')->toArray();
+            // ✅ PERBAIKAN: Ambil noCatalog DAN guid
+            $reagents = DB::table('reagens')
+                ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
+                ->join('users', 'reagens_in.user_id', '=', 'users.id')
+                ->where('users.organization_guid', $user->organization_guid)
+                ->select('reagens.noCatalog', 'reagens.guid as reagen_guid')
+                ->distinct()
+                ->get();
 
-            foreach ($noCatalogStd as $noCatalog) {
-                // Skip if record exists and has been stock opnamed
+            foreach ($reagents as $item) {
+                $noCatalog = $item->noCatalog;
+                $reagenGuid = $item->reagen_guid;
+
                 if (isset($existingStockHistories[$noCatalog]) && $existingStockHistories[$noCatalog]->stock_opname == 1) {
                     continue;
                 }
 
-                // Get previous month's final quantity
                 $previousData = StockHistory::where('year', $previousYear)
                     ->where('month', $previousMonth)
                     ->where('noCatalog', $noCatalog)
                     ->first();
 
                 $quantityBefore = $previousData ? $previousData->quantity_actual : 0;
-                
-                // Calculate current month's movements, filter by organization
-                $reagenInQuantitySum = ReagenIn::whereHas('user', function ($q) use ($user) {
-                    $q->where('organization_id', $user->organization_id);
-                })->whereYear('created_at', $year)
-                  ->whereMonth('created_at', $month)
-                  ->where('noCatalog', $noCatalog)
-                  ->sum('quantity');
 
-                $reagenOutQuantitySum = LogbookReagen::whereHas('user', function ($q) use ($user) {
-                    $q->where('organization_id', $user->organization_id);
-                })->whereYear('created_at', $year)
-                  ->whereMonth('created_at', $month)
-                  ->where('noCatalog', $noCatalog)
-                  ->sum('quantity_taken');
+                $reagenInQuantitySum = DB::table('reagens_in')
+                    ->join('users', 'reagens_in.user_id', '=', 'users.id')
+                    ->where('users.organization_guid', $user->organization_guid)
+                    ->where('reagens_in.noCatalog', $noCatalog)
+                    ->whereYear('reagens_in.created_at', $year)
+                    ->whereMonth('reagens_in.created_at', $month)
+                    ->sum('reagens_in.quantity');
 
-                // Update or create record
+                $reagenOutQuantitySum = DB::table('logbook_reagens')
+                    ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+                    ->where('users.organization_guid', $user->organization_guid)
+                    ->where('logbook_reagens.noCatalog', $noCatalog)
+                    ->whereYear('logbook_reagens.created_at', $year)
+                    ->whereMonth('logbook_reagens.created_at', $month)
+                    ->sum('logbook_reagens.quantity_taken');
+
+                // ✅ Simpan reagen_guid secara eksplisit
                 StockHistory::updateOrCreate(
                     [
                         'month' => $month,
@@ -195,33 +221,26 @@ class StockOpnameController extends Controller
                         'noCatalog' => $noCatalog,
                     ],
                     [
+                        'reagen_guid' => $reagenGuid, // ✅ Kunci relasi
                         'quantity' => $quantityBefore,
                         'quantity_in' => $reagenInQuantitySum ?? 0,
                         'quantity_out' => $reagenOutQuantitySum ?? 0,
-                        'quantity_actual' => isset($existingStockHistories[$noCatalog]) ? 
-                            $existingStockHistories[$noCatalog]->quantity_actual : 0,
-                        'stock_opname' => isset($existingStockHistories[$noCatalog]) ? 
-                            $existingStockHistories[$noCatalog]->stock_opname : 0,
-                        'user_id' => auth()->user()->id,
+                        'quantity_actual' => isset($existingStockHistories[$noCatalog]) ? $existingStockHistories[$noCatalog]->quantity_actual : 0,
+                        'stock_opname' => isset($existingStockHistories[$noCatalog]) ? $existingStockHistories[$noCatalog]->stock_opname : 0,
+                        'user_id' => $user->guid,
                         'updated_at' => now()
                     ]
                 );
             }
 
             DB::commit();
-
-            $reagens = StockHistory::with('reagen')
-                ->where('year', $year)
-                ->where('month', $month)
-                ->get();
-
+            $reagens = StockHistory::with('reagen')->where('year', $year)->where('month', $month)->get();
             Alert::success('Success!', 'Stock data has been generated successfully');
             return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Generate Stock Error: ' . $e->getMessage());
-            Alert::error('Error!', 'Failed to generate stock data');
+            Alert::error('Error!', 'Failed to generate stock data: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating stock data');
         }
     }
@@ -249,7 +268,7 @@ class StockOpnameController extends Controller
                     ->where('month', $previousMonth)
                     ->where('noCatalog', $reagen->noCatalog)
                     ->first();
-                
+
                 $reagen->quantity_before = $previousData ? $previousData->quantity_actual : 0;
                 $reagen->expected_stock = ($reagen->quantity_before + $reagen->quantity_in) - $reagen->quantity_out;
                 $reagen->difference = $reagen->quantity_actual - $reagen->expected_stock;
@@ -265,7 +284,6 @@ class StockOpnameController extends Controller
 
             $pdf = PDF::loadView('stock-opname.stock-report', $data);
             return $pdf->stream('stock_opname_report_' . $year . '_' . $month . '.pdf');
-
         } catch (\Exception $e) {
             Log::error('Generate Stock Report Error: ' . $e->getMessage());
             Alert::error('Error!', 'Failed to generate stock report');
@@ -281,7 +299,7 @@ class StockOpnameController extends Controller
             $month = $request->input('month') ?? Carbon::now()->format('m');
             $year = $request->input('year') ?? Carbon::now()->format('Y');
             $quantityActualJson = $request->input('quantity_actual');
-            
+
             if (!$quantityActualJson) {
                 throw new \Exception('No quantity data provided');
             }
@@ -325,7 +343,6 @@ class StockOpnameController extends Controller
             DB::commit();
             Alert::success('Success!', 'Data Stock Opname berhasil disimpan');
             return redirect()->back()->with('success', 'Stock opname updated successfully');
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Stock Opname Update Error: ' . $e->getMessage());
@@ -335,37 +352,38 @@ class StockOpnameController extends Controller
     }
 
     // untuk mengambil data reagen untuk modal
-    public function getReagen($id, Request $request) {
+    public function getReagen($id, Request $request)
+    {
         $bulan = $request->query('bulan');
         $tahun = $request->query('tahun');
-    
+
         Log::channel('debug')->info("Parameter bulan: $bulan, tahun: $tahun, id: $id");
-    
+
         if (!$bulan || !$tahun) {
             Log::channel('debug')->error("Parameter bulan atau tahun tidak ditemukan");
             return response()->json([
                 'error' => 'Parameter bulan dan tahun wajib diisi'
             ], 400);
         }
-    
+
         $stockHistory = StockHistory::with('reagen')
             ->where('id', $id)
             ->where('month', $bulan)
             ->where('year', $tahun)
             ->first();
-    
+
         Log::channel('debug')->info("Query result: " . ($stockHistory ? $stockHistory->toJson() : 'No Data Found'));
-    
+
         if (!$stockHistory) {
             Log::channel('debug')->warning("Data tidak ditemukan untuk ID: $id, Bulan: $bulan, Tahun: $tahun");
             return response()->json([
                 'error' => 'Data tidak ditemukan untuk ID, bulan, dan tahun yang diberikan'
             ], 404);
         }
-    
+
         $reagen = $stockHistory->reagen;
         Log::channel('debug')->info("Reagen data: " . $reagen->toJson());
-    
+
         return response()->json([
             'stockHistory' => $stockHistory,
             'reagen' => $reagen
@@ -394,18 +412,17 @@ class StockOpnameController extends Controller
         // Jika validasi berhasil, lanjutkan dengan logika pembaruan
         // Update data
         $updateResult = DB::table('stock_histories')
-        ->where('id',  $request->id)
-        ->update([
-            'quantity_actual' => $request->quantity_actual,
-            'catatan' => $request->catatan,
-            'status' => $request->status,
-            'user_id' => $request->user_id,
-            'stock_opname' => 1,
-            'updated_at' => now(),
-        ]);
+            ->where('id',  $request->id)
+            ->update([
+                'quantity_actual' => $request->quantity_actual,
+                'catatan' => $request->catatan,
+                'status' => $request->status,
+                'user_id' => $request->user_id,
+                'stock_opname' => 1,
+                'updated_at' => now(),
+            ]);
 
         // Mengembalikan respons dengan data yang diperbarui
         return response()->json(['success' => 'Stock history updated successfully'], 200);
     }
-      
 }

@@ -1,116 +1,115 @@
 @extends('layout.main')
-
 @section('container')
 
-<style>
-        /* Style for radio buttons */
-        .custom-radio {
-            display: inline-block;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 15px;
-        }
+<div class="max-w-4xl mx-auto px-4 py-6">
+    {{-- Header Section --}}
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Order Detail</h1>
+        <a href="{{ route('order.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-gray-200">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
 
-        .custom-radio input {
-            display: none; /* Hide the actual radio button */
-        }
-
-        .custom-radio label {
-            background-color: #3498db;
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        /* Change background color on hover */
-        .custom-radio label:hover {
-            background-color: #2980b9;
-        }
-
-        /* Style for checked radio button */
-        .custom-radio input:checked + label {
-            background-color: #2ecc71;
-        }
-    </style>
-
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-            <h1 class="h2">Detail Order</h1>
-          </div>
-
-            <!-- Nomor Katalog -->
-             <!-- Nama Reagen -->
-             <div class="form-group">
-                <label for="namaReagen">Nomor Katalog</label>
-                <input type="text" class="form-control" id="namaReagen" name="nameReagen" value="{{ $order->noCatalog }}" readonly>
-            </div>
-
-             <!-- Nama Reagen -->
-             <div class="form-group">
-                <label for="namaReagen">Nama Reagen</label>
-                <input type="text" class="form-control" id="namaReagen" name="nameReagen" value="{{ $order->nameReagen }}" readonly>
-            </div>
-
-            <!-- Merk -->
-            <div class="form-group">
-                <label for="merk">Merk</label>
-                <input type="text" class="form-control" id="merk" name="merk" value="{{ $order->merk }}" readonly>
-            </div>
-
-            <div class="form-group">
-                <label for="packSize">Pack Size:</label>
-                <input type="text" class="form-control" id="packSize" name="packSize" value="{{ $order->packSize }}" readonly>
-            </div>
-
-            <div class="form-group">
-                <label for="quantity">Quantity:</label>
-                <input type="number" class="form-control" id="quantity" name="quantity" value="{{ $order->quantity }}" readonly>
-            </div>
-
-            <!-- Leadtime Order -->
-            <div>
-                <?php
-                    if($order->status == 0){
-                       echo "<p>Order created at: $order->created_at </p>
-                        <p>Days passed since creation: $daysPassed </p>";
-                    }else{
-                        $created_at = $order->created_at; // Waktu pembuatan
-                        $updated_at = $order->updated_at; // Waktu pembaruan
-
-                        // Menghitung selisih waktu
-                        $daysDifference = $updated_at->diffInDays($created_at);
-
-                        // Menampilkan selisih waktu
-                        echo "<p>Order created at: $order->created_at</p>
-                        <p>Days passed since creation: $daysDifference </p>";
-                    }
-                ?>
-                
-                <!-- Tampilkan informasi lainnya dari objek $order sesuai kebutuhan -->
-            </div>
-
-        <form action="{{ route('order.update', $order->id) }}" method="post">
-        @csrf
-            <div>
-                <label for="Status">Status:</label><br>
-                <div class="custom-radio">
-                    <input type="radio" name="status" id="inlineRadio1" value="0" {{ $order->status == 0 ? 'checked' : '' }}>
-                    <label for="inlineRadio1">Not Complete</label>
-                </div>
-
-                <div class="custom-radio">
-                    <input type="radio" name="status" id="inlineRadio2" value="1" {{ $order->status == 1 ? 'checked' : '' }}>
-                    <label for="inlineRadio2">Complete</label>
-                </div>
-            </div>
+    {{-- Main Card --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 sm:p-8 space-y-6">
             
-            <?php
-            if($order->status == 0){
-                echo '<button type="submit" class="btn btn-primary">Submit</button>';
-            }else{
-                
-            }
-            ?>
-        </form>
+            {{-- Info Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Catalog No</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-sm font-medium text-gray-900 font-mono">{{ $order->noCatalog ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reagent Name</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-sm font-medium text-gray-900">{{ $order->nameReagen ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Brand</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-sm font-medium text-gray-900">{{ $order->merk ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pack Size</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-sm font-medium text-gray-900">{{ $order->packSize ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quantity</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-sm font-medium text-gray-900">{{ $order->quantity ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $order->status == 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800' }}">
+                            {{ $order->status == 0 ? 'Pending' : 'Completed' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Metadata Section --}}
+            <div class="pt-4 border-t border-gray-100 flex flex-wrap gap-4 text-sm text-gray-500">
+                <div>
+                    <span class="font-medium text-gray-700">Created:</span> {{ $order->created_at ? $order->created_at->format('d M Y, H:i') : '-' }}
+                </div>
+                <div class="hidden sm:block text-gray-300">•</div>
+                <div>
+                    <span class="font-medium text-gray-700">Days Passed:</span> <span class="font-semibold text-gray-900">{{ $daysPassed ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Update Status Section (Modern Segmented Control) --}}
+            @if($order->status == 0)
+            <div class="pt-4 border-t border-gray-100">
+                <form action="{{ route('order.update', $order->guid) }}" method="POST" class="space-y-4">
+                    @csrf
+                    
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-3">Update Status</label>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        {{-- Pending Option --}}
+                        <label class="relative flex-1 cursor-pointer group">
+                            <input type="radio" name="status" value="0" class="peer sr-only" {{ $order->status == 0 ? 'checked' : '' }}>
+                            <div class="flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-500 font-medium transition-all duration-200 hover:bg-gray-50 peer-checked:border-amber-500 peer-checked:text-amber-700 peer-checked:bg-amber-50">
+                                <span class="w-2.5 h-2.5 mr-2 rounded-full bg-gray-300 peer-checked:bg-amber-500 transition-colors"></span>
+                                Pending
+                            </div>
+                        </label>
+                        
+                        {{-- Completed Option --}}
+                        <label class="relative flex-1 cursor-pointer group">
+                            <input type="radio" name="status" value="1" class="peer sr-only">
+                            <div class="flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-500 font-medium transition-all duration-200 hover:bg-gray-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 peer-checked:bg-emerald-50">
+                                <span class="w-2.5 h-2.5 mr-2 rounded-full bg-gray-300 peer-checked:bg-emerald-500 transition-colors"></span>
+                                Completed
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95 transform duration-150">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
 
 @endsection

@@ -17,6 +17,7 @@ class StockHistory extends Model
     // Define fillable columns.
     protected $fillable = [
         'guid',
+        'noCatalog',
         'month',
         'year',
         'reagen_guid',

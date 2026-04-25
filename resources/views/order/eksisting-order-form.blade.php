@@ -1,93 +1,124 @@
 @extends('layout.main')
-
 @section('container')
 
-<!-- Baris 1 -->
-<div class="row d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Eksisting Order Form</h1>
-</div>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    {{-- Header Section --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Existing Order Form</h1>
+            <p class="text-sm text-gray-500 mt-1">Select a registered reagent to quickly place a repeat order.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('order.new') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                <i class="bi bi-plus-lg"></i> New Order
+            </a>
+            <a href="{{ route('order.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
 
-<!-- baris 2 -->
-<div class="row">
-    <a href="/new-order-form"><button class="btn btn-primary mr-2">New Order</button></a>
-    <a href="/eksisting-order-form"><button class="btn btn-info">Eksisting Order</button></a>
-</div><!-- baris 2 -->
-
-<!-- baris 3 -->
-<div class="row">
-    <!-- baris 3 kolom 1 -->
-    <div class="col">
-        <form action="{{ route('orders.store') }}" method="POST">
-            @csrf
-
-            <!-- Nomor Katalog -->
-            <div class="form-group">
-                <label for="nomorKatalog">Nomor Katalog</label>
-                <select class="form-control" id="nomorKatalog" name="noCatalog">
-                    <option value="" selected>Pilih Reagen</option>
+    {{-- Form Card --}}
+    <form action="{{ route('orders.store') }}" method="POST" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+        @csrf
+        <input type="hidden" name="status" value="0">
+        <input type="hidden" name="userId" value="{{ auth()->id() }}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {{-- Reagent Selector --}}
+            <div class="space-y-1 md:col-span-2">
+                <label for="reagenSelect" class="block text-sm font-medium text-gray-700">Select Existing Reagent</label>
+                <select id="reagenSelect" required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white @error('noCatalog') border-red-500 @enderror">
+                    <option value="">-- Choose Reagent --</option>
                     @foreach($reagens as $reagen)
-                        <option value="{{ $reagen->noCatalog }}">{{ $reagen->noCatalog }} - {{ $reagen->nameReagen }}</option>
+                        <option value="{{ $reagen->noCatalog }}" 
+                                data-name="{{ $reagen->nameReagen }}" 
+                                data-merk="{{ $reagen->merk }}" 
+                                data-pack="{{ $reagen->packSize }}">
+                            {{ $reagen->nameReagen }} ({{ $reagen->noCatalog }})
+                        </option>
                     @endforeach
                 </select>
+                @error('noCatalog') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <!-- Nama Reagen -->
-            <div class="form-group">
-                <label for="namaReagen">Nama Reagen</label>
-                <input type="text" class="form-control" id="namaReagen" name="nameReagen" readonly>
+            {{-- Auto-filled Fields (Read-only) --}}
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-500">No Catalog</label>
+                <input type="text" id="noCatalog" name="noCatalog" readonly
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                       placeholder="Auto-filled">
             </div>
 
-            <!-- Merk -->
-            <div class="form-group">
-                <label for="merk">Merk</label>
-                <input type="text" class="form-control" id="merk" name="merk" readonly>
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-500">Reagent Name</label>
+                <input type="text" id="nameReagen" name="nameReagen" readonly
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                       placeholder="Auto-filled">
             </div>
 
-            <div class="form-group">
-                <label for="packSize">Pack Size:</label>
-                <input type="text" class="form-control" id="packSize" name="packSize" readonly>
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-500">Brand / Merk</label>
+                <input type="text" id="merk" name="merk" readonly
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                       placeholder="Auto-filled">
             </div>
 
-            <div class="form-group">
-                <label for="quantity">Quantity:</label>
-                <input type="number" class="form-control" id="quantity" name="quantity" required>
+            <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-500">Pack Size</label>
+                <input type="text" id="packSize" name="packSize" readonly
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                       placeholder="Auto-filled">
             </div>
 
-            <div class="form-group">
-                <input type="hidden" class="form-control" id="status" name="status" value="0" readonly>
-                <input type="hidden" class="form-control" id="userId" name="userId" value="{{ auth()->user()->id }}" readonly>
+            {{-- Quantity --}}
+            <div class="space-y-1 md:col-span-2">
+                <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                <input type="number" name="quantity" id="quantity" min="1" required
+                       class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('quantity') border-red-500 @enderror"
+                       value="{{ old('quantity') }}" placeholder="Enter quantity...">
+                @error('quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div><!-- baris 3 kolom 1 -->
-</div><!-- baris 3 -->
+        {{-- Actions --}}
+        <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3">
+            <a href="{{ route('order.index') }}" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-center">
+                Cancel
+            </a>
+            <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Submit Order
+            </button>
+        </div>
+    </form>
+</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@push('scripts')
 <script>
-    $(document).ready(function(){
-        $('#nomorKatalog').on('change', function(){
-            var noCatalogUtama = $(this).val();
-            if(noCatalogUtama) {
-                $.ajax({
-                    url: '/reagen/'+noCatalogUtama,
-                    type: "GET",
-                    dataType: "json",
-                    success:function(data) {
-                        $('#namaReagen').val(data.nameReagen);
-                        $('#merk').val(data.merk);
-                        $('#packSize').val(data.packSize);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error(xhr.responseText);
-                    }
-                });
-            } else {
-                $('#namaReagen').val('');
-                $('#merk').val('');
-                $('#packSize').val('');
-            }
-        });
+    document.getElementById('reagenSelect').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const noCatalog = this.value;
+        const name = selectedOption.getAttribute('data-name') || '';
+        const merk = selectedOption.getAttribute('data-merk') || '';
+        const pack = selectedOption.getAttribute('data-pack') || '';
+
+        // Update read-only fields
+        document.getElementById('noCatalog').value = noCatalog;
+        document.getElementById('nameReagen').value = name;
+        document.getElementById('merk').value = merk;
+        document.getElementById('packSize').value = pack;
+    });
+
+    // Reset fields when dropdown is cleared (optional UX polish)
+    document.getElementById('reagenSelect').addEventListener('focus', function() {
+        if (!this.value) {
+            ['noCatalog', 'nameReagen', 'merk', 'packSize'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        }
     });
 </script>
+@endpush
+
 @endsection

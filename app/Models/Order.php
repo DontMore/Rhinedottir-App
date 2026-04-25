@@ -22,14 +22,15 @@ class Order extends Model
         'merk',
         'packSize',
         'quantity',
-        'userId',
+        'userId',             // Biarkan sementara untuk kompatibilitas view lama
+        'user_guid',          // ✅ KOLOM BARU
+        'organization_guid',  // ✅ TAMBAHKAN JIKA BELUM ADA
         'status',
     ];
 
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
@@ -37,8 +38,9 @@ class Order extends Model
         });
     }
 
+    // ✅ Update relasi agar menggunakan user_guid (lebih konsisten dengan UUID)
     public function user()
     {
-        return $this->belongsTo(User::class, 'userId', 'id');
+        return $this->belongsTo(User::class, 'user_guid', 'guid');
     }
 }

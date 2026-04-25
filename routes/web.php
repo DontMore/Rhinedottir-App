@@ -92,12 +92,12 @@ Route::post('/take-process-admin', [LogbookController::class, 'storeTakeAdmin'])
 
 // route order
 Route::get('/order', [OrderController::class, 'index'])->name('order.index')->middleware('admin');
-Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->middleware('admin');
-Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->middleware('admin');
-Route::post('/order', [OrderController::class, 'store'])->middleware('admin')->name('orders.store');
-Route::get('/view-order/{id}', [OrderController::class, 'viewOrder'])->middleware('admin')->name('order.view');
-Route::post('/update-order/{id}', [OrderController::class, 'update'])->middleware('admin')->name('order.update');
-Route::delete('/order-delete/{id}', [OrderController::class, 'destroy'])->middleware('admin')->name('order.delete');
+Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->name('order.new')->middleware('admin');
+Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->name('order.eksisting')->middleware('admin');
+Route::post('/order', [OrderController::class, 'store'])->name('orders.store')->middleware('admin');
+Route::get('/view-order/{guid}', [OrderController::class, 'viewOrder'])->middleware('admin')->name('order.view');
+Route::post('/update-order/{guid}', [OrderController::class, 'update'])->middleware('admin')->name('order.update');
+Route::delete('/order-delete/{guid}', [OrderController::class, 'destroy'])->middleware('admin')->name('order.delete');
 Route::get('/reagen/{guidUtama}', [OrderController::class, 'getReagenData'])->middleware('admin');
 
 
