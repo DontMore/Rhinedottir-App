@@ -30,43 +30,51 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function collection()
     {
-        // Get Reagen In data
+        // Get user organization
+        $user = auth()->user();
+
+        // 1. Query Data Masuk (Reagen In)
         $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
+            ->where('users.organization_guid', $user->organization_guid)
             ->select(
                 'reagens_in.created_at',
-                'reagens_in.noCatalog',
-                'reagens_in.Id',
-                DB::raw('CAST(reagens_in.quantity AS SIGNED) as quantity'),
-                DB::raw('NULL as description'),
+                'reagens_in.reagen_guid', // ✅ Pastikan kolom ini ditarik
+                'reagens_in.id as Id',
+                'reagens_in.quantity',
+                'reagens_in.note',
                 'users.name as user_name',
                 DB::raw("'in' as transaction_type")
             );
 
-        // Get Logbook (Reagen Out) data
+        // 2. Query Data Keluar (Logbook)
         $reagenOutQuery = LogbookReagen::with(['reagen'])
             ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
+            ->where('users.organization_guid', $user->organization_guid)
             ->select(
                 'logbook_reagens.created_at',
-                'logbook_reagens.noCatalog',
+                'logbook_reagens.reagen_guid', // ✅ Pastikan kolom ini ditarik
                 'logbook_reagens.id as Id',
                 DB::raw('CAST(logbook_reagens.quantity_taken AS SIGNED) as quantity'),
-                'logbook_reagens.note as description',
+                'logbook_reagens.note',
                 'users.name as user_name',
                 DB::raw("'out' as transaction_type")
             );
+
+        // ✅ APPLY FILTERS (SINKRONISASI GUID)
+        if ($this->reagen) {
+            $reagenInQuery->where('reagens_in.reagen_guid', $this->reagen);
+            $reagenOutQuery->where('logbook_reagens.reagen_guid', $this->reagen);
+        }
 
         if ($this->start_date) {
             $reagenInQuery->whereDate('reagens_in.created_at', '>=', $this->start_date);
             $reagenOutQuery->whereDate('logbook_reagens.created_at', '>=', $this->start_date);
         }
+
         if ($this->end_date) {
             $reagenInQuery->whereDate('reagens_in.created_at', '<=', $this->end_date);
             $reagenOutQuery->whereDate('logbook_reagens.created_at', '<=', $this->end_date);
-        }
-        if ($this->reagen) {
-            $reagenInQuery->where('reagens_in.noCatalog', $this->reagen);
-            $reagenOutQuery->where('logbook_reagens.noCatalog', $this->reagen);
         }
 
         return $reagenInQuery->union($reagenOutQuery)
@@ -82,7 +90,7 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
             'Reagen',
             'Quantity',
             'Recorded By',
-            'Description'
+            'note'
         ];
     }
 
@@ -94,7 +102,7 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
             $history->reagen->nameReagen,
             $history->quantity,
             $history->user_name,
-            $history->description ?? '-'
+            $history->note ?? '-'
         ];
     }
 
@@ -104,7 +112,7 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
             'title' => 'Historical Report',
             'creator' => config('app.name'),
             'company' => config('app.name'),
-            'description' => 'Historical Report of Reagen Movement',
+            'note' => 'Historical Report of Reagen Movement',
             'subject' => 'Reagen Historical Report',
             'keywords' => 'reagen,historical,report',
         ];
@@ -114,18 +122,18 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
     {
         $lastRow = $sheet->getHighestRow();
         $data = $this->collection();
-        
+
         // Set page setup
         $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
         $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
         $sheet->getPageSetup()->setFitToWidth(1);
         $sheet->getPageSetup()->setFitToHeight(0);
-        
+
         // Set print area
         $sheet->getPageSetup()->setPrintArea("A1:F$lastRow");
-        
+
         // Set smaller font size and compact layout
-        $sheet->getStyle('A1:F'.$lastRow)->applyFromArray([
+        $sheet->getStyle('A1:F' . $lastRow)->applyFromArray([
             'font' => [
                 'size' => 8
             ],
@@ -152,17 +160,17 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
                 'startColor' => ['rgb' => 'F3F4F6']
             ]
         ]);
-        
+
         // Compact dimensions
         $sheet->getDefaultRowDimension()->setRowHeight(13);
         $sheet->getRowDimension(1)->setRowHeight(15);
-        
+
         $sheet->getColumnDimension('A')->setWidth(11); // Date
         $sheet->getColumnDimension('B')->setWidth(5);  // Type
         $sheet->getColumnDimension('C')->setWidth(18); // Reagen
         $sheet->getColumnDimension('D')->setWidth(7);  // Quantity
         $sheet->getColumnDimension('E')->setWidth(13); // Recorded By
-        $sheet->getColumnDimension('F')->setWidth(20); // Description
+        $sheet->getColumnDimension('F')->setWidth(20); // note
 
         // Summary section with slim styling
         $summaryRow = $lastRow + 1;
@@ -174,13 +182,17 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
 
         // Calculate totals
         $totalIn = $data->where('transaction_type', 'in')
-            ->sum(function($item) { return (int)$item->quantity; });
+            ->sum(function ($item) {
+                return (int)$item->quantity;
+            });
         $totalOut = $data->where('transaction_type', 'out')
-            ->sum(function($item) { return (int)$item->quantity; });
+            ->sum(function ($item) {
+                return (int)$item->quantity;
+            });
 
         // Add summary rows
         $sheet->setCellValue("A{$summaryRow}", 'Summary');
-        
+
         $sheet->setCellValue("A" . ($summaryRow + 1), 'Total Overall In:');
         $sheet->setCellValue("B" . ($summaryRow + 1), $totalIn);
         $sheet->setCellValue("A" . ($summaryRow + 2), 'Total Overall Out:');
@@ -192,9 +204,13 @@ class HistoricalExport implements FromCollection, WithHeadings, WithMapping, Wit
                 return [
                     'name' => $group->first()->reagen->nameReagen,
                     'in' => $group->where('transaction_type', 'in')
-                        ->sum(function($item) { return (int)$item->quantity; }),
+                        ->sum(function ($item) {
+                            return (int)$item->quantity;
+                        }),
                     'out' => $group->where('transaction_type', 'out')
-                        ->sum(function($item) { return (int)$item->quantity; })
+                        ->sum(function ($item) {
+                            return (int)$item->quantity;
+                        })
                 ];
             });
 

@@ -199,9 +199,9 @@ class ReportController extends Controller
                 })->values()
         ];
 
-        $reagens = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid); // ✅ Fixed
-        })->get();
+        $reagens = Reagen::where('organization_guid', $user->organization_guid)
+            ->orderBy('nameReagen')
+            ->get();
 
         return view('report.historical-report', compact('histories', 'reagens', 'summary'));
     }
