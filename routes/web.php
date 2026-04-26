@@ -159,3 +159,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/organization/{id}/add-user', [OrganizationController::class, 'storeUser'])->name('organization.storeuser')->middleware('admin');
     Route::get('/organization/{id}', [OrganizationController::class, 'show'])->name('organization.show')->middleware('admin');
 });
+
+// routes/web.php
+Route::get('/test-smtp', function () {
+    \App\Models\EmailSetting::updateConfig();
+    
+    try {
+        \Illuminate\Support\Facades\Mail::raw('Test connection', function ($msg) {
+            $msg->to('developer@onexternal.com')->subject('SMTP Test');
+        });
+        return '✅ Email terkirim!';
+    } catch (\Exception $e) {
+        return '❌ Error: ' . $e->getMessage();
+    }
+});

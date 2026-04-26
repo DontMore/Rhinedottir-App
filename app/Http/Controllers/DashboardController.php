@@ -24,76 +24,70 @@ class DashboardController extends Controller
     {
         // ✅ Ambil user yang sedang login
         $user = auth()->user();
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
 
         // Hitung total reagen berdasarkan organization_guid user
         $totalReagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->count();
 
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
         // Hitung total quantity stock berdasarkan organization_guid user
         $totalQuantity = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->sum('quantity');
 
-        // Hitung total Reagen In bulan ini berdasarkan organization_guid user
+        // Hitung total Reagen In bulan ini
         $totalQuantityIn = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->whereMonth('created_at', $currentMonth)
-          ->whereYear('created_at', $currentYear)
-          ->sum('quantity');
+            ->whereYear('created_at', $currentYear)
+            ->sum('quantity');
 
-        // Hitung total Reagen Taken (Out) bulan ini berdasarkan organization_guid user
+        // Hitung total Reagen Taken (Out) bulan ini
         $totalQuantityOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->whereMonth('created_at', $currentMonth)
-          ->whereYear('created_at', $currentYear)
-          ->sum('quantity_taken');
+            ->whereYear('created_at', $currentYear)
+            ->sum('quantity_taken');
 
-        // Ambil data logbook berdasarkan organization_guid user
+        // 🔥 QUERY BARU: Hitung pemakaian per hari bulan ini untuk Grafik Deviasi
+        $dailyUsageRaw = LogbookReagen::whereHas('user', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->selectRaw('DAY(created_at) as day, SUM(quantity_taken) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        // Isi array 0 jika tidak ada data di hari tertentu, pastikan sesuai jumlah hari bulan ini
+        $daysInMonth = Carbon::now()->daysInMonth;
+        $dailyActualUsage = [];
+        for ($i = 1; $i <= $daysInMonth; $i++) {
+            $dailyActualUsage[] = $dailyUsageRaw[$i] ?? 0;
+        }
+
+        // Ambil data logbook, stock history, order, dll (tetap sama)
         $logbook = LogbookReagen::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->get();
 
-        // Ambil data stock history dengan quantity = 0
-        $zeroStockReagen = StockHistory::where('month', $currentMonth)
-                            ->where('year', $currentYear)
-                            ->where('quantity', 0)
-                            ->get();
+        $zeroStockReagen = StockHistory::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('month', $currentMonth)
+            ->where('year', $currentYear)
+            ->where('quantity', 0)
+            ->get();
 
-        // Ambil data chart untuk reagen spesifik (noCatalog = '1000142500')
-        $stocks = StockHistory::select('month', 'year', 'quantity')
-                            ->where('noCatalog', '=', '1000142500')
-                            ->orderBy('year')
-                            ->orderBy('month')
-                            ->get();
-
-        // Proses data untuk chart
-        $chartData = [];
-        foreach ($stocks as $stock) {
-            $monthYear = $stock->month . ' ' . $stock->year;
-            if (!isset($chartData[$monthYear])) {
-                $chartData[$monthYear] = [];
-            }
-            $chartData[$monthYear][] = $stock->quantity;
-        }
-
-        $labels = array_keys($chartData);
-        $data = array_values($chartData);
-
-        // Ambil data order berdasarkan organization_guid user
         $reagenOrder = Order::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->get();
 
-        // Ambil 10 reagen dengan expired date terdekat berdasarkan organization_guid user
         $reagenED = ReagenIn::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->orderBy('expiredDate', 'asc')->take(10)->get();
 
-        // ✅ KEMBALIKAN VIEW DENGAN MENYERTAKAN $user
+        // ✅ RETURN VIEW DENGAN DATA BARU $dailyActualUsage
         return view('dashboard.dashboard', compact(
             'totalReagen',
             'totalQuantity',
@@ -102,9 +96,8 @@ class DashboardController extends Controller
             'zeroStockReagen',
             'reagenOrder',
             'reagenED',
-            'labels',
-            'data',
-            'user'  // ✅ PENTING: Tambahkan 'user' agar tersedia di view
+            'dailyActualUsage',
+            'user'
         ));
     }
 

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -18,6 +17,9 @@ class MailController extends Controller
     {
         $settings = EmailSetting::first();
         if ($settings) {
+            Config::set('mail.mailers.smtp.host', $settings->mail_host ?? 'smtp.gmail.com');
+            Config::set('mail.mailers.smtp.port', $settings->mail_port ?? 587);
+            Config::set('mail.mailers.smtp.encryption', $settings->mail_encryption ?? 'tls');
             Config::set('mail.mailers.smtp.username', $settings->mail_username);
             Config::set('mail.mailers.smtp.password', $settings->mail_password);
             Config::set('mail.from.address', $settings->mail_from_address);
@@ -58,15 +60,16 @@ class MailController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
 
+        // Konfigurasi mail settings sebelum reset password
+        $this->configureMailSettings();
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
                     'password' => Hash::make($password)
                 ])->setRememberToken(Str::random(60));
-
                 $user->save();
-
                 event(new PasswordReset($user));
             }
         );

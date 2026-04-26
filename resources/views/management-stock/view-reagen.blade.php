@@ -1,236 +1,211 @@
 @extends('layout.main')
+@section('title', 'Reagent Details')
 
 @section('container')
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Reagen Details Card -->
-    <div class="bg-white rounded-lg shadow-sm mb-6">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h1 class="text-xl font-semibold text-gray-900">Reagen Details</h1>
-            <div class="flex space-x-2">
-                <a href="{{ url()->previous() }}" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                    </svg>
-                    Back
-                </a>
-                <a href="{{ route('data.edit', ['guid' => $data->guid]) }}" 
-                   class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    Edit
-                </a>
+<div class="space-y-6">
+    <!-- Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Reagent Details</h2>
+            <p class="text-sm text-gray-500 mt-1">View specifications, hazard information, and stock movement history.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+                Back
+            </a>
+            <a href="{{ route('data.edit', ['guid' => $data->guid]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Edit Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Details & Hazards Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Information Card -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-base font-semibold text-gray-800">General Information</h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Catalog Number</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->noCatalog }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Reagent Name</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->nameReagen }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Brand</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->merk }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Pack Size</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->packSize }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Price</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">Rp {{ number_format((float)$data->price, 0, ',', '.') }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                    <span class="text-sm text-gray-500">MSDS Document</span>
+                    <span class="sm:col-span-2">
+                        <a href="{{ $data->msds }}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors ring-1 ring-inset ring-blue-700/10">
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            View MSDS
+                        </a>
+                    </span>
+                </div>
             </div>
         </div>
 
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Details List -->
-                <div class="space-y-1 divide-y divide-gray-200">
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">Catalog Number</span>
-                        <span class="font-medium text-gray-900">{{ $data->noCatalog }}</span>
-                    </div>
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">Reagen Name</span>
-                        <span class="font-medium text-gray-900">{{ $data->nameReagen }}</span>
-                    </div>
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">Brand</span>
-                        <span class="font-medium text-gray-900">{{ $data->merk }}</span>
-                    </div>
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">Pack Size</span>
-                        <span class="font-medium text-gray-900">{{ $data->packSize }}</span>
-                    </div>
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">MSDS</span>
-                        <a href="{{ $data->msds }}" class="inline-flex items-center px-3 py-1 border border-blue-600 text-sm font-medium rounded-md text-blue-600 hover:bg-blue-50" target="_blank">
-                            <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                            </svg>
-                            View MSDS
-                        </a>
-                    </div>
-                    <div class="flex justify-between py-3">
-                        <span class="text-gray-500">Price</span>
-                        <span class="font-medium text-gray-900">Rp {{ number_format((float)$data->price, 0, ',', '.') }}</span>
-                    </div>
-                </div>
-
-                <!-- Hazard Symbols -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Hazard Symbols</h2>
-                    <div class="grid grid-cols-3 gap-4">
-                        @foreach($hazardOptions as $hazard)
-                            <div class="flex flex-col items-center">
-                                @php
-                                    $imagePath = match($hazard) {
-                                        'Environment' => 'Environmental-Hazard',
-                                        default => strtolower($hazard)
-                                    };
-                                @endphp
-                                <img src="{{ asset('public/images/' . $imagePath . '.png') }}"
-                                     alt="{{ $hazard }}"
-                                     class="w-16 h-16 object-contain transition-transform duration-200 hover:scale-110">
-                                <span class="mt-2 text-sm text-gray-600">{{ $hazard }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+        <!-- Hazard Symbols Card -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-base font-semibold text-gray-800">Hazard Symbols</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    @foreach($hazardOptions as $hazard)
+                        @php
+                            $imagePath = match($hazard) {
+                                'Environment' => 'Environmental-Hazard',
+                                default => strtolower($hazard)
+                            };
+                        @endphp
+                        <div class="flex flex-col items-center p-3 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
+                            <img src="{{ asset('public/images/' . $imagePath . '.png') }}"
+                                 alt="{{ $hazard }}"
+                                 class="w-14 h-14 object-contain"
+                                 onerror="this.style.display='none'">
+                            <span class="mt-2 text-xs font-medium text-gray-600 text-center">{{ $hazard }}</span>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Stock History Table -->
-    <div class="bg-white rounded-lg shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">Stock History</h2>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 class="text-base font-semibold text-gray-800">Stock History</h3>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                Total: {{ $data->reagenIn->count() }}
+            </span>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-100">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Number</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expired Date</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($data->reagenIn as $item)
-                    <tr class="hover:bg-gray-50">
+                <tbody class="bg-white divide-y divide-gray-100">
+                    @forelse($data->reagenIn as $item)
+                    <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->batch }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->batch }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ $item->quantity }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                {{ number_format($item->quantity, 0, ',', '.') }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {{ \Carbon\Carbon::parse($item->expiredDate)->isPast() 
-                                    ? 'bg-red-100 text-red-800' 
-                                    : 'bg-blue-100 text-blue-800' }}">
+                            @php
+                                $isExpired = \Carbon\Carbon::parse($item->expiredDate)->isPast();
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' }}">
                                 {{ \Carbon\Carbon::parse($item->expiredDate)->format('d M Y') }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button type="button" 
-                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 mr-2"
-                                    onclick="showModal(this)" 
-                                    data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}"
-                                    data-id="{{ $item->Id }}">
-                                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v-4m6 0h-2"/>
-                                </svg>
-                                Label
-                            </button>
-                            <button type="button" 
-                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                                    onclick="confirmDelete({{ $item->Id }})">
-                                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                Delete
-                            </button>
-                            <form id="delete-form-{{ $item->Id }}" 
-                                  action="{{ route('management-stock.delete-stock', $item->Id) }}" 
-                                  method="POST" class="hidden">
-                                @csrf
-                                @method('DELETE')
-                            </form>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <div class="flex items-center justify-end gap-2">
+                                <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors open-label-modal" data-id="{{ $item->Id }}" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}">
+                                    <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    Label
+                                </button>
+                                <form action="{{ route('management-stock.delete-stock', $item->Id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors confirm-delete">
+                                        <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
+                            No stock history available for this reagent.
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200">
-            
         </div>
     </div>
 </div>
 
-<!-- Modal (updated) -->
-<div id="exampleModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex min-h-screen items-center justify-center p-4">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        
-        <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all max-w-4xl w-full">
-            <!-- Modal Header -->
+<!-- Label Modal -->
+<div id="labelModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" data-close-modal></div>
+        <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
             <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Label Reagen</h3>
-                <button type="button" class="text-gray-400 hover:text-gray-500" data-dismiss="modal">
+                <h3 class="text-lg font-semibold text-gray-900">Reagent Label</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500 transition-colors" data-close-modal>
                     <span class="sr-only">Close</span>
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-
-            <!-- Modal Body -->
-            <div class="p-6" id="modalBody">
-                <div class="flex flex-col md:flex-row border border-gray-200 rounded-lg bg-white">
-                    <!-- QR Code Section -->
-                    <div class="p-6 border-b md:border-b-0 md:border-r border-gray-200 flex items-center justify-center">
+            <div class="p-6" id="modalContent">
+                <div class="flex flex-col md:flex-row border border-gray-200 rounded-lg bg-white overflow-hidden">
+                    <div class="p-6 border-b md:border-b-0 md:border-r border-gray-200 flex items-center justify-center bg-gray-50">
                         <div id="qrcode"></div>
                     </div>
-
-                    <!-- Label Content -->
                     <div class="flex-1 flex flex-col">
-                        <!-- Company Header -->
-                        <div class="flex items-center p-4 border-b border-gray-200">
-                            <div class="w-32 px-2">
-                                <img src="{{ asset('images/logo_b7.png') }}" alt="Logo" class="w-full h-auto">
+                        <div class="flex items-center p-4 border-b border-gray-200 bg-gray-50/50">
+                            <div class="w-24 px-2">
+                                <img src="{{ asset('images/logo_b7.png') }}" alt="Logo" class="w-full h-auto object-contain">
                             </div>
-                            <div class="flex-1 text-center font-bold text-lg">
-                                LABORATORIUM QC-ANDEV
-                            </div>
+                            <div class="flex-1 text-center font-bold text-lg text-gray-800">LABORATORIUM QC-ANDEV</div>
                         </div>
-
-                        <!-- Info Section -->
                         <div class="flex-1 p-6 space-y-4 border-b border-gray-200">
-                            <div class="flex">
-                                <span class="w-32 text-gray-600">Nama Reagen</span>
-                                <span class="flex-1">: {{ $data->nameReagen }}</span>
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                                <span class="w-full sm:w-32 text-sm text-gray-600">Nama Reagen</span>
+                                <span class="text-sm font-medium text-gray-900 sm:flex-1">: {{ $data->nameReagen }}</span>
                             </div>
-                            <div class="flex">
-                                <span class="w-32 text-gray-600">Expired Date</span>
-                                <span class="flex-1">: <span id="expired"></span></span>
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                                <span class="w-full sm:w-32 text-sm text-gray-600">Expired Date</span>
+                                <span class="text-sm font-medium text-gray-900 sm:flex-1">: <span id="modalExpired"></span></span>
                             </div>
-                            <div class="flex">
-                                <span class="w-32 text-gray-600">Tanggal Buka</span>
-                                <span class="flex-1">: </span>
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                                <span class="w-full sm:w-32 text-sm text-gray-600">Tanggal Buka</span>
+                                <span class="text-sm font-medium text-gray-900 sm:flex-1">: ___________________</span>
                             </div>
                         </div>
-
-                        <!-- Footer -->
-                        <div class="p-4 text-right text-sm text-gray-500">
+                        <div class="p-4 text-right text-xs text-gray-500">
                             Distribution List - Lampiran 1:WI-QO-QC-1018.02
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Modal Footer -->
-            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-                <button type="button" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50" 
-                    data-dismiss="modal">
-                    Close
-                </button>
-                <button type="button" 
-                    id="downloadBtn"
-                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
-                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-close-modal>Close</button>
+                <button type="button" id="downloadLabelBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Download Label
                 </button>
             </div>
@@ -239,89 +214,68 @@
 </div>
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-function showModal(button) {
-    const modal = document.getElementById('exampleModal');
-    const expired = button.dataset.expired;
-    const id = button.dataset.id;
-    
-    // Update modal content
-    document.getElementById('expired').textContent = expired;
-    const qrcodeDiv = document.getElementById('qrcode');
-    qrcodeDiv.innerHTML = '';
-    
-    // Generate QR Code
-    var typeNumber = 4;
-    var errorCorrectionLevel = 'L';
-    var qr = qrcode(typeNumber, errorCorrectionLevel);
-    qr.addData("https://reagen.onexternal.com/qrcode/" + id);
-    qr.make();
-    qrcodeDiv.innerHTML = qr.createImgTag(6);
-    
-    // Show modal
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('labelModal');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+    const qrContainer = document.getElementById('qrcode');
+    let qrCodeInstance = null;
 
-// Use SweetAlert2 for delete confirmation
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
+    // Open Modal
+    document.querySelectorAll('.open-label-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('modalExpired').textContent = this.dataset.expired;
+            const id = this.dataset.id;
+            
+            qrContainer.innerHTML = '';
+            qrCodeInstance = new QRCode(qrContainer, {
+                text: `https://reagen.onexternal.com/qrcode/${id}`,
+                width: 128, height: 128,
+                colorDark: "#000000", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
 
-// Close modal when clicking close button or outside
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('exampleModal');
-    
-    // Close button click
-    document.querySelectorAll('[data-dismiss="modal"]').forEach(button => {
-        button.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         });
     });
-    
-    // Click outside modal
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-    });
-    
-    // Download button functionality
-    document.getElementById('downloadBtn').addEventListener('click', function() {
-        const element = document.getElementById('modalBody');
-        html2canvas(element, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-            logging: false
-        }).then(canvas => {
-            const image = canvas.toDataURL('image/png');
+
+    // Close Modal
+    const closeModal = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
+    closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+
+    // Download Label
+    document.getElementById('downloadLabelBtn').addEventListener('click', function() {
+        const element = document.getElementById('modalContent');
+        html2canvas(element, { scale: 2, backgroundColor: '#ffffff', logging: false }).then(canvas => {
             const link = document.createElement('a');
-            link.download = 'reagen_label.png';
-            link.href = image;
+            link.download = `label_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
             link.click();
+        });
+    });
+
+    // Delete Confirmation (SweetAlert2)
+    document.querySelectorAll('.confirm-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const form = this.closest('form');
+            Swal.fire({
+                title: 'Delete Stock Record?',
+                text: "This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it'
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
         });
     });
 });
 </script>
 @endpush
-
 @endsection

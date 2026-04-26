@@ -1,163 +1,144 @@
 @extends('layout.main')
 
+@section('title', 'Management Stock')
+
 @section('container')
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Header & Search -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">Management Stock</h1>
-        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <form action="{{ route('management-stock.index') }}" method="GET" class="w-full sm:w-72">
-                <div class="relative">
-                    <input type="text" 
-                        name="keyword" 
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" 
-                        placeholder="Search by Name or Brand">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                </div>
-            </form>
+<div class="space-y-6">
+    <!-- Page Header & Action Buttons -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Reagent Inventory</h2>
+            <p class="text-sm text-gray-500 mt-1">Manage stock, track movements, and organize reagents.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="add-reagen" class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                Add New
+            </a>
+            <a href="reagen-in" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Stock In
+            </a>
+            <a href="reagen-out" class="inline-flex items-center px-4 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                Stock Out
+            </a>
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-wrap gap-3 mb-6">
-              <a href="add-reagen" class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition">
-                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add New
-            </a>
-        <a href="reagen-in" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Reagen In
-        </a>
-        <a href="reagen-out" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-            </svg>
-            Reagen Out
-        </a>
-    </div>
+    <!-- Table Card -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catalog No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reagent Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    @forelse($reagens as $item)
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $item->noCatalog }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->nameReagen }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->merk }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $qty = $item->stockReagen ? $item->stockReagen->quantity : 0;
+                                $colorClass = $qty > 10 ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : ($qty > 0 ? 'bg-amber-50 text-amber-700 ring-amber-600/20' : 'bg-red-50 text-red-700 ring-red-600/20');
+                            @endphp
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{ $colorClass }}">
+                                {{ $qty }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('data.view', ['guid' => $item->guid]) }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">View</a>
+                                <a href="{{ route('reagen.addstock', ['guid' => $item->guid]) }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors">Add</a>
+                                <a href="{{ route('data.edit', ['guid' => $item->guid]) }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors">Edit</a>
+                                <form action="{{ route('data.delete', ['guid' => $item->guid]) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="confirm-button inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
+                            No reagents found. Add your first item to get started.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <!-- Table -->
-    <div class="bg-white shadow rounded-lg overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Catalog Number</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reagent Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Brand</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-100">
-                @foreach($reagens as $item)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->noCatalog }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->nameReagen }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->merk }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full {{ ($item->stockReagen && $item->stockReagen->quantity > 0) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $item->stockReagen ? $item->stockReagen->quantity : '0' }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <div class="flex flex-wrap gap-2">
-                            {{-- Detail View --}}
-                            <a href="{{ route('data.view', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium transition">View</a>
-
-                            {{-- Add Stock --}}
-                            <a href="{{ route('reagen.addstock', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium transition">Add</a>
-
-                            {{-- Edit Data --}}
-                            <a href="{{ route('data.edit', ['guid' => $item->guid]) }}" class="px-3 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 text-xs font-medium transition">Edit</a>
-
-                            {{-- Delete Data --}}
-                            <form action="{{ route('data.delete', ['guid' => $item->guid]) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" class="confirm-button px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium transition">Delete</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="mt-6 px-4 py-3 flex items-center justify-center border-t border-gray-200 sm:px-6 bg-white rounded-b-lg">
+        <!-- Pagination -->
         @if ($reagens->hasPages())
-        <nav aria-label="Page navigation example">
-            <ul class="inline-flex -space-x-px text-base h-10">
-                {{-- Previous Page Link --}}
-                @if ($reagens->onFirstPage())
-                    <li>
-                        <span class="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-400 bg-gray-100 border border-e-0 border-gray-300 rounded-s-lg cursor-not-allowed">Previous</span>
-                    </li>
-                @else
-                    <li>
-                        <a href="{{ $reagens->previousPageUrl() }}" class="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700">Previous</a>
-                    </li>
-                @endif
+        <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+            <nav aria-label="Pagination" class="flex items-center justify-between">
+                <div class="hidden sm:block text-sm text-gray-500">
+                    Showing <span class="font-medium">{{ $reagens->firstItem() }}</span> to <span class="font-medium">{{ $reagens->lastItem() }}</span> of <span class="font-medium">{{ $reagens->total() }}</span> results
+                </div>
+                <div class="flex-1 flex justify-end sm:justify-center">
+                    <ul class="inline-flex -space-x-px rounded-md shadow-sm">
+                        @if ($reagens->onFirstPage())
+                            <li><span class="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 rounded-l-md cursor-not-allowed">Previous</span></li>
+                        @else
+                            <li><a href="{{ $reagens->previousPageUrl() }}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-l-md">Previous</a></li>
+                        @endif
 
-                {{-- Pagination Elements --}}
-                @foreach ($reagens->links()->elements[0] as $page => $url)
-                    @if ($page === '...')
-                        <li>
-                            <span class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300">...</span>
-                        </li>
-                    @elseif ($page == $reagens->currentPage())
-                        <li>
-                            <a aria-current="page" class="flex items-center justify-center px-4 h-10 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">{{ $page }}</a>
-                        </li>
-                    @else
-                        <li>
-                            <a href="{{ $url }}" class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">{{ $page }}</a>
-                        </li>
-                    @endif
-                @endforeach
+                        @foreach ($reagens->links()->elements[0] as $page => $url)
+                            @if ($page === '...')
+                                <li><span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span></li>
+                            @elseif ($page == $reagens->currentPage())
+                                <li><span class="relative z-10 inline-flex items-center px-4 py-2 border border-blue-600 bg-blue-600 text-sm font-medium text-white">{{ $page }}</span></li>
+                            @else
+                                <li><a href="{{ $url }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ $page }}</a></li>
+                            @endif
+                        @endforeach
 
-                {{-- Next Page Link --}}
-                @if ($reagens->hasMorePages())
-                    <li>
-                        <a href="{{ $reagens->nextPageUrl() }}" class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700">Next</a>
-                    </li>
-                @else
-                    <li>
-                        <span class="flex items-center justify-center px-4 h-10 leading-tight text-gray-400 bg-gray-100 border border-gray-300 rounded-e-lg cursor-not-allowed">Next</span>
-                    </li>
-                @endif
-            </ul>
-        </nav>
+                        @if ($reagens->hasMorePages())
+                            <li><a href="{{ $reagens->nextPageUrl() }}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-r-md">Next</a></li>
+                        @else
+                            <li><span class="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 rounded-r-md cursor-not-allowed">Next</span></li>
+                        @endif
+                    </ul>
+                </div>
+                <div class="hidden sm:block w-1/3"></div>
+            </nav>
+        </div>
         @endif
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.0/sweetalert.min.js"></script>
-<script type="text/javascript">
-    $('.confirm-button').click(function(event) {
-        var form =  $(this).closest("form");
-        event.preventDefault();
-        swal({
-            title: `Are you sure you want to delete this?`,
-            text: "It will gone forevert",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        })
-        .then((willDelete) => {
-            if (willDelete) {
-                form.submit();
-            }
+@push('scripts')
+<script>
+    document.querySelectorAll('.confirm-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const form = this.closest('form');
+            swal({
+                title: 'Delete Reagent?',
+                text: "This action cannot be undone.",
+                icon: "warning",
+                buttons: {
+                    cancel: { text: "Cancel", visible: true, className: "swal-button--cancel" },
+                    confirm: { text: "Yes, delete it", className: "swal-button--danger" }
+                },
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    form.submit();
+                }
+            });
         });
     });
 </script>
+@endpush
 @endsection

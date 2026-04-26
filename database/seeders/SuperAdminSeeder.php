@@ -15,7 +15,7 @@ class SuperAdminSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'username' => 'superadmin', // tambahkan username
-                'password' => Hash::make('12345'),
+                'password' => Hash::make("3`[W)j!gJ;/'86<S"),
                 'role' => 'superadmin',
             ]
         );

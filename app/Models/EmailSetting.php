@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -10,9 +8,12 @@ class EmailSetting extends Model
     protected $primaryKey = 'guid';
     public $incrementing = false;
     protected $keyType = 'string';
-
+    
     protected $fillable = [
         'guid',
+        'mail_host',           // ✅ Tambah ini
+        'mail_port',           // ✅ Tambah ini
+        'mail_encryption',     // ✅ Tambah ini
         'mail_username',
         'mail_password',
         'mail_from_address',
@@ -21,7 +22,6 @@ class EmailSetting extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
@@ -34,6 +34,9 @@ class EmailSetting extends Model
         $settings = self::first();
         if ($settings) {
             config([
+                'mail.mailers.smtp.host' => $settings->mail_host,        // ✅
+                'mail.mailers.smtp.port' => $settings->mail_port,        // ✅
+                'mail.mailers.smtp.encryption' => $settings->mail_encryption, // ✅
                 'mail.mailers.smtp.username' => $settings->mail_username,
                 'mail.mailers.smtp.password' => $settings->mail_password,
                 'mail.from.address' => $settings->mail_from_address,
