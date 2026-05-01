@@ -1,107 +1,129 @@
 @extends('layout.main')
+@section('title', 'Admin Reagent Usage')
 
 @section('container')
-<div class="max-w-7xl mx-auto px-4 py-6">
-    @if(session('errors') && session('errors')->has('quantity_taken'))
-    <div id="exampleModalCenter" class="fixed inset-0 z-50 hidden">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        
-        <div class="fixed inset-0 z-10 overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-2">Insufficient stock</h3>
-                        <p class="text-sm text-gray-500">Please recheck the stock and the quantity being taken.</p>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="button" onclick="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Close</button>
-                    </div>
-                </div>
-            </div>
+<div class="space-y-6">
+    <!-- Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Record Usage (Admin)</h2>
+            <p class="text-sm text-gray-500 mt-1">Log reagent consumption for other analysts with custom dates.</p>
         </div>
+        <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+            Back
+        </a>
     </div>
 
-    <script>
-        function closeModal() {
-            document.getElementById('exampleModalCenter').classList.add('hidden');
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('exampleModalCenter').classList.remove('hidden');
-        });
-    </script>
-    @endif
-
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h1 class="text-2xl font-bold text-gray-900">Logbook</h1>
-        </div>
-
-        <div class="p-6">
-            <div class="grid gap-4 mb-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <span class="text-gray-600">Catalog Number</span>
-                    <span class="text-gray-900">: {{ $reagen->noCatalog }}</span>
+    <!-- Info & Form Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Reagent Info Card -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h3 class="text-base font-semibold text-gray-800 mb-4">Reagent Information</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-sm text-gray-500">Catalog No.</span>
+                    <span class="text-sm font-medium text-gray-900">{{ $reagen->noCatalog }}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <span class="text-gray-600">Reagent Name</span>
-                    <span class="text-gray-900">: {{ $reagen->nameReagen }}</span>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-sm text-gray-500">Reagent Name</span>
+                    <span class="text-sm font-medium text-gray-900">{{ $reagen->nameReagen }}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <span class="text-gray-600">Merk</span>
-                    <span class="text-gray-900">: {{ $reagen->merk }}</span>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-sm text-gray-500">Brand</span>
+                    <span class="text-sm font-medium text-gray-900">{{ $reagen->merk }}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <span class="text-gray-600">Stock</span>
-                    <span class="text-gray-900">: {{ optional($reagen->stockReagen)->quantity ?? 'N/A' }}</span>
+                <div class="flex justify-between items-center py-2">
+                    <span class="text-sm text-gray-500">Available Stock</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        {{ $reagen->stockReagen?->quantity ?? 0 }}
+                    </span>
                 </div>
             </div>
+        </div>
 
-            <form action="/take-process-admin" method="post" class="space-y-6">
+        <!-- Admin Usage Form Card -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-base font-semibold text-gray-800">Usage Details</h3>
+            </div>
+            <form action="/take-process-admin" method="POST" class="p-6 space-y-5">
                 @csrf
-                <input type="hidden" value="{{ $reagen->noCatalog }}" name="noCatalog">
-                <input type="hidden" value="{{ auth()->user()->id }}" name="user_id">
+                <input type="hidden" name="noCatalog" value="{{ $reagen->noCatalog }}">
+                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-                <div>
-                    <label for="id" class="block text-sm font-medium text-gray-700">Date</label>
-                    <input type="date" id="id" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1.5">Date <span class="text-red-500">*</span></label>
+                        <input type="date" id="date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required
+                            class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        @error('date') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="batchSelect" class="block text-sm font-medium text-gray-700 mb-1.5">Batch Number <span class="text-red-500">*</span></label>
+                        <select id="batchSelect" name="batch" required
+                            class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            @forelse ($reagen->reagenIn as $stock)
+                                <option value="{{ $stock->batch }}" {{ old('batch') == $stock->batch ? 'selected' : '' }}>{{ $stock->batch }}</option>
+                            @empty
+                                <option value="" disabled>No active batches</option>
+                            @endforelse
+                        </select>
+                        @error('batch') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="quantity_taken" class="block text-sm font-medium text-gray-700 mb-1.5">Quantity Taken <span class="text-red-500">*</span></label>
+                        <input type="number" id="quantity_taken" name="quantity_taken" value="{{ old('quantity_taken') }}" required min="1" placeholder="0"
+                            class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        @error('quantity_taken') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="analis" class="block text-sm font-medium text-gray-700 mb-1.5">Analyst <span class="text-red-500">*</span></label>
+                        <select id="analis" name="analis" required
+                            class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            @foreach ($analisList as $id => $name)
+                                <option value="{{ $id }}" {{ old('analis') == $id ? 'selected' : '' }}>{{ $name }} - {{ $id }}</option>
+                            @endforeach
+                        </select>
+                        @error('analis') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
                 </div>
 
                 <div>
-                    <label for="batchSelect" class="block text-sm font-medium text-gray-700">Batch Number</label>
-                    <select id="batchSelect" name="batch" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        @foreach ($reagen->reagenIn as $stock)
-                            <option value="{{ $stock->batch }}">{{ $stock->batch }}</option>
-                        @endforeach
-                    </select>
+                    <label for="note" class="block text-sm font-medium text-gray-700 mb-1.5">Notes</label>
+                    <textarea id="note" name="note" rows="3" placeholder="Optional remarks about this usage..."
+                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-y">{{ old('note') }}</textarea>
+                    @error('note') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label for="quantity_taken" class="block text-sm font-medium text-gray-700">Quantity Taken</label>
-                    <input type="number" id="quantity_taken" name="quantity_taken" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                </div>
-
-                <div>
-                    <label for="analis" class="block text-sm font-medium text-gray-700">Analis</label>
-                    <select id="analis" name="analis" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        @foreach ($analisList as $id => $name)
-                            <option value="{{ $id }}">{{ $name }} - {{ $id }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="note" class="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea id="note" name="note" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
-                </div>
-
-                <div>
-                    <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Submit
+                <div class="pt-2">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                        <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Submit Record
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@if(session('errors') && session('errors')->has('quantity_taken'))
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        title: 'Insufficient Stock',
+        text: 'Please recheck the available stock and the quantity being taken.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3b82f6'
+    });
+});
+</script>
+@endpush
+@endif
 @endsection
