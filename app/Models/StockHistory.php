@@ -6,15 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class StockHistory extends Model
-{
-    protected $table = 'stock_histories'; // Replace 'stock_reagents' with the actual table name as needed.
+// ✅ 1. Import Interface & Trait Audit
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-    protected $primaryKey = 'guid'; // The column used as the primary key.
+class StockHistory extends Model implements AuditableContract
+{
+    // ✅ 2. Tambahkan Trait Auditing
+    use HasFactory, Auditable;
+
+    protected $table = 'stock_histories';
+    protected $primaryKey = 'guid';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // Define fillable columns.
     protected $fillable = [
         'guid',
         'noCatalog',
@@ -28,13 +33,15 @@ class StockHistory extends Model
         'status',
         'stock_opname',
         'catatan',
-        'user_id'
+        'user_id',
     ];
+
+    // ✅ 3. Exclude field auto-generated/immutable agar tidak membanjiri audit trail
+    protected $auditExclude = ['guid'];
 
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
@@ -42,7 +49,6 @@ class StockHistory extends Model
         });
     }
 
-    // Relationship with the NoKatalogReagen model (Foreign Key).
     public function reagen()
     {
         return $this->belongsTo(Reagen::class, 'reagen_guid', 'guid');

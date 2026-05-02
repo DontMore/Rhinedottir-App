@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class Order extends Model
+// ✅ 1. Import Interface & Trait Audit
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
+
+class Order extends Model implements AuditableContract
 {
-    use HasFactory;
+    // ✅ 2. Tambahkan Trait Auditing
+    use HasFactory, Auditable;
 
     protected $table = 'orders';
     protected $primaryKey = 'guid';
@@ -22,11 +27,14 @@ class Order extends Model
         'merk',
         'packSize',
         'quantity',
-        'userId',             // Biarkan sementara untuk kompatibilitas view lama
-        'user_guid',          // ✅ KOLOM BARU
-        'organization_guid',  // ✅ TAMBAHKAN JIKA BELUM ADA
+        'userId',
+        'user_guid',
+        'organization_guid',
         'status',
     ];
+
+    // ✅ 3. Exclude field auto-generated/immutable agar tidak membanjiri log audit
+    protected $auditExclude = ['guid'];
 
     protected static function boot()
     {
@@ -38,7 +46,7 @@ class Order extends Model
         });
     }
 
-    // ✅ Update relasi agar menggunakan user_guid (lebih konsisten dengan UUID)
+    // ✅ Relasi ke User menggunakan user_guid (konsisten dengan UUID)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_guid', 'guid');

@@ -1,20 +1,27 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class StockReagen extends Model
+// ✅ 1. Import Interface & Trait Audit
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
+
+class StockReagen extends Model implements AuditableContract
 {
+    // ✅ 2. Tambahkan Trait Auditing
+    use Auditable;
+
     protected $table = 'stock_reagens';
     protected $primaryKey = 'guid';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // ✅ PERBAIKAN: Tambahkan 'noCatalog' ke fillable
     protected $fillable = [
         'guid',
-        'noCatalog',        // 👈 WAJIB: agar bisa di-mass-assign
+        'noCatalog',
         'reagen_guid',
         'batch',
         'quantity',
@@ -23,6 +30,9 @@ class StockReagen extends Model
         'stockUpdateDate',
         'organization_guid',
     ];
+
+    // ✅ 3. Exclude field auto-generated agar tidak membanjiri audit trail
+    protected $auditExclude = ['guid'];
 
     protected static function boot()
     {
@@ -40,7 +50,7 @@ class StockReagen extends Model
         return $this->belongsTo(Reagen::class, 'reagen_guid', 'guid');
     }
 
-    // Perbaiki juga relasi ini (sebelumnya salah pakai guid,guid)
+    // Relasi ke LogbookReagen
     public function logbookReagen()
     {
         return $this->belongsTo(LogbookReagen::class, 'noCatalog', 'noCatalog');

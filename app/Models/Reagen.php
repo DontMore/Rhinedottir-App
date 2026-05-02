@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class Reagen extends Model
+// ✅ 1. Import Interface & Trait Audit
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
+
+class Reagen extends Model implements AuditableContract
 {
-    use HasFactory;
+    // ✅ 2. Tambahkan Trait Auditing
+    use HasFactory, Auditable;
 
     protected $primaryKey = 'guid';
     public $incrementing = false;
@@ -25,6 +30,9 @@ class Reagen extends Model
         'price',
         'organization_guid',
     ];
+
+    // ✅ 3. Exclude field auto-generated agar tidak membanjiri audit trail
+    protected $auditExclude = ['guid'];
 
     protected static function boot()
     {
@@ -43,7 +51,6 @@ class Reagen extends Model
 
     // ✅ PERBAIKAN PENTING:
     // Semua hasMany harus menunjuk ke foreign_key di tabel anak yaitu 'reagen_guid'
-
     public function reagenIn()
     {
         return $this->hasMany(ReagenIn::class, 'reagen_guid', 'guid');

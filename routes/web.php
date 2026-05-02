@@ -173,3 +173,10 @@ Route::get('/test-smtp', function () {
         return '❌ Error: ' . $e->getMessage();
     }
 });
+
+use App\Http\Controllers\AuditLogController;
+
+// ⚠️ WAJIB: Bungkus dengan middleware auth/admin agar tidak diakses publik
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+});

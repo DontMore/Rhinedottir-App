@@ -1,90 +1,90 @@
 <nav class="fixed top-0 z-50 w-full bg-gray-900 border-b border-gray-700">
-  <div class="px-3 py-3 lg:px-5 lg:pl-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center justify-start rtl:justify-end">
-        <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-gray-400 rounded-lg sm:hidden hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600">
-            <span class="sr-only">Open sidebar</span>
-            <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-               <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
-            </svg>
-         </button>
-        <a href="https://flowbite.com" class="flex ms-2 md:me-24">
-          <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-white">Rhinedottir</span>
-        </a>
-      </div>
-
-      <div class="flex items-center">
-  <div class="relative ms-3">
-    <!-- User Menu Button -->
-    <button type="button" class="flex items-center text-sm bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
-      <span class="sr-only">Open user menu</span>
-      <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="User photo">
-    </button>
-
-    <!-- Dropdown Menu -->
-    <div class="hidden absolute right-0 z-50 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg" id="dropdown-user">
-      <div class="px-4 py-3 border-b border-gray-700">
-        <p class="text-sm font-medium text-white">
-          @auth
-            {{ auth()->user()->name }}
-          @else
-            Guest
-          @endauth
-        </p>
-        <p class="text-xs text-gray-400 mt-1">
-          <span class="inline-flex items-center">
-            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-            </svg>
-            @auth
-              {{ auth()->user()->role }} - Org: {{ auth()->user()->organization_guid }}
-            @else
-              Guest
-            @endauth
-          </span>
-        </p>
-      </div>
-      <ul class="py-2 text-sm">
-         @auth
-        <li>
-          <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" 
-             class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            Settings
-          </a>
-        </li>
-        <li>
-          <form action="{{ route('logout') }}" method="POST" class="w-full">
-            @csrf
-            <button type="submit" 
-                    class="flex w-full items-center px-4 py-2 text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors duration-200">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
-              Sign out
+   <div class="px-3 py-3 lg:px-5 lg:pl-3">
+      <div class="flex items-center justify-between">
+         <div class="flex items-center justify-start rtl:justify-end">
+            <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-gray-400 rounded-lg sm:hidden hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600">
+               <span class="sr-only">Open sidebar</span>
+               <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
+               </svg>
             </button>
-          </form>
-        </li>
-        @endauth
-      </ul>
-    </div>
-  </div>
+            <a href="https://flowbite.com" class="flex ms-2 md:me-24">
+               <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-white">Rhinedottir</span>
+            </a>
+         </div>
+
+         <div class="flex items-center">
+            <div class="relative ms-3">
+               <!-- User Menu Button -->
+               <button type="button" class="flex items-center text-sm bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+                  <span class="sr-only">Open user menu</span>
+                  <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="User photo">
+               </button>
+
+               <!-- Dropdown Menu -->
+               <div class="hidden absolute right-0 z-50 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg" id="dropdown-user">
+                  <div class="px-4 py-3 border-b border-gray-700">
+                     <p class="text-sm font-medium text-white">
+                        @auth
+                        {{ auth()->user()->name }}
+                        @else
+                        Guest
+                        @endauth
+                     </p>
+                     <p class="text-xs text-gray-400 mt-1">
+                        <span class="inline-flex items-center">
+                           <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                           </svg>
+                           @auth
+                           {{ auth()->user()->role }} - Org: {{ auth()->user()->organization_guid }}
+                           @else
+                           Guest
+                           @endauth
+                        </span>
+                     </p>
+                  </div>
+                  <ul class="py-2 text-sm">
+                     @auth
+                     <li>
+                        <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}"
+                           class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                           </svg>
+                           Settings
+                        </a>
+                     </li>
+                     <li>
+                        <form action="{{ route('logout') }}" method="POST" class="w-full">
+                           @csrf
+                           <button type="submit"
+                              class="flex w-full items-center px-4 py-2 text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors duration-200">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                              </svg>
+                              Sign out
+                           </button>
+                        </form>
+                     </li>
+                     @endauth
+                  </ul>
+               </div>
+            </div>
 
 
-    </div>
-  </div>
+         </div>
+      </div>
 </nav>
 
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-gray-900 border-r border-gray-700 sm:translate-x-0" aria-label="Sidebar">
    <div class="h-full px-3 pb-4 overflow-y-auto bg-gray-900">
       <ul class="space-y-2 font-medium">
-          {{-- Dashboard - Admin & Superadmin dengan organization_guid check --}}
-          @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_guid)
+         {{-- Dashboard - Admin & Superadmin dengan organization_guid check --}}
+         @canany(['admin', 'superadmin'])
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('dashboard.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -93,12 +93,12 @@
                <span class="ms-3">Dashboard</span>
             </a>
          </li>
-            @endif
-          @endcanany
-          
-          {{-- Stock Management - Admin & Superadmin dengan organization_guid check --}}
-          @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_guid)
+         @endif
+         @endcanany
+
+         {{-- Stock Management - Admin & Superadmin dengan organization_guid check --}}
+         @canany(['admin', 'superadmin'])
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('management-stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -107,11 +107,11 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Stock Management</span>
             </a>
          </li>
-            @endif
-          @endcanany
-          
-          {{-- Stock Opname - Semua role dengan organization_guid check --}}
-          @if(auth()->user()->organization_guid)
+         @endif
+         @endcanany
+
+         {{-- Stock Opname - Semua role dengan organization_guid check --}}
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -120,10 +120,10 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Stock Opname</span>
             </a>
          </li>
-          @endif
-          
-          {{-- Orders - Semua role dengan organization_guid check --}}
-          @if(auth()->user()->organization_guid)
+         @endif
+
+         {{-- Orders - Semua role dengan organization_guid check --}}
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('order.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -132,11 +132,11 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Orders</span>
             </a>
          </li>
-          @endif
-          
-          {{-- Reports - Admin & Superadmin dengan organization_guid check --}}
-          @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_guid)
+         @endif
+
+         {{-- Reports - Admin & Superadmin dengan organization_guid check --}}
+         @canany(['admin', 'superadmin'])
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('report.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -145,12 +145,12 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Reports</span>
             </a>
          </li>
-            @endif
-          @endcanany
-          
-          {{-- Users - Admin & Superadmin dengan organization_guid check --}}
-          @canany(['admin', 'superadmin'])
-            @if(auth()->user()->organization_guid)
+         @endif
+         @endcanany
+
+         {{-- Users - Admin & Superadmin dengan organization_guid check --}}
+         @canany(['admin', 'superadmin'])
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="user-list" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -159,11 +159,25 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Users</span>
             </a>
          </li>
-            @endif
-          @endcanany
-          
-          {{-- Settings - Semua role dengan organization_guid check --}}
-          @if(auth()->user()->organization_guid)
+         @endif
+         @endcanany
+
+         {{-- Audit Trail - Admin & Superadmin dengan organization_guid check --}}
+         @canany(['admin', 'superadmin'])
+         @if(auth()->user()->organization_guid)
+         <li>
+            <a href="{{ route('audit-logs.index') }} " class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group ">
+               <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white " xmlns="http://www.w3.org/2000/svg " fill="none " viewBox="0 0 24 24 " stroke-width="1.5 " stroke="currentColor ">
+                  <path stroke-linecap="round " stroke-linejoin="round " d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z "> </path>
+               </svg>
+               <span class="flex-1 ms-3 whitespace-nowrap ">Audit Trail </span>
+            </a>
+         </li>
+         @endif
+         @endcanany
+
+         {{-- Settings - Semua role dengan organization_guid check --}}
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('settings.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -173,22 +187,22 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Settings</span>
             </a>
          </li>
-          @endif
-          
-          {{-- Super Admin Menu - Hanya Superadmin tanpa organization_guid check (global access) --}}
-          @can('superadmin')
+         @endif
+
+         {{-- Super Admin Menu - Hanya Superadmin tanpa organization_guid check (global access) --}}
+         @can('superadmin')
          <li>
             <a href="{{ route('superadmin.index') }}" class="flex items-center p-2 text-yellow-300 rounded-lg hover:bg-yellow-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-yellow-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                </svg>
                <span class="flex-1 ms-3 whitespace-nowrap">Super Admin</span>
             </a>
          </li>
-          @endcan
-          
-          {{-- Logbook - Semua role dengan organization_guid check --}}
-          @if(auth()->user()->organization_guid)
+         @endcan
+
+         {{-- Logbook - Semua role dengan organization_guid check --}}
+         @if(auth()->user()->organization_guid)
          <li>
             <a href="{{ route('logbook.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group">
                <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-all duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -197,7 +211,7 @@
                <span class="flex-1 ms-3 whitespace-nowrap">Logbook</span>
             </a>
          </li>
-          @endif
+         @endif
       </ul>
    </div>
 </aside>

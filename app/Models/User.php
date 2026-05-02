@@ -8,9 +8,14 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable
+// ✅ PERBAIKAN: Import trait dengan nama yang benar
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable; // ← Trait-nya bernama Auditable, bukan Auditing
+
+class User extends Authenticatable implements AuditableContract
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    // ✅ PERBAIKAN: Gunakan trait Auditable
+    use HasApiTokens, HasFactory, Notifiable, Auditable;
 
     protected $primaryKey = 'guid';
     public $incrementing = false;
@@ -24,7 +29,7 @@ class User extends Authenticatable
         'password',
         'role',
         'organization_guid',
-        'is_active', // ✅ Tambahkan ini
+        'is_active',
     ];
 
     protected $hidden = [
@@ -35,15 +40,17 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'is_active' => 'boolean', // ✅ Cast sebagai boolean
+        'is_active' => 'boolean',
     ];
+
+    // ✅ Opsional: Exclude field sensitif dari audit
+    protected $auditExclude = ['password', 'remember_token'];
 
     public function username()
     {
         return 'username';
     }
 
-    // ✅ Scopes untuk query aktif/non-aktif
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -54,7 +61,6 @@ class User extends Authenticatable
         return $query->where('is_active', false);
     }
 
-    // ✅ Helper methods
     public function isActive(): bool
     {
         return $this->is_active === true;
@@ -73,12 +79,10 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
             }
-            // ✅ Default is_active = true saat registrasi
             if (!isset($model->is_active)) {
                 $model->is_active = true;
             }
