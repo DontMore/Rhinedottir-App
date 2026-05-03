@@ -42,4 +42,10 @@ class AuditLogController extends Controller
 
         return view('audit-logs.index', compact('audits', 'models', 'events', 'users'));
     }
+
+    public function show($id)
+    {
+        $audit = Audit::with('user')->findOrFail($id);
+        return view('audit-logs.show', compact('audit'));
+    }
 }

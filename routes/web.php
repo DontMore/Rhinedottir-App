@@ -179,4 +179,5 @@ use App\Http\Controllers\AuditLogController;
 // ⚠️ WAJIB: Bungkus dengan middleware auth/admin agar tidak diakses publik
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/audit-logs/{id}', [AuditLogController::class, 'show'])->name('audit-logs.show');
 });
