@@ -145,6 +145,9 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
     Route::post('/email', [SettingsController::class, 'updateEmailSettings'])->name('email.update');
     Route::get('/profile', [SettingsController::class, 'profileSettings'])->name('profile');
     Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/api', [SettingsController::class, 'apiSettings'])->name('api');
+    Route::post('/api', [SettingsController::class, 'updateApiSettings'])->name('api.update');
+    Route::post('/api/regenerate-token', [SettingsController::class, 'regenerateApiToken'])->name('api.regenerate-token');
 });
 
 Route::middleware(['auth'])->group(function () {

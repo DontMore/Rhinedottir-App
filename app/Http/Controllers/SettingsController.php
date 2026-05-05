@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\EmailSetting;
+use App\Models\ApiSetting;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\Artisan;
 
@@ -55,6 +56,56 @@ class SettingsController extends Controller
         Artisan::call('config:clear');
 
         Alert::success('Success', 'Email settings updated successfully');
+        return back();
+    }
+
+    public function apiSettings()
+    {
+        $settings = ApiSetting::first();
+        return view('settings.api', compact('settings'));
+    }
+
+    public function updateApiSettings(Request $request)
+    {
+        $request->validate([
+            'gas_web_app_url' => 'nullable|url',
+            'is_active' => 'boolean',
+        ]);
+
+        $settings = ApiSetting::first();
+        $isActive = $request->has('is_active') ? $request->is_active : false;
+
+        if (!$settings) {
+            ApiSetting::create([
+                'gas_web_app_url' => $request->gas_web_app_url,
+                'is_active' => $isActive,
+            ]);
+        } else {
+            $settings->update([
+                'gas_web_app_url' => $request->gas_web_app_url,
+                'is_active' => $isActive,
+            ]);
+        }
+
+        Alert::success('Success', 'API settings updated successfully');
+        return back();
+    }
+
+    public function regenerateApiToken()
+    {
+        $settings = ApiSetting::first();
+        
+        if (!$settings) {
+            $settings = ApiSetting::create([
+                'is_active' => false,
+            ]);
+        } else {
+            $settings->update([
+                'api_token' => \Illuminate\Support\Str::random(60)
+            ]);
+        }
+
+        Alert::success('Success', 'API Token regenerated successfully');
         return back();
     }
 }
