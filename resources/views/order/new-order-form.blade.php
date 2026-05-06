@@ -19,16 +19,21 @@
     </div>
 
     {{-- Form Card --}}
-    <form action="{{ route('orders.store') }}" method="POST" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+    <form action="{{ route('orders.store') }}" method="POST" id="orderForm" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
         @csrf
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             {{-- No Catalog --}}
             <div class="space-y-1">
                 <label for="noCatalog" class="block text-sm font-medium text-gray-700">No Catalog</label>
-                <input type="text" name="noCatalog" id="noCatalog" required
-                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('noCatalog') border-red-500 @enderror"
-                       value="{{ old('noCatalog') }}" placeholder="e.g., 1000142500">
+                <div class="relative">
+                    <input type="text" name="noCatalog" id="noCatalog" required
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('noCatalog') border-red-500 @enderror"
+                           value="{{ old('noCatalog', request('catalog')) }}" placeholder="e.g., 1000142500">
+                    <div id="loadingSpinner" class="hidden absolute right-3 top-3">
+                        <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    </div>
+                </div>
                 @error('noCatalog') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -84,5 +89,51 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        function fetchReagenData(catalog) {
+            if (!catalog) return;
+            
+            $('#loadingSpinner').removeClass('hidden');
+            
+            // Search for reagen data using existing endpoint
+            // Note: The endpoint expects GUID, but we might need a search by catalog
+            // Let's check if we can find it in the organization
+            $.ajax({
+                url: "{{ url('/reagen') }}/" + catalog, // This might need verification
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(data) {
+                    if (data) {
+                        $('#nameReagen').val(data.nameReagen);
+                        $('#merk').val(data.merk);
+                        $('#packSize').val(data.packSize);
+                    }
+                },
+                complete: function() {
+                    $('#loadingSpinner').addClass('hidden');
+                }
+            });
+        }
+
+        // Auto-fetch if catalog is in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const catalogParam = urlParams.get('catalog');
+        if (catalogParam) {
+            fetchReagenData(catalogParam);
+        }
+
+        // Fetch on manual input change
+        $('#noCatalog').on('change', function() {
+            fetchReagenData($(this).val());
+        });
+    });
+</script>
+@endpush
 
 @endsection

@@ -51,7 +51,8 @@ class ManagementStockController extends Controller
             'packSize' => 'required',
             'hazardOptions' => 'array',
             'msds' => 'required',
-            'price' => 'required'
+            'price' => 'required',
+            'buffer_stock' => 'required|numeric|min:0'
         ]);
 
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
@@ -128,7 +129,8 @@ class ManagementStockController extends Controller
             'packSize' => 'required',
             'hazardOptions' => 'array',
             'msds' => 'required',
-            'price' => 'required'
+            'price' => 'required',
+            'buffer_stock' => 'required|numeric|min:0'
         ]);
 
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];

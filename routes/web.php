@@ -54,6 +54,7 @@ Route::get('/reagent-chart', function () {
 });
 Route::get('/logbook-chart-data', [DashboardController::class, 'getLogbookChartData']);
 Route::get('/logbook-reagent-list', [DashboardController::class, 'getLogbookReagentList']);
+Route::get('/deviation-chart-data', [DashboardController::class, 'getDeviationData']);
 Route::get('/logbook-chart', function () {
     return view('logbook_chart');
 });

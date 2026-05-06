@@ -98,8 +98,8 @@
                 </div>
             </div>
 
-            <!-- MSDS & Price -->
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <!-- MSDS, Price, & Buffer Stock -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">MSDS Link <span class="text-red-500">*</span></label>
                     <input type="url" name="msds" value="{{ old('msds') }}" required placeholder="https://..."
@@ -116,6 +116,12 @@
                             class="block w-full pl-10 rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                         @error('price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Buffer Stock <span class="text-red-500">*</span></label>
+                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', 0) }}" required placeholder="0"
+                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    @error('buffer_stock') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>

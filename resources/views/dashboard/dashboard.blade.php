@@ -53,6 +53,12 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // ✅ Pick random reagent on load
+            if (data.length > 0) {
+                const randomReagent = data[Math.floor(Math.random() * data.length)];
+                select.val(randomReagent.noCatalog).trigger('change');
+            }
         });
 
         // ✅ Chart Update Function (Combined)
@@ -168,6 +174,7 @@
             const noCatalog = $(this).val();
             if (noCatalog) {
                 updateCombinedChart(noCatalog);
+                deviationChartModule.update(noCatalog);
             } else {
                 if (combinedChartInstance) {
                     combinedChartInstance.destroy();
@@ -177,65 +184,83 @@
         });
 
         // 🔥 LOGIKA GRAFIK DEVIASI PEMAKAIAN REAGEN
-        (function() {
-            const actualUsageData = @json($dailyActualUsage ?? []);
-            const daysInMonth = actualUsageData.length > 0 ? actualUsageData.length : 30;
-            const daysLabels = Array.from({length: daysInMonth}, (_, i) => `Hari ${i + 1}`);
+        const deviationChartModule = (function() {
             let deviationChartInstance = null;
-
-            function renderDeviationChart(target) {
+            let currentUsageData = @json($monthlyActualUsage ?? []);
+            let currentLabels = @json($monthLabels ?? []);
+            
+            function renderDeviationChart(usageData = null, labels = null) {
                 const ctx = document.getElementById('deviationChart')?.getContext('2d');
                 if (!ctx) return;
                 
-                const deviations = actualUsageData.map(val => val - target);
+                if (usageData) currentUsageData = usageData;
+                if (labels) currentLabels = labels;
+                
+                const count = currentUsageData.length;
+                
+                // Hitung Rata-rata (Mean)
+                const sum = currentUsageData.reduce((a, b) => a + b, 0);
+                const average = sum / (count || 1);
+                
+                // Hitung Deviasi dari Rata-rata (Baseline 0)
+                const deviations = currentUsageData.map(val => (val - average).toFixed(2));
 
                 if (deviationChartInstance) {
+                    deviationChartInstance.data.labels = currentLabels;
                     deviationChartInstance.data.datasets[0].data = deviations;
                     deviationChartInstance.update('active');
                     return;
                 }
 
                 deviationChartInstance = new Chart(ctx, {
-                    type: 'bar',
+                    type: 'line',
                     data: {
-                        labels: daysLabels,
-                        datasets: [{
-                            label: 'Deviasi',
-                            data: deviations,
-                            backgroundColor: ctx => ctx.raw >= 0 ? 'rgba(239, 68, 68, 0.75)' : 'rgba(16, 185, 129, 0.75)',
-                            borderColor: ctx => ctx.raw >= 0 ? 'rgba(239, 68, 68, 1)' : 'rgba(16, 185, 129, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4,
-                            borderSkipped: false
-                        }]
+                        labels: currentLabels,
+                        datasets: [
+                            {
+                                label: 'Deviasi Pemakaian',
+                                data: deviations,
+                                borderColor: '#9ca3af',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: {
+                                    target: 'origin',
+                                    above: 'rgba(239, 68, 68, 0.15)', // Merah jika > rata-rata (Boros)
+                                    below: 'rgba(16, 185, 129, 0.15)'  // Hijau jika < rata-rata (Hemat)
+                                },
+                                pointBackgroundColor: context => context.raw >= 0 ? '#ef4444' : '#10b981',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: { duration: 500, easing: 'easeOutQuart' },
+                        animation: { duration: 800, easing: 'easeOutQuart' },
                         interaction: { mode: 'index', intersect: false },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
                                 backgroundColor: '#111827',
-                                titleFont: { size: 13, weight: '600' },
+                                padding: 15,
+                                cornerRadius: 10,
+                                titleFont: { size: 13, weight: 'bold' },
                                 bodyFont: { size: 12 },
-                                padding: 12,
-                                cornerRadius: 8,
-                                displayColors: false,
                                 callbacks: {
                                     title: items => `📅 ${items[0].label}`,
                                     label: function(context) {
-                                        const target = parseInt(document.getElementById('targetSlider')?.value || 50);
-                                        const actual = actualUsageData[context.dataIndex];
                                         const dev = context.raw;
-                                        const isPositive = dev >= 0;
+                                        const actual = currentUsageData[context.dataIndex];
+                                        const isAbove = dev >= 0;
                                         
                                         return [
-                                            `Pemakaian Aktual: ${actual} unit`,
-                                            `Target Saat Ini: ${target} unit`,
-                                            `Deviasi: ${isPositive ? '+' : ''}${dev} unit`,
-                                            `📌 Kesimpulan: ${isPositive ? `⚠️ Boros sebanyak ${Math.abs(dev)}` : `✅ Hemat sebanyak ${Math.abs(dev)}`}`
+                                            `Pemakaian: ${actual} unit`,
+                                            `Rata-rata: ${average.toFixed(2)} unit`,
+                                            `Deviasi: ${isAbove ? '+' : ''}${dev} unit dari rata-rata`,
+                                            `📌 Status: ${isAbove ? '⚠️ Di Atas Rata-rata' : '✅ Di Bawah Rata-rata'}`
                                         ];
                                     }
                                 }
@@ -244,19 +269,22 @@
                         scales: {
                             x: {
                                 grid: { display: false },
-                                ticks: { color: '#9ca3af', font: { size: 11 }, maxTicksLimit: 15 }
+                                ticks: { color: '#9ca3af', font: { size: 11 }, maxTicksLimit: 12 }
                             },
                             y: {
                                 beginAtZero: false,
                                 grid: {
-                                    color: ctx => ctx.tick.value === 0 ? 'rgba(17, 24, 39, 0.4)' : '#f3f4f6',
-                                    lineWidth: ctx => ctx.tick.value === 0 ? 2.5 : 1,
-                                    borderDash: ctx => ctx.tick.value === 0 ? [] : [2, 4]
+                                    color: (ctx) => ctx.tick.value === 0 ? '#111827' : '#f3f4f6',
+                                    lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
+                                    drawBorder: false
                                 },
                                 ticks: {
                                     color: '#9ca3af',
                                     font: { size: 11, weight: '500' },
-                                    callback: val => val === 0 ? 'TARGET (0)' : (val > 0 ? `+${val}` : `${val}`)
+                                    callback: function(value) {
+                                        if (value === 0) return 'MEAN (0)';
+                                        return (value > 0 ? '+' : '') + value;
+                                    }
                                 }
                             }
                         }
@@ -264,18 +292,23 @@
                 });
             }
 
-            const slider = document.getElementById('targetSlider');
-            const display = document.getElementById('targetValueDisplay');
+            return {
+                update: function(noCatalog) {
+                    const chartCanvas = document.getElementById('deviationChart');
+                    chartCanvas.style.opacity = '0.5';
 
-            if (slider && document.getElementById('deviationChart')) {
-                renderDeviationChart(parseInt(slider.value));
-                slider.addEventListener('input', function() {
-                    const newTarget = parseInt(this.value);
-                    if (display) display.textContent = newTarget;
-                    renderDeviationChart(newTarget);
-                });
-            }
+                    $.get("{{ url('/deviation-chart-data') }}", { noCatalog: noCatalog }, function(data) {
+                        chartCanvas.style.opacity = '1';
+                        renderDeviationChart(data.values, data.labels);
+                    });
+                },
+                init: function() {
+                    renderDeviationChart();
+                }
+            };
         })();
+
+        deviationChartModule.init();
     });
 </script>
 @endpush
@@ -358,22 +391,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
             <h2 class="text-xl font-bold text-gray-900">Grafik Deviasi Pemakaian Reagen</h2>
-            <p class="text-sm text-gray-500 mt-1">Analisis selisih pemakaian aktual vs target harian</p>
-        </div>
-        
-        {{-- Slider Kontrol Target --}}
-        <div class="w-full sm:w-72 bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <label for="targetSlider" class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Target Pemakaian Harian</label>
-            <div class="flex items-center justify-between mt-3">
-                <span class="text-xs text-gray-400">0</span>
-                <div class="text-center">
-                    <span id="targetValueDisplay" class="text-2xl font-extrabold text-emerald-600">50</span>
-                    <span class="text-xs text-gray-500 ml-1">unit</span>
-                </div>
-                <span class="text-xs text-gray-400">100</span>
-            </div>
-            <input type="range" id="targetSlider" min="0" max="100" value="50" step="1" 
-                   class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+            <p class="text-sm text-gray-500 mt-1">Analisis selisih pemakaian aktual terhadap rata-rata bulanan</p>
         </div>
     </div>
 

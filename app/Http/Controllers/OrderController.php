@@ -18,7 +18,18 @@ class OrderController extends Controller
         $orders = Order::whereHas('user', function ($q) use ($user) {
             $q->where('organization_guid', $user->organization_guid);
         })->get();
-        return view('order.order', compact('orders'));
+
+        // Rekomendasi Order: Stok <= Buffer Stock
+        $recommendations = Reagen::with('stockReagen')
+            ->where('organization_guid', $user->organization_guid)
+            ->where('buffer_stock', '>', 0)
+            ->get()
+            ->filter(function ($reagen) {
+                $currentStock = $reagen->stockReagen ? $reagen->stockReagen->quantity : 0;
+                return $currentStock <= $reagen->buffer_stock;
+            });
+
+        return view('order.order', compact('orders', 'recommendations'));
     }
 
     public function newOrderForm()

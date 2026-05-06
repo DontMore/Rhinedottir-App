@@ -28,6 +28,7 @@ class Reagen extends Model implements AuditableContract
         'hazardOptions',
         'msds',
         'price',
+        'buffer_stock',
         'organization_guid',
     ];
 

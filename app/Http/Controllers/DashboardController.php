@@ -28,66 +28,58 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
 
         // Hitung total reagen berdasarkan organization_guid user
-        $totalReagen = Reagen::whereHas('reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->count();
+        $totalReagen = Reagen::where('organization_guid', $user->organization_guid)->count();
 
         // Hitung total quantity stock berdasarkan organization_guid user
-        $totalQuantity = StockReagen::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->sum('quantity');
+        $totalQuantity = StockReagen::where('organization_guid', $user->organization_guid)->sum('quantity');
 
         // Hitung total Reagen In bulan ini
-        $totalQuantityIn = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->whereMonth('created_at', $currentMonth)
+        $totalQuantityIn = ReagenIn::where('organization_guid', $user->organization_guid)
+            ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->sum('quantity');
 
         // Hitung total Reagen Taken (Out) bulan ini
-        $totalQuantityOut = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->whereMonth('created_at', $currentMonth)
+        $totalQuantityOut = LogbookReagen::where('organization_guid', $user->organization_guid)
+            ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->sum('quantity_taken');
 
-        // 🔥 QUERY BARU: Hitung pemakaian per hari bulan ini untuk Grafik Deviasi
-        $dailyUsageRaw = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
-            ->selectRaw('DAY(created_at) as day, SUM(quantity_taken) as total')
-            ->groupBy('day')
-            ->pluck('total', 'day');
+        // 🔥 QUERY BARU: Hitung pemakaian per bulan (12 bulan terakhir) untuk Grafik Deviasi
+        $months = [];
+        $monthLabels = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $months[] = $date->format('Y-m');
+            $monthLabels[] = $date->format('M Y');
+        }
 
-        // Isi array 0 jika tidak ada data di hari tertentu, pastikan sesuai jumlah hari bulan ini
-        $daysInMonth = Carbon::now()->daysInMonth;
-        $dailyActualUsage = [];
-        for ($i = 1; $i <= $daysInMonth; $i++) {
-            $dailyActualUsage[] = $dailyUsageRaw[$i] ?? 0;
+        $monthlyUsageRaw = LogbookReagen::where('organization_guid', $user->organization_guid)
+            ->where('created_at', '>=', Carbon::now()->subMonths(11)->startOfMonth())
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(quantity_taken) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $monthlyActualUsage = [];
+        foreach ($months as $m) {
+            $monthlyActualUsage[] = (float) ($monthlyUsageRaw[$m] ?? 0);
         }
 
         // Ambil data logbook, stock history, order, dll (tetap sama)
-        $logbook = LogbookReagen::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->get();
+        $logbook = LogbookReagen::where('organization_guid', $user->organization_guid)->get();
 
-        $zeroStockReagen = StockHistory::whereHas('reagen.reagenIn.user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->where('month', $currentMonth)
-            ->where('year', $currentYear)
+        $zeroStockReagen = StockReagen::where('organization_guid', $user->organization_guid)
             ->where('quantity', 0)
             ->get();
 
-        $reagenOrder = Order::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->get();
+        $reagenOrder = Order::where('organization_guid', $user->organization_guid)->get();
 
-        $reagenED = ReagenIn::whereHas('user', function ($q) use ($user) {
-            $q->where('organization_guid', $user->organization_guid);
-        })->orderBy('expiredDate', 'asc')->take(10)->get();
+        $reagenED = ReagenIn::where('organization_guid', $user->organization_guid)
+            ->orderBy('expiredDate', 'asc')
+            ->take(10)
+            ->get();
 
-        // ✅ RETURN VIEW DENGAN DATA BARU $dailyActualUsage
+        // ✅ RETURN VIEW DENGAN DATA BARU $monthlyActualUsage
         return view('dashboard.dashboard', compact(
             'totalReagen',
             'totalQuantity',
@@ -96,7 +88,8 @@ class DashboardController extends Controller
             'zeroStockReagen',
             'reagenOrder',
             'reagenED',
-            'dailyActualUsage',
+            'monthlyActualUsage',
+            'monthLabels',
             'user'
         ));
     }
@@ -154,20 +147,11 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         $reagents = DB::table('reagens')
-            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
-            ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->where('users.organization_guid', $user->organization_guid)
-            ->select('reagens.noCatalog', 'reagens.nameReagen')
+            ->where('organization_guid', $user->organization_guid)
+            ->select('noCatalog', 'nameReagen')
             ->distinct()
-            ->orderBy('reagens.nameReagen', 'asc')
+            ->orderBy('nameReagen', 'asc')
             ->get();
-
-        if ($reagents->isEmpty()) {
-            Log::info('No reagents found in database for user', [
-                'user_id' => $user->id,
-                'organization_guid' => $user->organization_guid
-            ]);
-        }
 
         return response()->json($reagents);
     }
@@ -215,6 +199,41 @@ class DashboardController extends Controller
         return response()->json($data);
     }
 
+    public function getDeviationData(Request $request)
+    {
+        $noCatalog = $request->query('noCatalog');
+        $user = auth()->user();
+        
+        $months = [];
+        $labels = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $months[] = $date->format('Y-m');
+            $labels[] = $date->format('M Y');
+        }
+
+        $query = LogbookReagen::where('organization_guid', $user->organization_guid)
+            ->where('created_at', '>=', Carbon::now()->subMonths(11)->startOfMonth());
+
+        if ($noCatalog) {
+            $query->where('noCatalog', $noCatalog);
+        }
+
+        $monthlyUsageRaw = $query->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(quantity_taken) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $data = [];
+        foreach ($months as $m) {
+            $data[] = (float) ($monthlyUsageRaw[$m] ?? 0);
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'values' => $data
+        ]);
+    }
+
     /**
      * Mendapatkan daftar reagen untuk chart logbook berdasarkan organization_guid.
      *
@@ -225,20 +244,11 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         $reagents = DB::table('reagens')
-            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
-            ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->where('users.organization_guid', $user->organization_guid)
-            ->select('reagens.noCatalog', 'reagens.nameReagen')
+            ->where('organization_guid', $user->organization_guid)
+            ->select('noCatalog', 'nameReagen')
             ->distinct()
-            ->orderBy('reagens.nameReagen', 'asc')
+            ->orderBy('nameReagen', 'asc')
             ->get();
-
-        if ($reagents->isEmpty()) {
-            Log::info('No reagents found in database for logbook', [
-                'user_id' => $user->id,
-                'organization_guid' => $user->organization_guid
-            ]);
-        }
 
         return response()->json($reagents);
     }
