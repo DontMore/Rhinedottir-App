@@ -135,6 +135,9 @@ Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('st
 Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
 Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
 Route::post('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
+Route::get('/stock-opname/random-usage', [StockOpnameController::class, 'randomUsage'])->middleware('admin')->name('stock.random-usage');
+Route::post('/stock-opname/random-usage/process', [StockOpnameController::class, 'processRandomUsage'])->middleware('admin')->name('stock.random-usage.process');
+Route::get('/api/stock-history-summary', [StockOpnameController::class, 'getStockHistorySummary'])->middleware('admin')->name('stock.history-summary');
 
 //route email
 Route::get('kirim-email','App\Http\Controllers\MailController@index');

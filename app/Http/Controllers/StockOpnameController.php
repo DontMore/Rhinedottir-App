@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -424,5 +425,203 @@ class StockOpnameController extends Controller
 
         // Mengembalikan respons dengan data yang diperbarui
         return response()->json(['success' => 'Stock history updated successfully'], 200);
+    }
+ 
+    public function randomUsage()
+    {
+        $user = auth()->user();
+        $reagens = Reagen::where('organization_guid', $user->organization_guid)
+            ->whereHas('stockReagen', function ($q) {
+                $q->where('quantity', '>', 0);
+            })
+            ->with('stockReagen')
+            ->get();
+ 
+        $allUsers = User::where('organization_guid', $user->organization_guid)
+            ->where('is_active', true)
+            ->get();
+ 
+        return view('stock-opname.random-usage', compact('reagens', 'allUsers'));
+    }
+ 
+    public function processRandomUsage(Request $request)
+    {
+        $user = auth()->user();
+        $validated = $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer',
+            'count' => 'required|integer|min:1|max:100',
+            'excluded_dates' => 'nullable|string',
+            'excluded_users' => 'nullable|array',
+            'reagen_guid' => 'nullable|string|exists:reagens,guid',
+        ]);
+ 
+        $month = $validated['month'];
+        $year = $validated['year'];
+        $count = $validated['count'];
+        $excludedDays = [];
+        if ($validated['excluded_dates']) {
+            $excludedDays = array_map('trim', explode(',', $validated['excluded_dates']));
+        }
+ 
+        // 1. Ambil analis aktif di organisasi ini
+        $userQuery = User::where('organization_guid', $user->organization_guid)
+            ->where('is_active', true);
+ 
+        if ($validated['excluded_users']) {
+            $userQuery->whereNotIn('guid', $validated['excluded_users']);
+        }
+ 
+        $users = $userQuery->get();
+ 
+        if ($users->isEmpty()) {
+            Alert::error('Error', 'No active users found in your organization.');
+            return redirect()->back();
+        }
+ 
+        // 2. Ambil reagen yang punya stok di organisasi ini
+        $reagenQuery = Reagen::where('organization_guid', $user->organization_guid)
+            ->whereHas('stockReagen', function ($q) {
+                $q->where('quantity', '>', 0);
+            })
+            ->with('stockReagen');
+ 
+        if ($validated['reagen_guid']) {
+            $reagenQuery->where('guid', $validated['reagen_guid']);
+        }
+ 
+        $reagensWithStock = $reagenQuery->get();
+ 
+        if ($reagensWithStock->isEmpty()) {
+            Alert::error('Error', 'No reagents with available stock found.');
+            return redirect()->back();
+        }
+ 
+        $generatedCount = 0;
+        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
+ 
+        DB::beginTransaction();
+        try {
+            for ($i = 0; $i < $count; $i++) {
+                // Pilih hari random (1 - daysInMonth)
+                $day = rand(1, $daysInMonth);
+                $randomDate = Carbon::create($year, $month, $day);
+ 
+                // Cek jika hari adalah weekend atau excluded
+                if ($randomDate->isWeekend() || in_array($day, $excludedDays)) {
+                    $i--; // Ulangi iterasi ini
+                    continue;
+                }
+ 
+                // Pilih reagen random
+                $reagen = $reagensWithStock->random();
+                $randomUser = $users->random();
+                $qtyToTake = 1; // Fix: Satu users hanya mengambil satu reagen dalam satu kali pengambilan
+ 
+                // Cek stok lagi secara real di DB (takut kegeser oleh iterasi sebelumnya)
+                $currentStock = StockReagen::where('reagen_guid', $reagen->guid)
+                    ->where('organization_guid', $user->organization_guid)
+                    ->sum('quantity');
+ 
+                if ($currentStock < $qtyToTake) {
+                    continue; // Skip jika stok habis di tengah jalan
+                }
+ 
+                // Kurangi stok FIFO (mirip LogbookController)
+                $stockItems = StockReagen::where('reagen_guid', $reagen->guid)
+                    ->where('organization_guid', $user->organization_guid)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+ 
+                $remainingToTake = $qtyToTake;
+                $usedBatch = null;
+ 
+                // Cari batch yang tersedia untuk reagen ini dari ReagenIn
+                $reagenIn = ReagenIn::where('reagen_guid', $reagen->guid)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                
+                $defaultBatch = $reagenIn ? $reagenIn->batch : 'B-'.rand(1000, 9999);
+ 
+                foreach ($stockItems as $stockItem) {
+                    if ($remainingToTake <= 0) break;
+                    
+                    // Gunakan batch dari stockItem jika ada, jika tidak pakai batch dari ReagenIn
+                    $usedBatch = $stockItem->batch ?? $defaultBatch;
+ 
+                    if ($stockItem->quantity >= $remainingToTake) {
+                        $stockItem->quantity -= $remainingToTake;
+                        $stockItem->save();
+                        $remainingToTake = 0;
+                    } else {
+                        $remainingToTake -= $stockItem->quantity;
+                        $stockItem->quantity = 0;
+                        $stockItem->save();
+                    }
+                }
+ 
+                // Simpan ke Logbook
+                LogbookReagen::create([
+                    'reagen_guid' => $reagen->guid,
+                    'noCatalog' => $reagen->noCatalog,
+                    'user_id' => $randomUser->id,
+                    'organization_guid' => $user->organization_guid,
+                    'batch' => $usedBatch,
+                    'quantity_taken' => $qtyToTake,
+                    'note' => '[System Generated - Random Usage]',
+                    'created_at' => $randomDate->setTime(rand(8, 16), rand(0, 59), rand(0, 59)), // Jam kerja random
+                ]);
+ 
+                // Update StockHistory untuk bulan tersebut
+                $stockHistory = StockHistory::where('reagen_guid', $reagen->guid)
+                    ->where('month', $month)
+                    ->where('year', $year)
+                    ->first();
+ 
+                if ($stockHistory) {
+                    $stockHistory->increment('quantity_out', $qtyToTake);
+                } else {
+                    // Jika belum ada history-nya (meskipun harusnya ada dari StockOpname logic)
+                    StockHistory::create([
+                        'reagen_guid' => $reagen->guid,
+                        'noCatalog' => $reagen->noCatalog,
+                        'month' => $month,
+                        'year' => $year,
+                        'quantity_out' => $qtyToTake,
+                        'quantity' => 0, // start qty will be synced later by SO logic
+                        'organization_guid' => $user->organization_guid,
+                    ]);
+                }
+ 
+                $generatedCount++;
+            }
+ 
+            DB::commit();
+            Alert::success('Success', "Successfully generated $generatedCount random usage records.");
+            return redirect()->route('stock.index');
+ 
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Random Usage Error: " . $e->getMessage());
+            Alert::error('Error', 'An error occurred during generation: ' . $e->getMessage());
+            return redirect()->back();
+        }
+    }
+ 
+    public function getStockHistorySummary(Request $request)
+    {
+        $user = auth()->user();
+        $month = $request->query('month');
+        $year = $request->query('year');
+ 
+        $history = StockHistory::with('reagen')
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereHas('reagen', function($q) use ($user) {
+                $q->where('organization_guid', $user->organization_guid);
+            })
+            ->get();
+ 
+        return response()->json($history);
     }
 }
