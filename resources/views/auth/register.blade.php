@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('container')
-<div class="max-w-2xl mx-auto px-4 py-6">
+<div class="space-y-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Register New User</h1>
         <a href="{{ url()->previous() }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">
@@ -13,7 +13,7 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <form method="POST" action="/register" class="p-6 space-y-6">
+        <form method="POST" action="{{ route('user.store') }}" class="p-6 space-y-6">
             @csrf
             <div class="grid gap-6 md:grid-cols-2">
                 <div>

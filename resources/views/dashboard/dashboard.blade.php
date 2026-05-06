@@ -175,6 +175,7 @@
             if (noCatalog) {
                 updateCombinedChart(noCatalog);
                 deviationChartModule.update(noCatalog);
+                batchExpiryChartModule.update(noCatalog);
             } else {
                 if (combinedChartInstance) {
                     combinedChartInstance.destroy();
@@ -309,6 +310,115 @@
         })();
 
         deviationChartModule.init();
+
+        // 🔥 LOGIKA GRAFIK BATCH EXPIRY TIMELINE
+        const batchExpiryChartModule = (function() {
+            let chartInstance = null;
+
+            return {
+                update: function(noCatalog) {
+                    const chartCanvas = document.getElementById('batchExpiryChart');
+                    const warningAlert = document.getElementById('expiryWarningAlert');
+                    if (!chartCanvas) return;
+                    
+                    chartCanvas.style.opacity = '0.5';
+
+                    $.get("{{ url('/batch-expiry-data') }}", { noCatalog: noCatalog }, function(data) {
+                        chartCanvas.style.opacity = '1';
+                        const ctx = chartCanvas.getContext('2d');
+                        
+                        if (chartInstance) chartInstance.destroy();
+                        
+                        if (data.length === 0) {
+                            warningAlert?.classList.add('hidden');
+                            return;
+                        }
+
+                        let hasWarning = false;
+                        const labels = data.map(item => `Batch: ${item.batch}`);
+                        const values = data.map(item => {
+                            if (item.monthsRemaining <= 3) hasWarning = true;
+                            return Math.max(0, item.monthsRemaining);
+                        });
+                        
+                        if (hasWarning) warningAlert?.classList.remove('hidden');
+                        else warningAlert?.classList.add('hidden');
+
+                        chartInstance = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Bulan Tersisa',
+                                    data: values,
+                                    backgroundColor: (context) => {
+                                        const val = context.raw;
+                                        const g = ctx.createLinearGradient(0, 0, 400, 0);
+                                        if (val <= 3) {
+                                            g.addColorStop(0, '#f87171');
+                                            g.addColorStop(1, '#ef4444');
+                                        } else {
+                                            g.addColorStop(0, '#34d399');
+                                            g.addColorStop(1, '#10b981');
+                                        }
+                                        return g;
+                                    },
+                                    borderRadius: 20,
+                                    barThickness: 12,
+                                    maxBarThickness: 15,
+                                }]
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: { duration: 1000, easing: 'easeOutQuart' },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        backgroundColor: '#111827',
+                                        padding: 12,
+                                        cornerRadius: 10,
+                                        titleFont: { size: 12, weight: 'bold' },
+                                        bodyFont: { size: 11 },
+                                        displayColors: false,
+                                        callbacks: {
+                                            label: (context) => {
+                                                const item = data[context.dataIndex];
+                                                return [
+                                                    `⏳ Masa Berlaku: ${item.monthsRemaining} bulan`,
+                                                    `📅 Tanggal ED: ${item.formattedED}`,
+                                                    `📦 Stok: ${item.quantity} unit`,
+                                                    `📌 Status: ${item.status}`
+                                                ];
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        beginAtZero: true,
+                                        grid: { color: '#f3f4f6', drawBorder: false },
+                                        ticks: { 
+                                            color: '#9ca3af',
+                                            font: { size: 10 },
+                                            callback: val => val + ' bln'
+                                        }
+                                    },
+                                    y: {
+                                        grid: { display: false },
+                                        ticks: { 
+                                            color: '#4b5563',
+                                            font: { weight: '600', size: 11 }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+            };
+        })();
     });
 </script>
 @endpush
@@ -395,9 +505,49 @@
         </div>
     </div>
 
-    {{-- Canvas Grafik --}}
     <div class="h-96 w-full relative">
         <canvas id="deviationChart"></canvas>
+    </div>
+</div>
+
+{{-- 🗓️ Batch Expiry Timeline (Gantt-style) --}}
+<div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm mt-8 transition-all duration-300 hover:shadow-md">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Batch Expiry Timeline</h2>
+            <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <i class="fas fa-history text-blue-500"></i>
+                Estimasi masa kadaluarsa berdasarkan nomor batch reagen
+            </p>
+        </div>
+        <div class="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-gradient-to-r from-red-400 to-red-600 shadow-sm shadow-red-200"></span>
+                <span class="text-xs font-bold text-gray-600 tracking-wide uppercase">< 3 Bulan</span>
+            </div>
+            <div class="w-px h-4 bg-gray-200"></div>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-sm shadow-emerald-200"></span>
+                <span class="text-xs font-bold text-gray-600 tracking-wide uppercase">Aman</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="batchExpiryContainer" class="h-80 w-full relative">
+        <canvas id="batchExpiryChart"></canvas>
+    </div>
+    
+    <div id="expiryWarningAlert" class="hidden mt-6 p-5 bg-gradient-to-r from-red-50 to-white border border-red-100 rounded-3xl flex items-center gap-5 shadow-sm shadow-red-50 transition-all duration-500">
+        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-red-500 flex-shrink-0 shadow-sm border border-red-50">
+            <i class="fas fa-bell animate-bounce text-xl"></i>
+        </div>
+        <div class="flex-grow">
+            <h4 class="text-base font-black text-red-900 tracking-tight">Peringatan Stok Mendekati ED!</h4>
+            <p class="text-sm text-red-600/80 mt-0.5 leading-relaxed">Beberapa batch akan kadaluarsa dalam waktu dekat. Pastikan ketersediaan stok dengan memesan reagen baru sebelum masa ED berakhir.</p>
+        </div>
+        <div class="hidden sm:block">
+            <a href="{{ route('order.index') }}" class="px-5 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-colors">Order Now</a>
+        </div>
     </div>
 </div>
 

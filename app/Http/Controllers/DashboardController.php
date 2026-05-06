@@ -234,6 +234,38 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function getBatchExpiryData(Request $request)
+    {
+        $noCatalog = $request->query('noCatalog');
+        $user = auth()->user();
+
+        if (!$noCatalog) {
+            return response()->json([]);
+        }
+
+        $batches = ReagenIn::where('organization_guid', $user->organization_guid)
+            ->where('noCatalog', $noCatalog)
+            ->select('batch', 'expiredDate', 'quantity')
+            ->orderBy('expiredDate', 'asc')
+            ->get()
+            ->map(function ($item) {
+                $now = Carbon::now();
+                $ed = Carbon::parse($item->expiredDate);
+                $monthsRemaining = $now->diffInMonths($ed, false);
+                
+                return [
+                    'batch' => $item->batch,
+                    'expiredDate' => $item->expiredDate,
+                    'formattedED' => $ed->format('d M Y'),
+                    'monthsRemaining' => $monthsRemaining,
+                    'status' => $monthsRemaining <= 0 ? 'Expired' : ($monthsRemaining <= 3 ? 'Warning' : 'Safe'),
+                    'quantity' => $item->quantity
+                ];
+            });
+
+        return response()->json($batches);
+    }
+
     /**
      * Mendapatkan daftar reagen untuk chart logbook berdasarkan organization_guid.
      *

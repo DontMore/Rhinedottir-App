@@ -340,9 +340,7 @@ class ManagementStockController extends Controller
         $user = auth()->user();
         $query = ReagenIn::with('reagen')
             ->where('quantity', '>', 0)
-            ->whereHas('user', function ($q) use ($user) {
-                $q->where('organization_guid', $user->organization_guid);
-            });
+            ->where('organization_guid', $user->organization_guid);
 
         if ($request->has('search')) {
             $search = $request->search;

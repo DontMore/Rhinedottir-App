@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('container')
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="space-y-6">
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">

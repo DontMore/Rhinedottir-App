@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('container')
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="space-y-6">
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

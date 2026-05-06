@@ -29,7 +29,7 @@ use App\Http\Controllers\OrganizationController;
 Route::get('/', [AuthenticationController::class, 'login'])->name('login');
 Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
 Route::post('/login', [AuthenticationController::class, 'authenticate']);
-Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout')->middleware('admin');
+Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout')->middleware('auth');
 Route::delete('/user/{id}', [AuthenticationController::class, 'deleteUser'])->name('user.delete')->middleware('admin');
 // Toggle status user
 Route::patch('/user/{id}/toggle-status', [AuthenticationController::class, 'toggleStatus'])->name('user.toggle-status');
@@ -38,7 +38,7 @@ Route::patch('/user/{id}/toggle-status', [AuthenticationController::class, 'togg
 Route::get('/user-list', [AuthenticationController::class, 'userList'])->middleware('admin')->name('user.index');
 Route::get('/register', [AuthenticationController::class, 'register'])->middleware('admin')->name('user.register');
 Route::get('/register-guest', [AuthenticationController::class, 'registerGuest'])->name('register.guest');
-Route::post('/register', [AuthenticationController::class, 'store']);
+Route::post('/register', [AuthenticationController::class, 'store'])->name('user.store');
 Route::get('/users/edit/{id}', [AuthenticationController::class, 'editUser'])->name('user.edit')->middleware('auth');
 // Route::put('/users/update/{id}', [AuthenticationController::class, 'updateUser'])->name('user.update')->middleware('auth');
 Route::put('/user/{id}', [AuthenticationController::class, 'update'])->name('user.update');
@@ -55,6 +55,7 @@ Route::get('/reagent-chart', function () {
 Route::get('/logbook-chart-data', [DashboardController::class, 'getLogbookChartData']);
 Route::get('/logbook-reagent-list', [DashboardController::class, 'getLogbookReagentList']);
 Route::get('/deviation-chart-data', [DashboardController::class, 'getDeviationData']);
+Route::get('/batch-expiry-data', [DashboardController::class, 'getBatchExpiryData']);
 Route::get('/logbook-chart', function () {
     return view('logbook_chart');
 });
@@ -92,14 +93,16 @@ Route::post('/take-process-admin', [LogbookController::class, 'storeTakeAdmin'])
 
 
 // route order
-Route::get('/order', [OrderController::class, 'index'])->name('order.index')->middleware('admin');
-Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->name('order.new')->middleware('admin');
-Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->name('order.eksisting')->middleware('admin');
-Route::post('/order', [OrderController::class, 'store'])->name('orders.store')->middleware('admin');
-Route::get('/view-order/{guid}', [OrderController::class, 'viewOrder'])->middleware('admin')->name('order.view');
-Route::post('/update-order/{guid}', [OrderController::class, 'update'])->middleware('admin')->name('order.update');
-Route::delete('/order-delete/{guid}', [OrderController::class, 'destroy'])->middleware('admin')->name('order.delete');
-Route::get('/reagen/{guidUtama}', [OrderController::class, 'getReagenData'])->middleware('admin');
+Route::middleware(['admin'])->group(function () {
+    Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+    Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->name('order.new');
+    Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->name('order.eksisting');
+    Route::post('/order', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/view-order/{guid}', [OrderController::class, 'viewOrder'])->name('order.view');
+    Route::post('/update-order/{guid}', [OrderController::class, 'update'])->name('order.update');
+    Route::delete('/order-delete/{guid}', [OrderController::class, 'destroy'])->name('order.delete');
+    Route::get('/reagen/{guidUtama}', [OrderController::class, 'getReagenData']);
+});
 
 
 // route report
@@ -139,16 +142,27 @@ Route::get('/reset-password', [MailController::class, 'resetPassword'])->name('p
 Route::get('/reset-password/{token}', [MailController::class, 'resetPassword'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password',  [MailController::class, 'update'])->middleware('guest')->name('password.update');
 
+use App\Http\Controllers\BackupController;
+
 // Settings Routes
 Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(function () {
-    Route::get('/', [SettingsController::class, 'index'])->name('index');
-    Route::get('/email', [SettingsController::class, 'emailSettings'])->name('email');
-    Route::post('/email', [SettingsController::class, 'updateEmailSettings'])->name('email.update');
+    // Shared Routes (All Roles)
     Route::get('/profile', [SettingsController::class, 'profileSettings'])->name('profile');
     Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
-    Route::get('/api', [SettingsController::class, 'apiSettings'])->name('api');
-    Route::post('/api', [SettingsController::class, 'updateApiSettings'])->name('api.update');
-    Route::post('/api/regenerate-token', [SettingsController::class, 'regenerateApiToken'])->name('api.regenerate-token');
+
+    // Admin Only Routes
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/', [SettingsController::class, 'emailSettings'])->name('index');
+        Route::get('/email', [SettingsController::class, 'emailSettings'])->name('email');
+        Route::post('/email', [SettingsController::class, 'updateEmailSettings'])->name('email.update');
+        Route::get('/api', [SettingsController::class, 'apiSettings'])->name('api');
+        Route::post('/api', [SettingsController::class, 'updateApiSettings'])->name('api.update');
+        Route::post('/api/regenerate-token', [SettingsController::class, 'regenerateApiToken'])->name('api.regenerate-token');
+        
+        // Backup Routes
+        Route::get('/backup', [BackupController::class, 'index'])->name('backup');
+        Route::post('/backup/download', [BackupController::class, 'downloadBackup'])->name('backup.download');
+    });
 });
 
 Route::middleware(['auth'])->group(function () {

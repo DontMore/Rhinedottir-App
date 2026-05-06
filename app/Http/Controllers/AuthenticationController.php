@@ -50,6 +50,11 @@ class AuthenticationController extends Controller
             ]);
             unset($validatedData['repassword']);
 
+            // ✅ Otomatis isi organization_guid sesuai dengan pembuat akun
+            if (auth()->check()) {
+                $validatedData['organization_guid'] = auth()->user()->organization_guid;
+            }
+
             // is_active akan otomatis true karena default di migration & model boot()
             User::create($validatedData);
 

@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('container')
-<div class="max-w-2xl mx-auto px-4 py-6">
+<div class="space-y-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Edit User</h1>
         <a href="{{ url()->previous() }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">

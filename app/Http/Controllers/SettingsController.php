@@ -7,13 +7,50 @@ use App\Models\EmailSetting;
 use App\Models\ApiSetting;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
 {
-    public function index()
+    public function emailSettings()
     {
         $settings = EmailSetting::first();
         return view('settings.index', compact('settings'));
+    }
+
+    public function profileSettings()
+    {
+        $user = auth()->user();
+        return view('settings.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->guid . ',guid',
+            'current_password' => 'nullable|required_with:new_password',
+            'new_password' => ['nullable', 'confirmed', Password::min(8)],
+        ]);
+
+        // Update Name & Email
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+
+        // Update Password if provided
+        if ($request->filled('new_password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
+            }
+            $user->password = Hash::make($request->new_password);
+        }
+
+        $user->save();
+
+        Alert::success('Success', 'Profile updated successfully');
+        return back();
     }
 
     public function updateEmailSettings(Request $request)

@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('container')
-<div class="w-full px-4 py-6 max-w-7xl mx-auto">
+<div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
         <a href="{{ route('user.register') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
