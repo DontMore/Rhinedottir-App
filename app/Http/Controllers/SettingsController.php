@@ -70,21 +70,25 @@ class SettingsController extends Controller
         $request->validate([
             'gas_web_app_url' => 'nullable|url',
             'is_active' => 'boolean',
+            'push_is_active' => 'boolean',
+            'push_interval' => 'required|in:everyMinute,everyFiveMinutes,everyTenMinutes,everyThirtyMinutes,hourly,daily',
         ]);
 
         $settings = ApiSetting::first();
         $isActive = $request->has('is_active') ? $request->is_active : false;
+        $pushIsActive = $request->has('push_is_active') ? $request->push_is_active : false;
+
+        $data = [
+            'gas_web_app_url' => $request->gas_web_app_url,
+            'is_active' => $isActive,
+            'push_is_active' => $pushIsActive,
+            'push_interval' => $request->push_interval,
+        ];
 
         if (!$settings) {
-            ApiSetting::create([
-                'gas_web_app_url' => $request->gas_web_app_url,
-                'is_active' => $isActive,
-            ]);
+            ApiSetting::create($data);
         } else {
-            $settings->update([
-                'gas_web_app_url' => $request->gas_web_app_url,
-                'is_active' => $isActive,
-            ]);
+            $settings->update($data);
         }
 
         Alert::success('Success', 'API settings updated successfully');

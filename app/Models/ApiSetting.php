@@ -20,6 +20,9 @@ class ApiSetting extends Model implements AuditableContract
         'gas_web_app_url',
         'is_active',
         'api_token',
+        'push_is_active',
+        'push_interval',
+        'last_push_at',
     ];
 
     protected static function boot()
