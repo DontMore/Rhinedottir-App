@@ -140,7 +140,7 @@ Route::post('/stock-opname/random-usage/process', [StockOpnameController::class,
 Route::get('/api/stock-history-summary', [StockOpnameController::class, 'getStockHistorySummary'])->middleware('admin')->name('stock.history-summary');
 
 //route email
-Route::get('kirim-email','App\Http\Controllers\MailController@index');
+Route::get('kirim-email', 'App\Http\Controllers\MailController@index');
 Route::get('/reset-password', [MailController::class, 'resetPassword'])->name('password.reset');
 Route::get('/reset-password/{token}', [MailController::class, 'resetPassword'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password',  [MailController::class, 'update'])->middleware('guest')->name('password.update');
@@ -152,7 +152,7 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
     // Shared Routes (All Roles)
     Route::get('/profile', [SettingsController::class, 'profileSettings'])->name('profile');
     Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
-
+    
     // Admin Only Routes
     Route::middleware(['admin'])->group(function () {
         Route::get('/', [SettingsController::class, 'emailSettings'])->name('index');
@@ -165,6 +165,12 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
         // Backup Routes
         Route::get('/backup', [BackupController::class, 'index'])->name('backup');
         Route::post('/backup/download', [BackupController::class, 'downloadBackup'])->name('backup.download');
+
+        // ✅ SCHEDULER ROUTES (Pindahkan ke sini)
+        Route::get('/scheduler', [SettingsController::class, 'schedulerIndex'])->name('scheduler');
+        Route::post('/scheduler/start', [SettingsController::class, 'startScheduler'])->name('scheduler.start');
+        Route::post('/scheduler/stop',  [SettingsController::class, 'stopScheduler'])->name('scheduler.stop');
+        Route::get('/scheduler/status', [SettingsController::class, 'getSchedulerStatus'])->name('scheduler.status');
     });
 });
 
@@ -184,7 +190,7 @@ Route::middleware(['auth'])->group(function () {
 // routes/web.php
 Route::get('/test-smtp', function () {
     \App\Models\EmailSetting::updateConfig();
-    
+
     try {
         \Illuminate\Support\Facades\Mail::raw('Test connection', function ($msg) {
             $msg->to('developer@onexternal.com')->subject('SMTP Test');

@@ -130,8 +130,8 @@ class AuthenticationController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%");
+                    ->orWhere('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
             });
         }
 
@@ -147,9 +147,9 @@ class AuthenticationController extends Controller
 
         // 📊 Paginate & preserve query params
         $users = $query->orderBy('is_active', 'desc')
-                       ->orderBy('name', 'asc')
-                       ->paginate(10)
-                       ->withQueryString();
+            ->orderBy('name', 'asc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('auth.user-list', compact('users'));
     }
@@ -159,7 +159,9 @@ class AuthenticationController extends Controller
      */
     public function editUser($id)
     {
-        $user = User::find($id);
+        // ✅ Load relasi organization agar bisa diakses di Blade
+        $user = User::with('organization')->find($id);
+
         if (!$user) {
             return redirect()->route('user.index')->with('error', 'User not found.');
         }
@@ -176,7 +178,7 @@ class AuthenticationController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $id . ',guid',
             'email'    => 'required|string|email|max:255|unique:users,email,' . $id . ',guid',
             'password' => 'nullable|string|min:6|confirmed',
-            'role'     => 'required|in:Admin,Analis,superadmin',
+            'role'     => 'sometimes|required|in:Admin,Analis,superadmin',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -188,7 +190,9 @@ class AuthenticationController extends Controller
         $user->name  = $request->input('name');
         $user->username = $request->input('username');
         $user->email = $request->input('email');
-        $user->role  = $request->input('role');
+        if ($request->has('role')) {
+            $user->role = $request->input('role');
+        }
 
         // Update status aktif/non-aktif jika dikirim
         if ($request->has('is_active')) {
@@ -231,7 +235,17 @@ class AuthenticationController extends Controller
             return redirect()->back()->with('error', 'User not found.');
         }
 
+        // Toggle status aktif/non-aktif
         $user->is_active = !$user->is_active;
+
+        // ✅ LOGIKA BARU: Jika user DI-AKTIFKAN dan belum punya organization_guid,
+        // otomatis isi dengan organization_guid milik user yang sedang login (admin/pengelola).
+        if ($user->is_active && empty($user->organization_guid)) {
+            if (auth()->check() && !empty(auth()->user()->organization_guid)) {
+                $user->organization_guid = auth()->user()->organization_guid;
+            }
+        }
+
         $user->save();
 
         $status = $user->is_active ? 'activated' : 'deactivated';

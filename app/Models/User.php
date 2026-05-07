@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 // ✅ PERBAIKAN: Import trait dengan nama yang benar
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 use OwenIt\Auditing\Auditable; // ← Trait-nya bernama Auditable, bukan Auditing
+use App\Models\Organization;
 
 class User extends Authenticatable implements AuditableContract
 {
@@ -87,5 +88,10 @@ class User extends Authenticatable implements AuditableContract
                 $model->is_active = true;
             }
         });
+    }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class, 'organization_guid', 'guid');
     }
 }

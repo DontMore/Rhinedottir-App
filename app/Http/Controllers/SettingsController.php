@@ -9,6 +9,8 @@ use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
@@ -65,7 +67,7 @@ class SettingsController extends Controller
         ]);
 
         $settings = EmailSetting::first();
-        
+
         if (!$settings) {
             $settings = EmailSetting::create([
                 'mail_host' => $request->mail_host,
@@ -88,7 +90,7 @@ class SettingsController extends Controller
 
         // Refresh config runtime
         EmailSetting::updateConfig();
-        
+
         // Clear cache
         Artisan::call('config:clear');
 
@@ -135,7 +137,7 @@ class SettingsController extends Controller
     public function regenerateApiToken()
     {
         $settings = ApiSetting::first();
-        
+
         if (!$settings) {
             $settings = ApiSetting::create([
                 'is_active' => false,
@@ -148,5 +150,85 @@ class SettingsController extends Controller
 
         Alert::success('Success', 'API Token regenerated successfully');
         return back();
+    }
+
+    public function schedulerIndex()
+    {
+        return view('settings.scheduler');
+    }
+
+    /**
+     * Start Laravel Scheduler via UI (Non-blocking)
+     */
+    public function startScheduler()
+    {
+        $exePath = storage_path('tools/LaravelScheduler.exe');
+
+        if (!file_exists($exePath)) {
+            Alert::error('Error', 'File LaravelScheduler.exe tidak ditemukan di storage/tools/');
+            return back();
+        }
+
+        // Cegah eksekusi ganda
+        if (file_exists(storage_path('scheduler.lock'))) {
+            Alert::info('Info', 'Scheduler sudah berjalan di background.');
+            return back();
+        }
+
+        // 🚀 DETACH PROCESS: Jalankan di background tanpa blocking PHP
+        // start /B = tanpa jendela baru, pclose(popen()) = langsung release ke OS
+        $cmd = 'start /B "" "' . $exePath . '"';
+        pclose(popen($cmd, 'r'));
+
+        Alert::success('Berhasil', 'Perintah start dikirim. Scheduler akan aktif dalam beberapa detik.');
+        Log::info('Scheduler start command triggered via UI by ' . auth()->user()->email);
+
+        return back();
+    }
+
+    /**
+     * Stop Scheduler via UI (hapus lock file)
+     */
+    public function stopScheduler()
+    {
+        // 1. Paksa hentikan proses di Windows
+        // Hapus '2>nul' jika ingin melihat output error di log
+        exec('taskkill /F /IM LaravelScheduler.exe /T 2>nul', $out1, $code1);
+        exec('taskkill /F /IM pythonw.exe /T 2>nul', $out2, $code2);
+
+        // 2. Bersihkan file status agar tidak bentrok saat restart
+        @unlink(storage_path('scheduler.lock'));
+        @unlink(storage_path('scheduler_heartbeat.json'));
+
+        Alert::success('Berhasil', 'Scheduler telah dihentikan. Proses & file status dibersihkan.');
+        Log::info('Scheduler forcefully stopped via UI by ' . auth()->user()->email);
+
+        return back();
+    }
+
+    /**
+     * Get real-time scheduler status (AJAX)
+     */
+    public function getSchedulerStatus()
+    {
+        $heartbeat = storage_path('scheduler_heartbeat.json');
+        $logFile   = storage_path('logs/scheduler.log');
+        $status    = ['running' => false, 'last_run' => 'Belum pernah berjalan', 'logs' => []];
+
+        if (file_exists($heartbeat)) {
+            $data = json_decode(file_get_contents($heartbeat), true);
+            if ($data && isset($data['last_run'])) {
+                $lastRun = \Carbon\Carbon::parse($data['last_run']);
+                $status['running'] = $lastRun->diffInMinutes(now()) < 3; // <3 menit = masih jalan
+                $status['last_run'] = $lastRun->format('Y-m-d H:i:s') . ' (' . $lastRun->diffForHumans() . ')';
+            }
+        }
+
+        if (file_exists($logFile)) {
+            $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $status['logs'] = array_slice($lines, -8); // 8 log terakhir
+        }
+
+        return response()->json($status);
     }
 }
