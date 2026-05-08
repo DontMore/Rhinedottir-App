@@ -100,55 +100,58 @@ class SettingsController extends Controller
 
     public function apiSettings()
     {
-        $settings = ApiSetting::first();
+        // Mengambil setting pertama atau buat baru jika kosong
+        $settings = ApiSetting::first() ?? new ApiSetting();
         return view('settings.api', compact('settings'));
     }
 
+    /**
+     * Menyimpan pengaturan API Settings (GAS Integration & Push Scheduler)
+     */
     public function updateApiSettings(Request $request)
     {
-        $request->validate([
-            'gas_web_app_url' => 'nullable|url',
-            'is_active' => 'boolean',
-            'push_is_active' => 'boolean',
-            'push_interval' => 'required|in:everyMinute,everyFiveMinutes,everyTenMinutes,everyThirtyMinutes,hourly,daily',
+        // 1. Validasi Data Input
+        $validated = $request->validate([
+            'gas_web_app_url'   => 'nullable|url',
+            // ✅ Validasi sebagai string dari daftar yang diizinkan (bukan integer)
+            'push_interval'     => 'required|in:everyMinute,everyFiveMinutes,everyTenMinutes,everyThirtyMinutes,hourly,daily',
+            'selected_tables'   => 'nullable|array',
+            'selected_tables.*' => 'in:reagens,logbook_reagens,stock_reagens,reagens_in,orders,stock_opnames',
         ]);
 
-        $settings = ApiSetting::first();
-        $isActive = $request->has('is_active') ? $request->is_active : false;
-        $pushIsActive = $request->has('push_is_active') ? $request->push_is_active : false;
-
+        // 2. Siapkan Data untuk Disimpan
+        // Checkbox HTML tidak dikirim jika tidak dicentang. 
+        // Kita gunakan $request->has() untuk mengubahnya menjadi boolean yang konsisten.
         $data = [
-            'gas_web_app_url' => $request->gas_web_app_url,
-            'is_active' => $isActive,
-            'push_is_active' => $pushIsActive,
-            'push_interval' => $request->push_interval,
+            'gas_web_app_url'   => $validated['gas_web_app_url'] ?? null,
+            'is_active'         => $request->has('is_active'),
+            'push_is_active'    => $request->has('push_is_active'),
+            'push_interval'     => $validated['push_interval'],
+            'selected_tables'   => $validated['selected_tables'] ?? [],
         ];
 
-        if (!$settings) {
-            ApiSetting::create($data);
-        } else {
+        // 3. Update Record yang Ada atau Buat Baru
+        $settings = ApiSetting::first();
+
+        if ($settings) {
             $settings->update($data);
+        } else {
+            ApiSetting::create($data);
         }
 
+        // 4. Notifikasi & Redirect Kembali
         Alert::success('Success', 'API settings updated successfully');
         return back();
     }
 
-    public function regenerateApiToken()
+    public function regenerateToken()
     {
         $settings = ApiSetting::first();
-
-        if (!$settings) {
-            $settings = ApiSetting::create([
-                'is_active' => false,
-            ]);
-        } else {
-            $settings->update([
-                'api_token' => \Illuminate\Support\Str::random(60)
-            ]);
+        if ($settings) {
+            $settings->api_token = \Illuminate\Support\Str::random(60);
+            $settings->save();
+            Alert::success('Berhasil', 'API Token baru telah dibuat.');
         }
-
-        Alert::success('Success', 'API Token regenerated successfully');
         return back();
     }
 
@@ -158,29 +161,39 @@ class SettingsController extends Controller
     }
 
     /**
-     * Start Laravel Scheduler via UI (Non-blocking)
+     * Start Laravel Scheduler via UI (Non-blocking & PID-Aware)
      */
     public function startScheduler()
     {
         $exePath = storage_path('tools/LaravelScheduler.exe');
+        $lockFile = storage_path('scheduler.lock');
 
         if (!file_exists($exePath)) {
             Alert::error('Error', 'File LaravelScheduler.exe tidak ditemukan di storage/tools/');
             return back();
         }
 
-        // Cegah eksekusi ganda
-        if (file_exists(storage_path('scheduler.lock'))) {
-            Alert::info('Info', 'Scheduler sudah berjalan di background.');
-            return back();
+        // ✅ CEK PROSES HIDUP vs STALE LOCK
+        if (file_exists($lockFile)) {
+            $pid = trim(file_get_contents($lockFile));
+            // Cek apakah PID tersebut masih terdaftar di Task Manager Windows
+            $checkProcess = @exec("tasklist /FI \"PID eq $pid\" /NH");
+
+            if (strpos($checkProcess, $pid) !== false) {
+                Alert::info('Info', 'Scheduler benar-benar sedang berjalan aktif di background.');
+                return back();
+            }
+
+            // Jika PID tidak ditemukan, ini adalah STALE LOCK (sisa crash/kill paksa)
+            @unlink($lockFile);
+            @unlink(storage_path('scheduler_heartbeat.json'));
         }
 
-        // 🚀 DETACH PROCESS: Jalankan di background tanpa blocking PHP
-        // start /B = tanpa jendela baru, pclose(popen()) = langsung release ke OS
+        //  DETACH PROCESS: Jalankan di background tanpa blocking PHP
         $cmd = 'start /B "" "' . $exePath . '"';
         pclose(popen($cmd, 'r'));
 
-        Alert::success('Berhasil', 'Perintah start dikirim. Scheduler akan aktif dalam beberapa detik.');
+        Alert::success('Berhasil', 'Perintah start dikirim. Scheduler akan aktif dalam 3-5 detik.');
         Log::info('Scheduler start command triggered via UI by ' . auth()->user()->email);
 
         return back();

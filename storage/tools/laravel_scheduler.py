@@ -16,6 +16,7 @@ HEARTBEAT    = os.path.join(STORAGE_DIR, "scheduler_heartbeat.json")
 LOCK_FILE    = os.path.join(STORAGE_DIR, "scheduler.lock")
 LOG_FILE     = os.path.join(STORAGE_DIR, "logs", "scheduler.log")
 
+# Pastikan direktori log ada
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 # Mapping interval Laravel Scheduler ke detik
@@ -79,6 +80,7 @@ def get_db_interval(db_config):
         return 60  # Fallback aman agar script tidak crash
 
 def update_heartbeat():
+    """Update file heartbeat agar UI Laravel tahu scheduler masih hidup"""
     data = {"status": "running", "last_run": datetime.now(timezone.utc).isoformat(), "pid": os.getpid()}
     try:
         with open(HEARTBEAT, "w", encoding="utf-8") as f:
@@ -87,6 +89,7 @@ def update_heartbeat():
         pass
 
 def check_lock():
+    """Cegah duplikasi instance dengan validasi PID"""
     if os.path.exists(LOCK_FILE):
         try:
             with open(LOCK_FILE, "r") as f:
@@ -100,17 +103,20 @@ def check_lock():
             except: pass
 
 def create_lock():
+    """Buat lock file dengan PID saat ini"""
     os.makedirs(os.path.dirname(LOCK_FILE), exist_ok=True)
     with open(LOCK_FILE, "w") as f:
         f.write(str(os.getpid()))
 
 def cleanup():
+    """Hapus lock & heartbeat saat berhenti"""
     for f in [LOCK_FILE, HEARTBEAT]:
         try: os.remove(f)
         except: pass
     log("Scheduler stopped. Lock & heartbeat removed.", "INFO")
 
 def run_schedule():
+    """Jalankan php artisan schedule:run tanpa console window"""
     try:
         result = subprocess.run(
             [PHP_BIN, "artisan", "schedule:run"],
@@ -122,7 +128,9 @@ def run_schedule():
         )
         out = (result.stdout + "\n" + result.stderr).strip()
         if out and "No scheduled commands are ready to run" not in out:
-            log(out, "OUTPUT")
+            log(f"Schedule Output: {out}", "OUTPUT")
+        else:
+            log("No push tasks due at this time.", "INFO")
         update_heartbeat()
     except Exception as e:
         log(f"Schedule execution failed: {str(e)}", "ERROR")
@@ -169,6 +177,7 @@ def main():
         log(f"Fatal crash: {e}", "CRITICAL")
         time.sleep(5)
         log("Auto-restarting...", "INFO")
+        # Restart process secara aman
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
 if __name__ == "__main__":

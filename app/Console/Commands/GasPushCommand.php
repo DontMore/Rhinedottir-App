@@ -25,18 +25,29 @@ class GasPushCommand extends Command
     public function handle()
     {
         $settings = ApiSetting::first();
-
         if (!$settings || !$settings->push_is_active || !$settings->gas_web_app_url) {
             $this->info('GAS Push is disabled or not configured.');
             return;
         }
 
-        $this->info('Starting GAS Push...');
+        // ✅ Ambil tabel pilihan dari DB
+        $selected = $settings->selected_tables ?? [];
 
+        // Jika kosong, fallback ke semua tabel (backward compatible)
+        // Jika ada isi, filter hanya tabel yang ada di whitelist (keamanan)
+        $tablesToPush = empty($selected)
+            ? $this->allowedTables
+            : array_intersect($selected, $this->allowedTables);
+
+        if (empty($tablesToPush)) {
+            $this->warn('No valid tables selected for push.');
+            return;
+        }
+
+        $this->info('Starting GAS Push for tables: ' . implode(', ', $tablesToPush));
         try {
-            foreach ($this->allowedTables as $table) {
+            foreach ($tablesToPush as $table) {
                 $this->info("Pushing table: {$table}");
-                
                 $data = DB::table($table)->get();
 
                 $response = Http::post($settings->gas_web_app_url, [
@@ -47,16 +58,14 @@ class GasPushCommand extends Command
                 ]);
 
                 if ($response->successful()) {
-                    $this->info("Successfully pushed {$table}.");
+                    $this->info("✅ Successfully pushed {$table}.");
                 } else {
-                    $this->error("Failed to push {$table}: " . $response->body());
+                    $this->error("❌ Failed to push {$table}: " . $response->body());
                     Log::error("GAS Push Failed for {$table}: " . $response->body());
                 }
             }
-
             $settings->update(['last_push_at' => now()]);
             $this->info('GAS Push completed successfully.');
-
         } catch (\Exception $e) {
             $this->error('GAS Push failed: ' . $e->getMessage());
             Log::error('GAS Push Exception: ' . $e->getMessage());

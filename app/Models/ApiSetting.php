@@ -11,6 +11,7 @@ class ApiSetting extends Model implements AuditableContract
 {
     use Auditable;
 
+    protected $table = 'api_settings';
     protected $primaryKey = 'guid';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -23,6 +24,14 @@ class ApiSetting extends Model implements AuditableContract
         'push_is_active',
         'push_interval',
         'last_push_at',
+        'selected_tables',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'push_is_active' => 'boolean',
+        'last_push_at' => 'datetime',
+        'selected_tables' => 'array', // Penting agar checkbox tersimpan sebagai JSON
     ];
 
     protected static function boot()
