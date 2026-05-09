@@ -10,7 +10,9 @@
             <p class="text-sm text-gray-500 mt-1">Update reagent information, hazard classifications, and pricing.</p>
         </div>
         <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12" />
+            </svg>
             Back
         </a>
     </div>
@@ -46,34 +48,103 @@
                 </div>
             </div>
 
+            <!-- ✅ Group & Category Dropdowns with Search (Edit Version) -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <!-- Group Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Reagen Group <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input type="text" placeholder="🔍 Search group..."
+                        class="group-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        autocomplete="off">
+                    <select name="group_guid" class="group-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <option value="">-- Select Group --</option>
+                        @foreach($groups as $group)
+                        <option value="{{ $group->guid }}" {{ old('group_guid', $data->group_guid) == $group->guid ? 'selected' : '' }}>
+                            {{ $group->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Category Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Reagen Category <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input type="text" placeholder="🔍 Search category..."
+                        class="category-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        autocomplete="off">
+                    <select name="category_guid" class="category-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <option value="">-- Select Category --</option>
+                        @foreach($categories as $category)
+                        <option value="{{ $category->guid }}" {{ old('category_guid', $data->category_guid) == $category->guid ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Script Search (Sama persis seperti di add-reagen) -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    function attachSearch(searchSelector, selectSelector) {
+                        const searchInput = document.querySelector(searchSelector);
+                        const select = document.querySelector(selectSelector);
+                        if (!searchInput || !select) return;
+
+                        searchInput.addEventListener('input', function() {
+                            const filter = this.value.toLowerCase();
+                            Array.from(select.options).forEach(option => {
+                                if (option.value === "") {
+                                    option.style.display = '';
+                                    return;
+                                }
+                                option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
+                            });
+                        });
+                        select.addEventListener('change', () => {
+                            searchInput.value = '';
+                        });
+                        select.addEventListener('blur', () => {
+                            searchInput.value = '';
+                        });
+                    }
+                    attachSearch('.group-search', '.group-select');
+                    attachSearch('.category-search', '.category-select');
+                });
+            </script>
+
             <!-- Hazard Symbols -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">Hazard Symbols</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     @php
-                        $hazards = [
-                            ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
-                            ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
-                            ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
-                            ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
-                            ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
-                            ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
-                            ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
-                            ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
-                        ];
+                    $hazards = [
+                    ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
+                    ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
+                    ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
+                    ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
+                    ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
+                    ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
+                    ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
+                    ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
+                    ];
                     @endphp
                     @foreach($hazards as $hazard)
-                        <div class="relative">
-                            <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
-                                {{ in_array($hazard['name'], $hazardOptions) ? 'checked' : '' }}
-                                class="peer absolute opacity-0 w-full h-full cursor-pointer z-10">
-                            <label for="hazard{{ $hazard['id'] }}"
-                                class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all bg-white hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                                <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
-                                    class="w-12 h-12 object-contain mb-2 transition-transform peer-checked:scale-110">
-                                <span class="text-xs font-medium text-gray-600 peer-checked:text-blue-700">{{ $hazard['name'] }}</span>
-                            </label>
-                        </div>
+                    <div class="relative">
+                        <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
+                            {{ in_array($hazard['name'], $hazardOptions) ? 'checked' : '' }}
+                            class="peer absolute opacity-0 w-full h-full cursor-pointer z-10">
+                        <label for="hazard{{ $hazard['id'] }}"
+                            class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all bg-white hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                            <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
+                                class="w-12 h-12 object-contain mb-2 transition-transform peer-checked:scale-110">
+                            <span class="text-xs font-medium text-gray-600 peer-checked:text-blue-700">{{ $hazard['name'] }}</span>
+                        </label>
+                    </div>
                     @endforeach
                 </div>
             </div>
@@ -112,7 +183,9 @@
                 Reset Form
             </button>
             <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
                 Save Changes
             </button>
         </div>

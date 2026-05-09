@@ -116,7 +116,7 @@ class SettingsController extends Controller
             // ✅ Validasi sebagai string dari daftar yang diizinkan (bukan integer)
             'push_interval'     => 'required|in:everyMinute,everyFiveMinutes,everyTenMinutes,everyThirtyMinutes,hourly,daily',
             'selected_tables'   => 'nullable|array',
-            'selected_tables.*' => 'in:reagens,logbook_reagens,stock_reagens,reagens_in,orders,stock_opnames',
+            'selected_tables.*' => 'in:reagens,logbook_reagens,stock_reagens,reagens_in,orders,stock_opnames,order_recommendations', // ✅ Tambahkan ini
         ]);
 
         // 2. Siapkan Data untuk Disimpan

@@ -30,6 +30,8 @@ class Reagen extends Model implements AuditableContract
         'price',
         'buffer_stock',
         'organization_guid',
+        'group_guid',
+        'category_guid',
     ];
 
     // ✅ 3. Exclude field auto-generated agar tidak membanjiri audit trail
@@ -75,5 +77,15 @@ class Reagen extends Model implements AuditableContract
     public function stocks()
     {
         return $this->hasMany(StockReagen::class, 'reagen_guid', 'guid');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(ReagenGroup::class, 'group_guid', 'guid');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(ReagenCategory::class, 'category_guid', 'guid');
     }
 }

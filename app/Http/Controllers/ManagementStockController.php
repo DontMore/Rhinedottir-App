@@ -9,10 +9,13 @@ use App\Models\ReagenIn;
 use App\Models\StockReagen;
 use App\Models\StockHistory;
 use App\Models\LogbookReagen;
+use App\Models\ReagenGroup;
+use App\Models\ReagenCategory;
 use RealRashid\SweetAlert\Facades\Alert;
 use Carbon\Carbon;
 use PDF;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Validation\Rule;
 
 class ManagementStockController extends Controller
 {
@@ -21,9 +24,7 @@ class ManagementStockController extends Controller
         $keyword = $request->input('keyword');
         $user = auth()->user();
 
-        $query = Reagen::with(['stockReagen' => function ($query) {
-            $query->select('reagen_guid', 'quantity');
-        }])->where('organization_guid', $user->organization_guid);
+        $query = Reagen::with(['stockReagen', 'group', 'category'])->where('organization_guid', $user->organization_guid);
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -34,12 +35,68 @@ class ManagementStockController extends Controller
         }
 
         $reagens = $query->paginate(20);
-        return view('management-stock.management-stock', compact('reagens'));
+
+        // ✅ Ambil Group & Category milik organisasi user
+        $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->latest()->get();
+        $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->latest()->get();
+
+        return view('management-stock.management-stock', compact('reagens', 'groups', 'categories'));
+    }
+
+    /**
+     * Simpan Group baru
+     */
+    public function storeGroup(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('reagen_groups', 'name')->where('organization_guid', auth()->user()->organization_guid)
+            ]
+        ]);
+
+        ReagenGroup::create([
+            'name' => $validated['name'],
+            'organization_guid' => auth()->user()->organization_guid
+        ]);
+
+        Alert::success('Success', 'Group berhasil dibuat.');
+        return back();
+    }
+
+    /**
+     * Simpan Category baru
+     */
+    public function storeCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('reagen_categories', 'name')->where('organization_guid', auth()->user()->organization_guid)
+            ]
+        ]);
+
+        ReagenCategory::create([
+            'name' => $validated['name'],
+            'organization_guid' => auth()->user()->organization_guid
+        ]);
+
+        Alert::success('Success', 'Category berhasil dibuat.');
+        return back();
     }
 
     public function addReagen()
     {
-        return view('management-stock.add-reagen');
+        $user = auth()->user();
+        // Ambil data group & category milik organisasi user
+        $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+        $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+
+        return view('management-stock.add-reagen', compact('groups', 'categories'));
     }
 
     public function addReagenStore(Request $request)
@@ -52,6 +109,8 @@ class ManagementStockController extends Controller
             'hazardOptions' => 'array',
             'msds' => 'required',
             'price' => 'required',
+            'group_guid' => 'nullable|string|exists:reagen_groups,guid',
+            'category_guid' => 'nullable|string|exists:reagen_categories,guid',
             'buffer_stock' => 'required|numeric|min:0'
         ]);
 
@@ -69,23 +128,20 @@ class ManagementStockController extends Controller
     public function viewReagen($guid)
     {
         $user = auth()->user();
-
-        // ✅ Tambahkan 'reagenIn' ke with() agar tidak terjadi N+1 query problem
         $data = Reagen::with([
             'stockReagen',
             'stockHistories' => function ($q) {
                 $q->orderBy('created_at', 'desc');
             },
-            'reagenIn'
+            'reagenIn',
+            'group',      // ✅ Tambahkan ini
+            'category'    // ✅ Tambahkan ini
         ])
             ->where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
             ->firstOrFail();
 
-        // ✅ Konversi string dari DB menjadi array untuk blade
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
-
-        // ✅ Kirim kedua variabel ke view
         return view('management-stock.view-reagen', compact('data', 'hazardOptions'));
     }
 
@@ -96,9 +152,13 @@ class ManagementStockController extends Controller
         $data = Reagen::where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
             ->firstOrFail();
-
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
-        return view('management-stock.edit-reagen', compact('data', 'hazardOptions'));
+
+        // Ambil data group & category
+        $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+        $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+
+        return view('management-stock.edit-reagen', compact('data', 'hazardOptions', 'groups', 'categories'));
     }
 
     // ✅ DELETE: Menggunakan $guid
@@ -130,6 +190,8 @@ class ManagementStockController extends Controller
             'hazardOptions' => 'array',
             'msds' => 'required',
             'price' => 'required',
+            'group_guid' => 'nullable|string|exists:reagen_groups,guid',
+            'category_guid' => 'nullable|string|exists:reagen_categories,guid',
             'buffer_stock' => 'required|numeric|min:0'
         ]);
 
@@ -196,6 +258,10 @@ class ManagementStockController extends Controller
         }
 
         Alert::success('SUCCESS!', 'Stok berhasil ditambahkan');
+
+        // ✅ TRIGGER UPDATE REKOMENDASI OTOMATIS
+        \App\Http\Controllers\OrderController::refreshRecommendations($user->organization_guid);
+        
         return redirect()->back();
     }
 

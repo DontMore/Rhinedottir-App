@@ -1,24 +1,18 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-
-// ✅ 1. Import Interface & Trait Audit
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 use OwenIt\Auditing\Auditable;
 
 class Order extends Model implements AuditableContract
 {
-    // ✅ 2. Tambahkan Trait Auditing
-    use HasFactory, Auditable;
+    use Auditable;
 
-    protected $table = 'orders';
-    protected $primaryKey = 'guid';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $primaryKey = 'guid'; // ✅ Gunakan GUID sebagai primary key
+    public $incrementing = false;   // ✅ Non-aktifkan auto-increment
+    protected $keyType = 'string';  // ✅ Tipe key adalah string
 
     protected $fillable = [
         'guid',
@@ -27,26 +21,28 @@ class Order extends Model implements AuditableContract
         'merk',
         'packSize',
         'quantity',
-        'userId',
-        'user_guid',
-        'organization_guid',
         'status',
+        'userId',           // Legacy compatibility
+        'user_guid',        // ✅ Baru
+        'organization_guid',// ✅ Baru
     ];
 
-    // ✅ 3. Exclude field auto-generated/immutable agar tidak membanjiri log audit
-    protected $auditExclude = ['guid'];
+    protected $casts = [
+        'quantity' => 'integer',
+        'status' => 'boolean',
+    ];
 
     protected static function boot()
     {
         parent::boot();
         static::creating(function ($model) {
             if (empty($model->guid)) {
-                $model->guid = (string) Str::uuid();
+                $model->guid = (string) Str::uuid(); // ✅ Auto-generate GUID
             }
         });
     }
 
-    // ✅ Relasi ke User menggunakan user_guid (konsisten dengan UUID)
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class, 'user_guid', 'guid');

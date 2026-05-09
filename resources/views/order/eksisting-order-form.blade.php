@@ -23,21 +23,23 @@
         @csrf
         <input type="hidden" name="status" value="0">
         <input type="hidden" name="userId" value="{{ auth()->id() }}">
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             {{-- Reagent Selector --}}
             <div class="space-y-1 md:col-span-2">
                 <label for="reagenSelect" class="block text-sm font-medium text-gray-700">Select Existing Reagent</label>
                 <select id="reagenSelect" required
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white @error('noCatalog') border-red-500 @enderror">
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white @error('noCatalog') border-red-500 @enderror">
                     <option value="">-- Choose Reagent --</option>
                     @foreach($reagens as $reagen)
-                        <option value="{{ $reagen->noCatalog }}" 
-                                data-name="{{ $reagen->nameReagen }}" 
-                                data-merk="{{ $reagen->merk }}" 
-                                data-pack="{{ $reagen->packSize }}">
-                            {{ $reagen->nameReagen }} ({{ $reagen->noCatalog }})
-                        </option>
+                    {{-- 3. Tambahkan kondisi selected --}}
+                    <option value="{{ $reagen->noCatalog }}"
+                        data-name="{{ $reagen->nameReagen }}"
+                        data-merk="{{ $reagen->merk }}"
+                        data-pack="{{ $reagen->packSize }}"
+                        {{ isset($selectedCatalog) && $reagen->noCatalog == $selectedCatalog ? 'selected' : '' }}>
+                        {{ $reagen->nameReagen }} ({{ $reagen->noCatalog }})
+                    </option>
                     @endforeach
                 </select>
                 @error('noCatalog') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
@@ -47,37 +49,37 @@
             <div class="space-y-1">
                 <label class="block text-sm font-medium text-gray-500">No Catalog</label>
                 <input type="text" id="noCatalog" name="noCatalog" readonly
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
-                       placeholder="Auto-filled">
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                    placeholder="Auto-filled">
             </div>
 
             <div class="space-y-1">
                 <label class="block text-sm font-medium text-gray-500">Reagent Name</label>
                 <input type="text" id="nameReagen" name="nameReagen" readonly
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
-                       placeholder="Auto-filled">
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                    placeholder="Auto-filled">
             </div>
 
             <div class="space-y-1">
                 <label class="block text-sm font-medium text-gray-500">Brand / Merk</label>
                 <input type="text" id="merk" name="merk" readonly
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
-                       placeholder="Auto-filled">
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                    placeholder="Auto-filled">
             </div>
 
             <div class="space-y-1">
                 <label class="block text-sm font-medium text-gray-500">Pack Size</label>
                 <input type="text" id="packSize" name="packSize" readonly
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
-                       placeholder="Auto-filled">
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
+                    placeholder="Auto-filled">
             </div>
 
             {{-- Quantity --}}
             <div class="space-y-1 md:col-span-2">
                 <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
                 <input type="number" name="quantity" id="quantity" min="1" required
-                       class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('quantity') border-red-500 @enderror"
-                       value="{{ old('quantity') }}" placeholder="Enter quantity...">
+                    class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 @error('quantity') border-red-500 @enderror"
+                    value="{{ old('quantity') }}" placeholder="Enter quantity...">
                 @error('quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
@@ -118,6 +120,13 @@
             });
         }
     });
+
+    // Trigger change event jika sudah ada value yang terpilih dari URL
+    const select = document.getElementById('reagenSelect');
+    if (select.value) {
+        // Dispatch event change secara manual
+        select.dispatchEvent(new Event('change'));
+    }
 </script>
 @endpush
 

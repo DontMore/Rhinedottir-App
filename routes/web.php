@@ -80,6 +80,9 @@ Route::get('/reagen-in', [ManagementStockController::class, 'reagenIn'])->name('
 Route::get('/reagen-out', [ManagementStockController::class, 'reagenOut'])->name('data.reagenout');
 Route::get('/reagen-expired', [ManagementStockController::class, 'reagenExpired'])->name('reagen.expired')->middleware('admin');
 
+Route::post('/group', [ManagementStockController::class, 'storeGroup'])->name('group.store');
+Route::post('/category', [ManagementStockController::class, 'storeCategory'])->name('category.store');
+
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index'); // Route untuk menampilkan data logbook
 Route::get('/take/{guid}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');
@@ -96,12 +99,17 @@ Route::post('/take-process-admin', [LogbookController::class, 'storeTakeAdmin'])
 Route::middleware(['admin'])->group(function () {
     Route::get('/order', [OrderController::class, 'index'])->name('order.index');
     Route::get('/new-order-form', [OrderController::class, 'newOrderForm'])->name('order.new');
-    Route::get('/eksisting-order-form', [OrderController::class, 'EksistingOrderForm'])->name('order.eksisting');
+    Route::get('/eksisting-order-form', [OrderController::class, 'eksistingOrderForm'])->name('order.eksisting');
+    
     Route::post('/order', [OrderController::class, 'store'])->name('orders.store');
+    
+    // ✅ Semua route detail menggunakan {guid}
     Route::get('/view-order/{guid}', [OrderController::class, 'viewOrder'])->name('order.view');
     Route::post('/update-order/{guid}', [OrderController::class, 'update'])->name('order.update');
     Route::delete('/order-delete/{guid}', [OrderController::class, 'destroy'])->name('order.delete');
-    Route::get('/reagen/{guidUtama}', [OrderController::class, 'getReagenData']);
+    
+    // ✅ AJAX endpoint juga menggunakan GUID
+    Route::get('/reagen/{guid}', [OrderController::class, 'getReagenData']);
 });
 
 

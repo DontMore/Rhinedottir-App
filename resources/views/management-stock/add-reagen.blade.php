@@ -10,7 +10,9 @@
             <p class="text-sm text-gray-500 mt-1">Fill in the details below to register a new reagent in the system.</p>
         </div>
         <a href="{{ route('management-stock.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12" />
+            </svg>
             Back
         </a>
     </div>
@@ -23,13 +25,15 @@
         <div class="mx-6 mt-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                 </div>
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
                     <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
                         @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                        <li>{{ $error }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -66,21 +70,94 @@
                 </div>
             </div>
 
+            <!-- ✅ Group & Category Dropdowns with Search -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <!-- Group Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Reagen Group <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input type="text" placeholder="🔍 Search group..."
+                        class="group-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        autocomplete="off">
+                    <select name="group_guid" class="group-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <option value="">-- Select Group --</option>
+                        @foreach($groups as $group)
+                        <option value="{{ $group->guid }}" {{ old('group_guid') == $group->guid ? 'selected' : '' }}>
+                            {{ $group->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Category Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Reagen Category <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input type="text" placeholder=" Search category..."
+                        class="category-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        autocomplete="off">
+                    <select name="category_guid" class="category-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <option value="">-- Select Category --</option>
+                        @foreach($categories as $category)
+                        <option value="{{ $category->guid }}" {{ old('category_guid') == $category->guid ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Script untuk fitur Search pada Dropdown -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    function attachSearch(searchSelector, selectSelector) {
+                        const searchInput = document.querySelector(searchSelector);
+                        const select = document.querySelector(selectSelector);
+                        if (!searchInput || !select) return;
+
+                        searchInput.addEventListener('input', function() {
+                            const filter = this.value.toLowerCase();
+                            Array.from(select.options).forEach(option => {
+                                // Skip option pertama (placeholder)
+                                if (option.value === "") {
+                                    option.style.display = '';
+                                    return;
+                                }
+                                option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
+                            });
+                        });
+
+                        // Reset filter saat select dibuka/berubah
+                        select.addEventListener('change', () => {
+                            searchInput.value = '';
+                        });
+                        select.addEventListener('blur', () => {
+                            searchInput.value = '';
+                        });
+                    }
+
+                    attachSearch('.group-search', '.group-select');
+                    attachSearch('.category-search', '.category-select');
+                });
+            </script>
+
             <!-- Hazard Symbols -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">Hazard Symbols</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     @php
-                        $hazards = [
-                            ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
-                            ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
-                            ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
-                            ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
-                            ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
-                            ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
-                            ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
-                            ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
-                        ];
+                    $hazards = [
+                    ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
+                    ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
+                    ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
+                    ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
+                    ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
+                    ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
+                    ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
+                    ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
+                    ];
                     @endphp
                     @foreach($hazards as $hazard)
                     <div class="relative">
@@ -132,7 +209,9 @@
                 Reset Form
             </button>
             <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
                 Save Reagent
             </button>
         </div>

@@ -1,6 +1,5 @@
 @extends('layout.main')
 @section('title', 'Reagent Details')
-
 @section('container')
 <div class="space-y-6">
     <!-- Header & Navigation -->
@@ -45,6 +44,17 @@
                     <span class="text-sm text-gray-500">Pack Size</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->packSize }}</span>
                 </div>
+                
+                <!-- ✅ TAMBAHAN: Group & Category -->
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Group</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->group->name ?? '-' }}</span>
+                </div>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Category</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->category->name ?? '-' }}</span>
+                </div>
+
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <span class="text-sm text-gray-500">Price</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">Rp {{ number_format((float)$data->price, 0, ',', '.') }}</span>
@@ -68,21 +78,21 @@
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    @foreach($hazardOptions as $hazard)
-                        @php
-                            $imagePath = match($hazard) {
-                                'Environment' => 'Environmental-Hazard',
-                                default => strtolower($hazard)
-                            };
-                        @endphp
+                   @foreach($hazardOptions as $hazard)
+                       @php
+                           $imagePath = match($hazard) {
+                               'Environment' => 'Environmental-Hazard',
+                               default => strtolower($hazard)
+                           };
+                       @endphp
                         <div class="flex flex-col items-center p-3 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
                             <img src="{{ asset('public/images/' . $imagePath . '.png') }}"
-                                 alt="{{ $hazard }}"
-                                 class="w-14 h-14 object-contain"
-                                 onerror="this.style.display='none'">
+                                alt="{{ $hazard }}"
+                                class="w-14 h-14 object-contain"
+                                onerror="this.style.display='none'">
                             <span class="mt-2 text-xs font-medium text-gray-600 text-center">{{ $hazard }}</span>
                         </div>
-                    @endforeach
+                   @endforeach
                 </div>
             </div>
         </div>
@@ -93,7 +103,7 @@
         <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 class="text-base font-semibold text-gray-800">Stock History</h3>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                Total: {{ $data->reagenIn->count() }}
+               Total: {{ $data->reagenIn->count() }}
             </span>
         </div>
         <div class="overflow-x-auto">
@@ -108,23 +118,24 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
-                    @forelse($data->reagenIn as $item)
+                   <!-- ✅ URUTAN DESCENDING -->
+                   @forelse($data->reagenIn->sortByDesc('created_at') as $item)
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
+                           {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->batch }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                                {{ number_format($item->quantity, 0, ',', '.') }}
+                               {{ number_format($item->quantity, 0, ',', '.') }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @php
-                                $isExpired = \Carbon\Carbon::parse($item->expiredDate)->isPast();
-                            @endphp
+                           @php
+                               $isExpired = \Carbon\Carbon::parse($item->expiredDate)->isPast();
+                           @endphp
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' }}">
-                                {{ \Carbon\Carbon::parse($item->expiredDate)->format('d M Y') }}
+                               {{ \Carbon\Carbon::parse($item->expiredDate)->format('d M Y') }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -134,8 +145,8 @@
                                     Label
                                 </button>
                                 <form action="{{ route('management-stock.delete-stock', $item->Id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
+                                   @csrf
+                                   @method('DELETE')
                                     <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors confirm-delete">
                                         <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         Delete
@@ -144,13 +155,13 @@
                             </div>
                         </td>
                     </tr>
-                    @empty
+                   @empty
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
-                            No stock history available for this reagent.
+                           No stock history available for this reagent.
                         </td>
                     </tr>
-                    @endforelse
+                   @endforelse
                 </tbody>
             </table>
         </div>
