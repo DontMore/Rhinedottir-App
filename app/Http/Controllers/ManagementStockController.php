@@ -11,6 +11,7 @@ use App\Models\StockHistory;
 use App\Models\LogbookReagen;
 use App\Models\ReagenGroup;
 use App\Models\ReagenCategory;
+use App\Models\StorageLocation;
 use RealRashid\SweetAlert\Facades\Alert;
 use Carbon\Carbon;
 use PDF;
@@ -92,15 +93,18 @@ class ManagementStockController extends Controller
     public function addReagen()
     {
         $user = auth()->user();
-        // Ambil data group & category milik organisasi user
+
+        // ✅ Ambil data berdasarkan organisasi user
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+        $storageLocations = StorageLocation::where('organization_guid', $user->organization_guid)->orderBy('code')->get();
 
-        return view('management-stock.add-reagen', compact('groups', 'categories'));
+        return view('management-stock.add-reagen', compact('groups', 'categories', 'storageLocations'));
     }
 
     public function addReagenStore(Request $request)
     {
+        // ✅ Validasi termasuk field baru
         $validatedData = $request->validate([
             'noCatalog' => 'required',
             'nameReagen' => 'required',
@@ -109,18 +113,28 @@ class ManagementStockController extends Controller
             'hazardOptions' => 'array',
             'msds' => 'required',
             'price' => 'required',
-            'group_guid' => 'nullable|string|exists:reagen_groups,guid',
-            'category_guid' => 'nullable|string|exists:reagen_categories,guid',
-            'buffer_stock' => 'required|numeric|min:0'
+            'buffer_stock' => 'required|numeric|min:0',
+
+            // ✅ Field Baru
+            'group_guid' => 'nullable|uuid|exists:reagen_groups,guid',
+            'category_guid' => 'nullable|uuid|exists:reagen_categories,guid',
+            'storage_location_guid' => 'nullable|uuid|exists:storage_locations,guid',
+            'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
 
+        // Proses Hazard Options
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
 
-        // ✅ Simpan organization_guid dari user yang sedang login
+        // Set Organization GUID
         $validatedData['organization_guid'] = auth()->user()->organization_guid;
 
-        Reagen::create($validatedData);
+        // ✅ Generate Recommended Storage Otomatis
+        $validatedData['recommended_storage_location'] = \App\Models\Reagen::getRecommendedStorage($hazardOptions);
+
+        // Simpan ke Database
+        \App\Models\Reagen::create($validatedData);
+
         Alert::success('Success!', 'Data has been added successfully');
         return redirect()->route('management-stock.index');
     }
@@ -152,13 +166,15 @@ class ManagementStockController extends Controller
         $data = Reagen::where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
             ->firstOrFail();
+
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
 
-        // Ambil data group & category
+        // ✅ Ambil data untuk dropdown edit
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
+        $storageLocations = StorageLocation::where('organization_guid', $user->organization_guid)->orderBy('code')->get();
 
-        return view('management-stock.edit-reagen', compact('data', 'hazardOptions', 'groups', 'categories'));
+        return view('management-stock.edit-reagen', compact('data', 'hazardOptions', 'groups', 'categories', 'storageLocations'));
     }
 
     // ✅ DELETE: Menggunakan $guid
@@ -190,13 +206,18 @@ class ManagementStockController extends Controller
             'hazardOptions' => 'array',
             'msds' => 'required',
             'price' => 'required',
-            'group_guid' => 'nullable|string|exists:reagen_groups,guid',
-            'category_guid' => 'nullable|string|exists:reagen_categories,guid',
-            'buffer_stock' => 'required|numeric|min:0'
+            'buffer_stock' => 'required|numeric|min:0',
+            'reagent_form' => 'required|in:liquid,solid,crystal', // ✅ Validasi baru
         ]);
 
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
+
+        // Update recommended storage location jika hazard berubah
+        $validatedData['recommended_storage_location'] = Reagen::getRecommendedStorage(
+            $hazardOptions,
+            $user->organization_guid
+        );
 
         $data->update($validatedData);
         Alert::success('SUCCESS!', 'Reagen updated successfully');
@@ -261,7 +282,7 @@ class ManagementStockController extends Controller
 
         // ✅ TRIGGER UPDATE REKOMENDASI OTOMATIS
         \App\Http\Controllers\OrderController::refreshRecommendations($user->organization_guid);
-        
+
         return redirect()->back();
     }
 

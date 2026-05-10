@@ -8,18 +8,18 @@
                 <span class="fw-bold text-white" style="font-size:1.1rem;">Rhinedottir Lab</span>
             </a>
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-light d-flex align-items-center justify-content-center rounded-2"
-                        type="button"
-                        data-bs-toggle="offcanvas"
-                        data-bs-target="#userMenu"
-                        aria-label="Menu"
+                <button class="btn btn-light d-flex align-items-center justify-content-center rounded-2" 
+                        type="button" 
+                        data-bs-toggle="offcanvas" 
+                        data-bs-target="#userMenu" 
+                        aria-label="Menu" 
                         style="width:38px;height:38px;">
                     <i class="bi bi-person"></i>
                 </button>
             </div>
         </div>
     </div>
-
+    
     <!-- User Menu Offcanvas -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="userMenu">
         <div class="offcanvas-header">
@@ -32,7 +32,7 @@
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
-        
+       
         <div class="offcanvas-body">
             <div class="menu-group">
                 <a href="{{ route('user.edit', ['id' => auth()->user()->id]) }}" class="menu-item">
@@ -60,6 +60,11 @@
     z-index: 1080;
     background: var(--sidebar-bg);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Tambahkan padding top untuk konten agar tidak tertutup navbar */
+body {
+    padding-top: 60px; /* Sesuaikan dengan tinggi navbar */
 }
 
 .menu-group {

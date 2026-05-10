@@ -15,35 +15,43 @@
                 <div class="relative flex-1 sm:w-64">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <input type="text" name="keyword" value="{{ request('keyword') }}" 
-                           placeholder="Search catalog, name, or brand..." 
-                           class="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors">
+                    <input type="text" name="keyword" value="{{ request('keyword') }}"
+                        placeholder="Search catalog, name, or brand..."
+                        class="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors">
                 </div>
                 <button type="submit" class="inline-flex items-center px-4 py-2.5 bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm whitespace-nowrap">
                     Search
                 </button>
                 @if(request('keyword'))
-                    <a href="{{ route('management-stock.index') }}" class="inline-flex items-center justify-center px-3 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" title="Reset Search">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </a>
+                <a href="{{ route('management-stock.index') }}" class="inline-flex items-center justify-center px-3 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" title="Reset Search">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </a>
                 @endif
             </form>
 
             <!-- Action Buttons -->
             <div class="flex gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
-                <a href="{{ route('management-stock.index') }}add-reagen" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <a href="{{ url('add-reagen') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                     Add New
                 </a>
                 <a href="reagen-in" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     Stock In
                 </a>
                 <a href="reagen-out" class="inline-flex items-center justify-center px-4 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
                     Stock Out
                 </a>
             </div>
@@ -71,8 +79,8 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->merk }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
-                                $qty = $item->stockReagen ? $item->stockReagen->quantity : 0;
-                                $colorClass = $qty > 10 ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : ($qty > 0 ? 'bg-amber-50 text-amber-700 ring-amber-600/20' : 'bg-red-50 text-red-700 ring-red-600/20');
+                            $qty = $item->stockReagen ? $item->stockReagen->quantity : 0;
+                            $colorClass = $qty > 10 ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : ($qty > 0 ? 'bg-amber-50 text-amber-700 ring-amber-600/20' : 'bg-red-50 text-red-700 ring-red-600/20');
                             @endphp
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{ $colorClass }}">
                                 {{ $qty }}
@@ -94,9 +102,9 @@
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
                             @if(request('keyword'))
-                                No reagents found matching "<strong>{{ request('keyword') }}</strong>". Try a different search term.
+                            No reagents found matching "<strong>{{ request('keyword') }}</strong>". Try a different search term.
                             @else
-                                No reagents found. Add your first item to get started.
+                            No reagents found. Add your first item to get started.
                             @endif
                         </td>
                     </tr>
@@ -125,19 +133,33 @@
 
 @push('scripts')
 <script>
-document.querySelectorAll('.confirm-button').forEach(button => {
-    button.addEventListener('click', function(event) {
-        event.preventDefault();
-        const form = this.closest('form');
-        swal({
-            title: 'Delete Reagent?',
-            text: "This action cannot be undone.",
-            icon: "warning",
-            buttons: { cancel: { text: "Cancel", visible: true, className: "swal-button--cancel" }, confirm: { text: "Yes, delete it", className: "swal-button--danger" } },
-            dangerMode: true,
-        }).then((willDelete) => { if (willDelete) { form.submit(); } });
+    document.querySelectorAll('.confirm-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const form = this.closest('form');
+            swal({
+                title: 'Delete Reagent?',
+                text: "This action cannot be undone.",
+                icon: "warning",
+                buttons: {
+                    cancel: {
+                        text: "Cancel",
+                        visible: true,
+                        className: "swal-button--cancel"
+                    },
+                    confirm: {
+                        text: "Yes, delete it",
+                        className: "swal-button--danger"
+                    }
+                },
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    form.submit();
+                }
+            });
+        });
     });
-});
 </script>
 @endpush
 @endsection

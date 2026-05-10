@@ -1,188 +1,191 @@
 @extends('layout.main')
 @section('title', 'Add New Reagent')
-
 @section('container')
 <div class="space-y-6">
     <!-- Header & Navigation -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h2 class="text-xl font-semibold text-gray-800">Add New Reagent</h2>
-            <p class="text-sm text-gray-500 mt-1">Fill in the details below to register a new reagent in the system.</p>
+            <p class="text-sm text-gray-500 mt-1">Register a new reagent with specifications, storage, and hazards.</p>
         </div>
         <a href="{{ route('management-stock.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12" />
-            </svg>
-            Back
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+            Back to List
         </a>
     </div>
 
     <!-- Form Card -->
-    <form action="add-reagen" method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <form action="{{ route('management-stock.add-reagen.store') }}" method="POST" class="space-y-6">
         @csrf
 
         @if ($errors->any())
-        <div class="mx-6 mt-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
-                    <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                        <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
         @endif
 
-        <div class="p-6 space-y-6">
-            <!-- Basic Info Grid -->
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h3 class="text-base font-semibold text-gray-800">Basic Information</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Catalog Number <span class="text-red-500">*</span></label>
-                    <input type="text" name="noCatalog" value="{{ old('noCatalog') }}" required
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('noCatalog') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <input type="text" name="noCatalog" value="{{ old('noCatalog') }}" required placeholder="e.g., CAT-12345"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
-                <div>
+                <div class="lg:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagent Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="nameReagen" value="{{ old('nameReagen') }}" required
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('nameReagen') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <input type="text" name="nameReagen" value="{{ old('nameReagen') }}" required placeholder="e.g., Acetone AR"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Brand <span class="text-red-500">*</span></label>
-                    <input type="text" name="merk" value="{{ old('merk') }}" required
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('merk') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Brand / Merk <span class="text-red-500">*</span></label>
+                    <input type="text" name="merk" value="{{ old('merk') }}" required placeholder="e.g., Merck"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Pack Size <span class="text-red-500">*</span></label>
-                    <input type="text" name="packSize" value="{{ old('packSize') }}" required
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('packSize') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <input type="text" name="packSize" value="{{ old('packSize') }}" required placeholder="e.g., 500ml"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
             </div>
+        </div>
 
-            <!-- ✅ Group & Category Dropdowns with Search -->
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <!-- Group Dropdown -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <svg class="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                <h3 class="text-base font-semibold text-gray-800">Classification</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Group -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                        Reagen Group <span class="text-gray-400 font-normal">(Optional)</span>
-                    </label>
-                    <input type="text" placeholder="🔍 Search group..."
-                        class="group-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                        autocomplete="off">
-                    <select name="group_guid" class="group-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagen Group</label>
+                    <input type="text" placeholder="🔍 Search group..." class="group-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <select name="group_guid" class="group-select block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         <option value="">-- Select Group --</option>
                         @foreach($groups as $group)
-                        <option value="{{ $group->guid }}" {{ old('group_guid') == $group->guid ? 'selected' : '' }}>
-                            {{ $group->name }}
-                        </option>
+                            <option value="{{ $group->guid }}" {{ old('group_guid') == $group->guid ? 'selected' : '' }}>{{ $group->name }}</option>
                         @endforeach
                     </select>
                 </div>
-
-                <!-- Category Dropdown -->
+                <!-- Category -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                        Reagen Category <span class="text-gray-400 font-normal">(Optional)</span>
-                    </label>
-                    <input type="text" placeholder=" Search category..."
-                        class="category-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                        autocomplete="off">
-                    <select name="category_guid" class="category-select block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagen Category</label>
+                    <input type="text" placeholder="🔍 Search category..." class="category-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <select name="category_guid" class="category-select block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         <option value="">-- Select Category --</option>
                         @foreach($categories as $category)
-                        <option value="{{ $category->guid }}" {{ old('category_guid') == $category->guid ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
+                            <option value="{{ $category->guid }}" {{ old('category_guid') == $category->guid ? 'selected' : '' }}>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
+        </div>
 
-            <!-- Script untuk fitur Search pada Dropdown -->
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    function attachSearch(searchSelector, selectSelector) {
-                        const searchInput = document.querySelector(searchSelector);
-                        const select = document.querySelector(selectSelector);
-                        if (!searchInput || !select) return;
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <h3 class="text-base font-semibold text-gray-800">Storage Logic & Hazards</h3>
+            </div>
+            <div class="p-6">
+                <!-- Physical Form & Recommendation -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Physical Form <span class="text-red-500">*</span></label>
+                        <select name="reagent_form" id="reagentForm" required class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">-- Select Form --</option>
+                            <option value="liquid" {{ old('reagent_form') == 'liquid' ? 'selected' : '' }}>Liquid (Cairan)</option>
+                            <option value="solid" {{ old('reagent_form') == 'solid' ? 'selected' : '' }}>Solid (Padatan)</option>
+                            <option value="crystal" {{ old('reagent_form') == 'crystal' ? 'selected' : '' }}>Crystal (Kristal)</option>
+                        </select>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Recommended Storage</label>
+                        <div id="recommendedStorageText" class="block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800 min-h-[42px] flex items-center">
+                            Select Form & Hazards to see recommendation...
+                        </div>
+                        <p class="mt-1 text-xs text-blue-600">Based on physical form + hazard classification</p>
+                        <input type="hidden" name="recommended_storage_location" id="recommendedStorageInput">
+                    </div>
+                </div>
 
-                        searchInput.addEventListener('input', function() {
-                            const filter = this.value.toLowerCase();
-                            Array.from(select.options).forEach(option => {
-                                // Skip option pertama (placeholder)
-                                if (option.value === "") {
-                                    option.style.display = '';
-                                    return;
-                                }
-                                option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
-                            });
-                        });
-
-                        // Reset filter saat select dibuka/berubah
-                        select.addEventListener('change', () => {
-                            searchInput.value = '';
-                        });
-                        select.addEventListener('blur', () => {
-                            searchInput.value = '';
-                        });
-                    }
-
-                    attachSearch('.group-search', '.group-select');
-                    attachSearch('.category-search', '.category-select');
-                });
-            </script>
-
-            <!-- Hazard Symbols -->
-            <div>
+                <!-- Hazard Symbols -->
                 <label class="block text-sm font-medium text-gray-700 mb-3">Hazard Symbols</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     @php
-                    $hazards = [
-                    ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
-                    ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
-                    ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
-                    ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
-                    ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
-                    ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
-                    ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
-                    ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
-                    ];
+                        $hazards = [
+                            ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
+                            ['id' => 2, 'name' => 'Corrosive', 'image' => 'corrosive.png'],
+                            ['id' => 3, 'name' => 'Explosive', 'image' => 'explosive.png'],
+                            ['id' => 4, 'name' => 'Carcinogen', 'image' => 'carcinogen.png'],
+                            ['id' => 5, 'name' => 'Environment', 'image' => 'Environmental-Hazard.png'],
+                            ['id' => 6, 'name' => 'Flammable', 'image' => 'flammable.png'],
+                            ['id' => 7, 'name' => 'Irritant', 'image' => 'irritant.png'],
+                            ['id' => 8, 'name' => 'Oxidising', 'image' => 'oxidising.png'],
+                        ];
                     @endphp
                     @foreach($hazards as $hazard)
-                    <div class="relative">
-                        <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
-                            {{ in_array($hazard['name'], old('hazardOptions', [])) ? 'checked' : '' }}
-                            class="peer absolute opacity-0 w-full h-full cursor-pointer z-10">
-                        <label for="hazard{{ $hazard['id'] }}"
-                            class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all bg-white hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                            <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
-                                class="w-12 h-12 object-contain mb-2 transition-transform peer-checked:scale-110">
-                            <span class="text-xs font-medium text-gray-600 peer-checked:text-blue-700">{{ $hazard['name'] }}</span>
-                        </label>
-                    </div>
+                        <div class="relative">
+                            <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
+                                {{ in_array($hazard['name'], old('hazardOptions', [])) ? 'checked' : '' }}
+                                class="peer absolute opacity-0 w-full h-full cursor-pointer z-10" onchange="updateRecommendedStorage()">
+                            <label for="hazard{{ $hazard['id'] }}"
+                                class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all bg-white hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
+                                    class="w-12 h-12 object-contain mb-2 transition-transform peer-checked:scale-110">
+                                <span class="text-xs font-medium text-gray-600 peer-checked:text-blue-700">{{ $hazard['name'] }}</span>
+                            </label>
+                        </div>
                     @endforeach
                 </div>
             </div>
+        </div>
 
-            <!-- MSDS, Price, & Buffer Stock -->
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <!-- SECTION 4: ACTUAL STORAGE & PRICING -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <svg class="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <h3 class="text-base font-semibold text-gray-800">Details & Pricing</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <!-- Actual Location -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Actual Storage Location</label>
+                    <select name="storage_location_guid" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">-- Select Location --</option>
+                        @foreach($storageLocations as $location)
+                            <option value="{{ $location->guid }}" {{ old('storage_location_guid') == $location->guid ? 'selected' : '' }}>
+                                {{ $location->code }} - {{ $location->name }} ({{ $location->state_type }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Where this reagent is physically placed.</p>
+                </div>
+                
+                <!-- MSDS -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">MSDS Link <span class="text-red-500">*</span></label>
                     <input type="url" name="msds" value="{{ old('msds') }}" required placeholder="https://..."
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('msds') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
+
+                <!-- Price -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Price <span class="text-red-500">*</span></label>
                     <div class="relative">
@@ -190,31 +193,130 @@
                             <span class="text-sm text-gray-500">Rp</span>
                         </div>
                         <input type="number" name="price" value="{{ old('price') }}" required placeholder="0"
-                            class="block w-full pl-10 rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                        @error('price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                               class="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Buffer Stock <span class="text-red-500">*</span></label>
-                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', 0) }}" required placeholder="0"
-                        class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    @error('buffer_stock') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+
+                <!-- Buffer Stock -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Buffer Stock Limit <span class="text-red-500">*</span></label>
+                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', 5) }}" required placeholder="Minimum stock quantity"
+                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <p class="mt-1 text-xs text-gray-500">Alert will be triggered when stock is below this number.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Form Footer -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
-            <button type="reset" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        <!-- Footer Actions -->
+        <div class="flex justify-end gap-3 pt-4">
+            <button type="reset" class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 Reset Form
             </button>
-            <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
+            <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Save Reagent
             </button>
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+    // Search Logic for Dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+        function attachSearch(searchSelector, selectSelector) {
+            const searchInput = document.querySelector(searchSelector);
+            const select = document.querySelector(selectSelector);
+            if (!searchInput || !select) return;
+
+            searchInput.addEventListener('input', function() {
+                const filter = this.value.toLowerCase();
+                Array.from(select.options).forEach(option => {
+                    if (option.value === "") { option.style.display = ''; return; }
+                    option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
+                });
+            });
+            select.addEventListener('change', () => { searchInput.value = ''; });
+        }
+        attachSearch('.group-search', '.group-select');
+        attachSearch('.category-search', '.category-select');
+    });
+
+    // Logic Rekomendasi Storage
+    function updateRecommendedStorage() {
+        const form = document.getElementById('reagentForm').value;
+        const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
+        
+        const recDiv = document.getElementById('recommendedStorageText');
+        const inputRec = document.getElementById('recommendedStorageInput');
+
+        if (!form) {
+            recDiv.textContent = 'Please select Physical Form first...';
+            recDiv.parentElement.className = 'mt-6 p-4 rounded-lg border border-gray-200 bg-gray-50 flex items-start gap-3';
+            inputRec.value = '';
+            return;
+        }
+
+        const hazardPriority = { 'Explosive': 1, 'Flammable': 2, 'Toxic': 3, 'Corrosive': 4, 'Oxidising': 5, 'Carcinogen': 6, 'Environment': 7, 'Irritant': 8 };
+        selectedHazards.sort((a, b) => (hazardPriority[a] || 99) - (hazardPriority[b] || 99));
+        const primaryHazard = selectedHazards.length > 0 ? selectedHazards[0] : null;
+
+        const storageMap = {
+            liquid: {
+                'Flammable': 'Flammable Liquid Cabinet - Lemari Tahan Api (NFPA Class I/II)',
+                'Corrosive': 'Corrosive Liquid Cabinet - Rak Plastik/PP Tahan Asam-Basa',
+                'Toxic': 'Poison Liquid Storage - Lemari Terkunci + Ventilasi',
+                'Oxidising': 'Oxidizer Liquid Storage - Terpisah dari Bahan Mudah Terbakar',
+                'Carcinogen': 'Carcinogen Liquid Storage - Area Terkontrol Fume Hood',
+                'Environment': 'Hazardous Liquid Waste Area - Kontainer B3',
+                'Explosive': '⚠️ EXPLOSIVE LIQUID - Ruang Khusus Berstandar ATP',
+                'Irritant': 'General Liquid Storage - Rak Kimia Basah',
+                null: 'General Liquid Storage - Rak Kimia Basah (Non-Hazard)'
+            },
+            solid: {
+                'Flammable': 'Flammable Solid Storage - Lemari Kering Tahan Api',
+                'Corrosive': 'Corrosive Solid Storage - Wadah Plastik Bersegel',
+                'Toxic': 'Toxic Solid Storage - Lemari Terkunci + Label Jelas',
+                'Oxidising': 'Oxidizer Solid Storage - Terpisah dari Reduser/Bahan Organik',
+                'Carcinogen': 'Carcinogen Solid Storage - Area Terkontrol',
+                'Environment': 'Hazardous Solid Waste Area - Kontainer B3',
+                'Explosive': '⚠️ EXPLOSIVE SOLID - Ruang Khusus Berstandar ATP',
+                'Irritant': 'General Solid Storage - Rak Kimia Kering',
+                null: 'General Solid Storage - Rak Kimia Kering (Non-Hazard)'
+            },
+            crystal: {
+                'Flammable': 'Flammable Crystal Storage - Wadah Kaca Gelap + Kering',
+                'Corrosive': 'Corrosive Crystal Storage - Desikator / Wadah Plastik',
+                'Toxic': 'Toxic Crystal Storage - Lemari Terkunci + Kelembaban Rendah',
+                'Oxidising': 'Oxidizer Crystal Storage - Terpisah, Suhu Stabil',
+                'Carcinogen': 'Carcinogen Crystal Storage - Area Terkontrol',
+                'Environment': 'Hazardous Crystal Waste Area',
+                'Explosive': '⚠️ EXPLOSIVE CRYSTAL - Ruang Khusus Berstandar ATP',
+                'Irritant': 'General Crystal Storage - Rak Kering + Silica Gel',
+                null: 'General Crystal Storage - Rak Kering + Desikator (Non-Hazard)'
+            }
+        };
+
+        const recommendation = storageMap[form]?.[primaryHazard] || 'General Storage';
+        
+        recDiv.textContent = recommendation;
+        inputRec.value = recommendation;
+        
+        // Ubah styling box
+        if(primaryHazard) {
+            recDiv.parentElement.className = 'mt-6 p-4 rounded-lg border border-blue-200 bg-blue-50 flex items-start gap-3';
+        } else {
+            recDiv.parentElement.className = 'mt-6 p-4 rounded-lg border border-green-200 bg-green-50 flex items-start gap-3';
+        }
+    }
+
+    // Listeners
+    const formSelect = document.getElementById('reagentForm');
+    if(formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
+    document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
+    
+    // Jalankan saat load
+    updateRecommendedStorage();
+</script>
+@endpush
 @endsection

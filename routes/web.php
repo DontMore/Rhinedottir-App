@@ -14,6 +14,7 @@ use App\Mail\SendEmail;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\StorageLocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,7 +64,9 @@ Route::get('/logbook-chart', function () {
 // route management stock
 Route::get('/management-stock', [ManagementStockController::class, 'index'])->name('management-stock.index')->middleware('admin');
 Route::get('/add-reagen', [ManagementStockController::class, 'addReagen'])->middleware('admin');
-Route::post('/add-reagen', [ManagementStockController::class, 'addReagenStore'])->middleware('admin');
+Route::post('/add-reagen', [ManagementStockController::class, 'addReagenStore'])
+    ->name('management-stock.add-reagen.store') // ✅ Tambahkan nama route
+    ->middleware('admin');
 Route::get('/add-stock-reagen/{guid}', [ManagementStockController::class, 'addStockReagen'])->name('reagen.addstock')->middleware('admin');
 
 Route::get('/view/{guid}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
@@ -215,4 +218,12 @@ use App\Http\Controllers\AuditLogController;
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/audit-logs/{id}', [AuditLogController::class, 'show'])->name('audit-logs.show');
+});
+
+Route::middleware(['admin'])->group(function () {
+    // ... route existing ...
+    Route::get('/storage-location', [StorageLocationController::class, 'index'])->name('storage.index');
+    Route::post('/storage-location', [StorageLocationController::class, 'store'])->name('storage.store');
+    Route::put('/storage-location/{guid}', [StorageLocationController::class, 'update'])->name('storage.update');
+    Route::delete('/storage-location/{guid}', [StorageLocationController::class, 'destroy'])->name('storage.delete');
 });
