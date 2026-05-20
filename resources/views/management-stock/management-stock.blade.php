@@ -3,59 +3,104 @@
 @section('container')
 <div class="space-y-6">
     <!-- Page Header & Action Buttons -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h2 class="text-xl font-semibold text-gray-800">Reagent Inventory</h2>
             <p class="text-sm text-gray-500 mt-1">Manage stock, track movements, and organize reagents.</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
-            <!-- ✅ SEARCH FORM -->
-            <form action="{{ route('management-stock.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:w-64">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" name="keyword" value="{{ request('keyword') }}"
-                        placeholder="Search catalog, name, or brand..."
-                        class="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors">
-                </div>
-                <button type="submit" class="inline-flex items-center px-4 py-2.5 bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm whitespace-nowrap">
-                    Search
-                </button>
-                @if(request('keyword'))
-                <a href="{{ route('management-stock.index') }}" class="inline-flex items-center justify-center px-3 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" title="Reset Search">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </a>
-                @endif
-            </form>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
-                <a href="{{ url('add-reagen') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Add New
-                </a>
-                <a href="reagen-in" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Stock In
-                </a>
-                <a href="reagen-out" class="inline-flex items-center justify-center px-4 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                    </svg>
-                    Stock Out
-                </a>
-            </div>
+        <!-- Action Buttons -->
+        <div class="flex gap-2 flex-wrap sm:flex-nowrap">
+            <a href="{{ url('add-reagen') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add New
+            </a>
+            <a href="reagen-in" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Stock In
+            </a>
+            <a href="reagen-out" class="inline-flex items-center justify-center px-4 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
+                Stock Out
+            </a>
         </div>
+    </div>
+
+    <!-- Filters & Search Card -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <form action="{{ route('management-stock.index') }}" method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                <!-- Search Input -->
+                <div class="md:col-span-2 space-y-1">
+                    <label for="keyword" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Search Reagents</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" name="keyword" id="keyword" value="{{ request('keyword') }}"
+                            placeholder="Search catalog no, reagent name, or brand..."
+                            class="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all bg-gray-50 hover:bg-white focus:bg-white">
+                    </div>
+                </div>
+
+                <!-- Group Filter -->
+                <div class="space-y-1">
+                    <label for="group_guid" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Group</label>
+                    <select name="group_guid" id="group_guid" class="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all bg-gray-50 hover:bg-white focus:bg-white">
+                        <option value="">All Groups</option>
+                        @foreach($groups as $g)
+                            <option value="{{ $g->guid }}" {{ request('group_guid') == $g->guid ? 'selected' : '' }}>
+                                {{ $g->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="space-y-1">
+                    <label for="category_guid" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Category</label>
+                    <select name="category_guid" id="category_guid" class="block w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all bg-gray-50 hover:bg-white focus:bg-white">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $c)
+                            <option value="{{ $c->guid }}" {{ request('category_guid') == $c->guid ? 'selected' : '' }}>
+                                {{ $c->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Apply Filters
+                    </button>
+                    @if(request('keyword') || request('group_guid') || request('category_guid'))
+                        <a href="{{ route('management-stock.index') }}" class="inline-flex items-center px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-all">
+                            Clear All
+                        </a>
+                    @endif
+                </div>
+
+                @if(request('keyword') || request('group_guid') || request('category_guid'))
+                    <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                        Active Filters
+                    </span>
+                @endif
+            </div>
+        </form>
     </div>
 
     <!-- Table Card -->
@@ -64,11 +109,13 @@
             <table class="min-w-full divide-y divide-gray-100">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catalog No.</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reagent Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Catalog No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reagent Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Group</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Brand</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
@@ -76,6 +123,24 @@
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $item->noCatalog }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->nameReagen }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->group)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                    {{ $item->group->name }}
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400 italic">None</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->category)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-700/10">
+                                    {{ $item->category->name }}
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400 italic">None</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $item->merk }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
@@ -100,9 +165,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
-                            @if(request('keyword'))
-                            No reagents found matching "<strong>{{ request('keyword') }}</strong>". Try a different search term.
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500">
+                            @if(request('keyword') || request('group_guid') || request('category_guid'))
+                            No reagents found matching selected search or filters. Try clearing filters.
                             @else
                             No reagents found. Add your first item to get started.
                             @endif

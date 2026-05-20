@@ -444,7 +444,7 @@ class StockOpnameController extends Controller
         return view('stock-opname.random-usage', compact('reagens', 'allUsers'));
     }
  
-    public function processRandomUsage(Request $request)
+    public function previewRandomUsage(Request $request)
     {
         $user = auth()->user();
         $validated = $request->validate([
@@ -455,100 +455,343 @@ class StockOpnameController extends Controller
             'excluded_users' => 'nullable|array',
             'reagen_guid' => 'nullable|string|exists:reagens,guid',
         ]);
- 
+
         $month = $validated['month'];
         $year = $validated['year'];
         $count = $validated['count'];
+        
         $excludedDays = [];
         if ($validated['excluded_dates']) {
-            $excludedDays = array_map('trim', explode(',', $validated['excluded_dates']));
+            $excludedDays = array_map(function($dateStr) {
+                $trimmed = trim($dateStr);
+                if (str_contains($trimmed, '-')) {
+                    return (int) Carbon::parse($trimmed)->format('d');
+                }
+                return (int) $trimmed;
+            }, explode(',', $validated['excluded_dates']));
         }
- 
-        // 1. Ambil analis aktif di organisasi ini
+
+        // 1. Get active analysts
         $userQuery = User::where('organization_guid', $user->organization_guid)
             ->where('is_active', true);
- 
+
         if ($validated['excluded_users']) {
             $userQuery->whereNotIn('guid', $validated['excluded_users']);
         }
- 
+
         $users = $userQuery->get();
- 
+
+        if ($users->isEmpty()) {
+            return response()->json(['error' => 'No active analysts found in your organization.'], 422);
+        }
+
+        // 2. Get reagents with stock
+        $reagenQuery = Reagen::where('organization_guid', $user->organization_guid)
+            ->whereHas('stockReagen', function ($q) {
+                $q->where('quantity', '>', 0);
+            })
+            ->with('stockReagen');
+
+        if ($validated['reagen_guid']) {
+            $reagenQuery->where('guid', $validated['reagen_guid']);
+        }
+
+        $reagensWithStock = $reagenQuery->get();
+
+        if ($reagensWithStock->isEmpty()) {
+            return response()->json(['error' => 'No reagents with available stock found.'], 422);
+        }
+
+        // Initialize in-memory stock decrement tracker
+        $reagensStockMemory = [];
+        foreach ($reagensWithStock as $r) {
+            $reagensStockMemory[$r->guid] = StockReagen::where('reagen_guid', $r->guid)
+                ->where('organization_guid', $user->organization_guid)
+                ->sum('quantity');
+        }
+
+        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
+        $previewLogs = [];
+        $attempts = 0;
+
+        for ($i = 0; $i < $count; $i++) {
+            $attempts++;
+            if ($attempts > 2000) {
+                break; // Safety break
+            }
+
+            // Pick random day
+            $day = rand(1, $daysInMonth);
+            $randomDate = Carbon::create($year, $month, $day);
+
+            // Check weekend or excluded
+            if ($randomDate->isWeekend() || in_array($day, $excludedDays)) {
+                $i--; // Repeat iteration
+                continue;
+            }
+
+            // Filter reagents with stock left in memory
+            $availableReagents = $reagensWithStock->filter(function($r) use ($reagensStockMemory) {
+                return ($reagensStockMemory[$r->guid] ?? 0) >= 1;
+            });
+
+            if ($availableReagents->isEmpty()) {
+                break; // No more stock in memory
+            }
+
+            $reagen = $availableReagents->random();
+            $randomUser = $users->random();
+            $qtyToTake = 1;
+
+            // Decrement in memory
+            $reagensStockMemory[$reagen->guid] -= $qtyToTake;
+
+            $previewLogs[] = [
+                'reagen_guid' => $reagen->guid,
+                'reagen_name' => $reagen->nameReagen,
+                'noCatalog' => $reagen->noCatalog,
+                'user_id' => $randomUser->id,
+                'user_name' => $randomUser->name,
+                'user_username' => $randomUser->username,
+                'date' => $randomDate->setTime(rand(8, 16), rand(0, 59), rand(0, 59))->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        // Sort by date/time for readability
+        usort($previewLogs, function($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        return response()->json($previewLogs);
+    }
+
+    public function processRandomUsage(Request $request)
+    {
+        $user = auth()->user();
+
+        // Check if logs are passed as JSON
+        $logsJson = $request->input('logs');
+        if ($logsJson) {
+            $logs = json_decode($logsJson, true);
+            if (empty($logs) || !is_array($logs)) {
+                Alert::error('Error', 'No preview logs found to save.');
+                return redirect()->back();
+            }
+
+            $month = $request->input('month');
+            $year = $request->input('year');
+
+            $generatedCount = 0;
+            DB::beginTransaction();
+            try {
+                foreach ($logs as $logData) {
+                    $reagenGuid = $logData['reagen_guid'];
+                    $noCatalog = $logData['noCatalog'];
+                    $userId = $logData['user_id'];
+                    $logDate = Carbon::parse($logData['date']);
+                    $qtyToTake = 1;
+
+                    // Double check stock
+                    $currentStock = StockReagen::where('reagen_guid', $reagenGuid)
+                        ->where('organization_guid', $user->organization_guid)
+                        ->sum('quantity');
+
+                    if ($currentStock < $qtyToTake) {
+                        continue;
+                    }
+
+                    // Kurangi stok FIFO
+                    $stockItems = StockReagen::where('reagen_guid', $reagenGuid)
+                        ->where('organization_guid', $user->organization_guid)
+                        ->orderBy('created_at', 'asc')
+                        ->get();
+
+                    $remainingToTake = $qtyToTake;
+                    $usedBatch = null;
+
+                    $reagenIn = ReagenIn::where('reagen_guid', $reagenGuid)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    $defaultBatch = $reagenIn ? $reagenIn->batch : 'B-'.rand(1000, 9999);
+
+                    foreach ($stockItems as $stockItem) {
+                        if ($remainingToTake <= 0) break;
+                        
+                        $usedBatch = $stockItem->batch ?? $defaultBatch;
+
+                        if ($stockItem->quantity >= $remainingToTake) {
+                            $stockItem->quantity -= $remainingToTake;
+                            $stockItem->save();
+                            $remainingToTake = 0;
+                        } else {
+                            $remainingToTake -= $stockItem->quantity;
+                            $stockItem->quantity = 0;
+                            $stockItem->save();
+                        }
+                    }
+
+                    // Simpan ke Logbook (Note is NULL as per requirement 4)
+                    LogbookReagen::create([
+                        'reagen_guid' => $reagenGuid,
+                        'noCatalog' => $noCatalog,
+                        'user_id' => $userId,
+                        'organization_guid' => $user->organization_guid,
+                        'batch' => $usedBatch,
+                        'quantity_taken' => $qtyToTake,
+                        'note' => null, // empty / blank
+                        'created_at' => $logDate,
+                    ]);
+
+                    // Update StockHistory
+                    $stockHistory = StockHistory::where('reagen_guid', $reagenGuid)
+                        ->where('month', $month)
+                        ->where('year', $year)
+                        ->first();
+
+                    if ($stockHistory) {
+                        $stockHistory->increment('quantity_out', $qtyToTake);
+                    } else {
+                        StockHistory::create([
+                            'reagen_guid' => $reagenGuid,
+                            'noCatalog' => $noCatalog,
+                            'month' => $month,
+                            'year' => $year,
+                            'quantity_out' => $qtyToTake,
+                            'quantity' => 0,
+                            'organization_guid' => $user->organization_guid,
+                        ]);
+                    }
+
+                    $generatedCount++;
+                }
+
+                DB::commit();
+                Alert::success('Success', "Successfully saved $generatedCount random usage records.");
+                return redirect()->route('stock.index');
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error("Random Usage Save Error: " . $e->getMessage());
+                Alert::error('Error', 'An error occurred during save: ' . $e->getMessage());
+                return redirect()->back();
+            }
+        }
+
+        // Fallback: direct generation and save (if not previewed)
+        $validated = $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer',
+            'count' => 'required|integer|min:1|max:100',
+            'excluded_dates' => 'nullable|string',
+            'excluded_users' => 'nullable|array',
+            'reagen_guid' => 'nullable|string|exists:reagens,guid',
+        ]);
+
+        $month = $validated['month'];
+        $year = $validated['year'];
+        $count = $validated['count'];
+        
+        $excludedDays = [];
+        if ($validated['excluded_dates']) {
+            $excludedDays = array_map(function($dateStr) {
+                $trimmed = trim($dateStr);
+                if (str_contains($trimmed, '-')) {
+                    return (int) Carbon::parse($trimmed)->format('d');
+                }
+                return (int) $trimmed;
+            }, explode(',', $validated['excluded_dates']));
+        }
+
+        // 1. Ambil analis aktif di organisasi ini
+        $userQuery = User::where('organization_guid', $user->organization_guid)
+            ->where('is_active', true);
+
+        if ($validated['excluded_users']) {
+            $userQuery->whereNotIn('guid', $validated['excluded_users']);
+        }
+
+        $users = $userQuery->get();
+
         if ($users->isEmpty()) {
             Alert::error('Error', 'No active users found in your organization.');
             return redirect()->back();
         }
- 
+
         // 2. Ambil reagen yang punya stok di organisasi ini
         $reagenQuery = Reagen::where('organization_guid', $user->organization_guid)
             ->whereHas('stockReagen', function ($q) {
                 $q->where('quantity', '>', 0);
             })
             ->with('stockReagen');
- 
+
         if ($validated['reagen_guid']) {
             $reagenQuery->where('guid', $validated['reagen_guid']);
         }
- 
+
         $reagensWithStock = $reagenQuery->get();
- 
+
         if ($reagensWithStock->isEmpty()) {
             Alert::error('Error', 'No reagents with available stock found.');
             return redirect()->back();
         }
- 
+
         $generatedCount = 0;
         $daysInMonth = Carbon::create($year, $month)->daysInMonth;
- 
+
         DB::beginTransaction();
         try {
+            $attempts = 0;
             for ($i = 0; $i < $count; $i++) {
+                $attempts++;
+                if ($attempts > 2000) {
+                    break;
+                }
                 // Pilih hari random (1 - daysInMonth)
                 $day = rand(1, $daysInMonth);
                 $randomDate = Carbon::create($year, $month, $day);
- 
+
                 // Cek jika hari adalah weekend atau excluded
                 if ($randomDate->isWeekend() || in_array($day, $excludedDays)) {
                     $i--; // Ulangi iterasi ini
                     continue;
                 }
- 
+
                 // Pilih reagen random
                 $reagen = $reagensWithStock->random();
                 $randomUser = $users->random();
                 $qtyToTake = 1; // Fix: Satu users hanya mengambil satu reagen dalam satu kali pengambilan
- 
+
                 // Cek stok lagi secara real di DB (takut kegeser oleh iterasi sebelumnya)
                 $currentStock = StockReagen::where('reagen_guid', $reagen->guid)
                     ->where('organization_guid', $user->organization_guid)
                     ->sum('quantity');
- 
+
                 if ($currentStock < $qtyToTake) {
                     continue; // Skip jika stok habis di tengah jalan
                 }
- 
+
                 // Kurangi stok FIFO (mirip LogbookController)
                 $stockItems = StockReagen::where('reagen_guid', $reagen->guid)
                     ->where('organization_guid', $user->organization_guid)
                     ->orderBy('created_at', 'asc')
                     ->get();
- 
+
                 $remainingToTake = $qtyToTake;
                 $usedBatch = null;
- 
+
                 // Cari batch yang tersedia untuk reagen ini dari ReagenIn
                 $reagenIn = ReagenIn::where('reagen_guid', $reagen->guid)
                     ->orderBy('created_at', 'desc')
                     ->first();
                 
                 $defaultBatch = $reagenIn ? $reagenIn->batch : 'B-'.rand(1000, 9999);
- 
+
                 foreach ($stockItems as $stockItem) {
                     if ($remainingToTake <= 0) break;
                     
                     // Gunakan batch dari stockItem jika ada, jika tidak pakai batch dari ReagenIn
                     $usedBatch = $stockItem->batch ?? $defaultBatch;
- 
+
                     if ($stockItem->quantity >= $remainingToTake) {
                         $stockItem->quantity -= $remainingToTake;
                         $stockItem->save();
@@ -559,8 +802,8 @@ class StockOpnameController extends Controller
                         $stockItem->save();
                     }
                 }
- 
-                // Simpan ke Logbook
+
+                // Simpan ke Logbook (Note is NULL as per requirement 4)
                 LogbookReagen::create([
                     'reagen_guid' => $reagen->guid,
                     'noCatalog' => $reagen->noCatalog,
@@ -568,16 +811,16 @@ class StockOpnameController extends Controller
                     'organization_guid' => $user->organization_guid,
                     'batch' => $usedBatch,
                     'quantity_taken' => $qtyToTake,
-                    'note' => '[System Generated - Random Usage]',
+                    'note' => null, // empty / blank
                     'created_at' => $randomDate->setTime(rand(8, 16), rand(0, 59), rand(0, 59)), // Jam kerja random
                 ]);
- 
+
                 // Update StockHistory untuk bulan tersebut
                 $stockHistory = StockHistory::where('reagen_guid', $reagen->guid)
                     ->where('month', $month)
                     ->where('year', $year)
                     ->first();
- 
+
                 if ($stockHistory) {
                     $stockHistory->increment('quantity_out', $qtyToTake);
                 } else {
@@ -592,14 +835,14 @@ class StockOpnameController extends Controller
                         'organization_guid' => $user->organization_guid,
                     ]);
                 }
- 
+
                 $generatedCount++;
             }
- 
+
             DB::commit();
             Alert::success('Success', "Successfully generated $generatedCount random usage records.");
             return redirect()->route('stock.index');
- 
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Random Usage Error: " . $e->getMessage());

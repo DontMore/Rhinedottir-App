@@ -23,6 +23,8 @@ class ManagementStockController extends Controller
     public function index(Request $request)
     {
         $keyword = $request->input('keyword');
+        $groupGuid = $request->input('group_guid');
+        $categoryGuid = $request->input('category_guid');
         $user = auth()->user();
 
         $query = Reagen::with(['stockReagen', 'group', 'category'])->where('organization_guid', $user->organization_guid);
@@ -33,6 +35,14 @@ class ManagementStockController extends Controller
                     ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
+        }
+
+        if ($groupGuid) {
+            $query->where('group_guid', $groupGuid);
+        }
+
+        if ($categoryGuid) {
+            $query->where('category_guid', $categoryGuid);
         }
 
         $reagens = $query->paginate(20);
