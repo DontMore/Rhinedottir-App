@@ -146,9 +146,9 @@ Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('st
 Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
 Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
 Route::post('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
-Route::get('/stock-opname/random-usage', [StockOpnameController::class, 'randomUsage'])->middleware('admin')->name('stock.random-usage');
-Route::post('/stock-opname/random-usage/preview', [StockOpnameController::class, 'previewRandomUsage'])->middleware('admin')->name('stock.random-usage.preview');
-Route::post('/stock-opname/random-usage/process', [StockOpnameController::class, 'processRandomUsage'])->middleware('admin')->name('stock.random-usage.process');
+Route::get('/stock-opname/stock-adjustment', [StockOpnameController::class, 'stockAdjustment'])->middleware('admin')->name('stock.stock-adjustment');
+Route::post('/stock-opname/stock-adjustment/preview', [StockOpnameController::class, 'previewStockAdjustment'])->middleware('admin')->name('stock.stock-adjustment.preview');
+Route::post('/stock-opname/stock-adjustment/process', [StockOpnameController::class, 'processStockAdjustment'])->middleware('admin')->name('stock.stock-adjustment.process');
 Route::get('/api/stock-history-summary', [StockOpnameController::class, 'getStockHistorySummary'])->middleware('admin')->name('stock.history-summary');
 
 //route email

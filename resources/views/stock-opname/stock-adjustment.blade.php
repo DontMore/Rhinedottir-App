@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('title', 'Random Usage Generator')
+@section('title', 'Stock Adjustment')
 
 @section('container')
 <!-- Flatpickr CSS & JS -->
@@ -10,8 +10,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Random Usage Generator</h2>
-            <p class="text-sm text-gray-500 mt-1">Generate simulated reagent usage logs for a specific period.</p>
+            <h2 class="text-2xl font-bold text-gray-800">Stock Adjustment</h2>
+            <p class="text-sm text-gray-500 mt-1">Adjust reagent stock and generate usage logs for a specific period.</p>
         </div>
         <a href="{{ route('stock.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
             <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m7 7h12"/></svg>
@@ -169,7 +169,7 @@
         </div>
 
         <!-- Confirm Form -->
-        <form action="{{ route('stock.random-usage.process') }}" method="POST" id="confirm-form" class="p-6 bg-gray-50 border-t border-gray-100 flex gap-4">
+        <form action="{{ route('stock.stock-adjustment.process') }}" method="POST" id="confirm-form" class="p-6 bg-gray-50 border-t border-gray-100 flex gap-4">
             @csrf
             <input type="hidden" name="month" id="confirm-month">
             <input type="hidden" name="year" id="confirm-year">
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         try {
-            const response = await fetch("{{ route('stock.random-usage.preview') }}", {
+            const response = await fetch("{{ route('stock.stock-adjustment.preview') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

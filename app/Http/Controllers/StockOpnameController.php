@@ -427,7 +427,7 @@ class StockOpnameController extends Controller
         return response()->json(['success' => 'Stock history updated successfully'], 200);
     }
  
-    public function randomUsage()
+    public function stockAdjustment()
     {
         $user = auth()->user();
         $reagens = Reagen::where('organization_guid', $user->organization_guid)
@@ -441,10 +441,10 @@ class StockOpnameController extends Controller
             ->where('is_active', true)
             ->get();
  
-        return view('stock-opname.random-usage', compact('reagens', 'allUsers'));
+        return view('stock-opname.stock-adjustment', compact('reagens', 'allUsers'));
     }
  
-    public function previewRandomUsage(Request $request)
+    public function previewStockAdjustment(Request $request)
     {
         $user = auth()->user();
         $validated = $request->validate([
@@ -565,7 +565,7 @@ class StockOpnameController extends Controller
         return response()->json($previewLogs);
     }
 
-    public function processRandomUsage(Request $request)
+    public function processStockAdjustment(Request $request)
     {
         $user = auth()->user();
 
@@ -666,12 +666,12 @@ class StockOpnameController extends Controller
                 }
 
                 DB::commit();
-                Alert::success('Success', "Successfully saved $generatedCount random usage records.");
+                Alert::success('Success', "Successfully saved $generatedCount stock adjustment records.");
                 return redirect()->route('stock.index');
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error("Random Usage Save Error: " . $e->getMessage());
+                Log::error("Stock Adjustment Save Error: " . $e->getMessage());
                 Alert::error('Error', 'An error occurred during save: ' . $e->getMessage());
                 return redirect()->back();
             }
@@ -840,12 +840,12 @@ class StockOpnameController extends Controller
             }
 
             DB::commit();
-            Alert::success('Success', "Successfully generated $generatedCount random usage records.");
+            Alert::success('Success', "Successfully generated $generatedCount stock adjustment records.");
             return redirect()->route('stock.index');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Random Usage Error: " . $e->getMessage());
+            Log::error("Stock Adjustment Error: " . $e->getMessage());
             Alert::error('Error', 'An error occurred during generation: ' . $e->getMessage());
             return redirect()->back();
         }

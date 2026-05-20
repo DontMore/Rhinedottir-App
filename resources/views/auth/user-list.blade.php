@@ -11,24 +11,25 @@
 
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-6">
         <div class="p-5">
-            <form method="GET" action="{{ route('user.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <form method="GET" action="{{ route('user.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end">
                 <div class="md:col-span-4">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Search</label>
-                    <div class="relative rounded-md shadow-sm">
+                    <label for="search" class="block text-sm font-medium text-gray-600 mb-1">Search</label>
+                    <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="bi bi-search text-gray-400"></i>
                         </div>
-                        <input type="text" 
-                               name="search" 
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors" 
-                               placeholder="Username, Name, or Email..." 
+                        <input type="text"
+                               id="search"
+                               name="search"
+                               class="block w-full h-10 pl-10 pr-3 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors"
+                               placeholder="Username, Name, or Email..."
                                value="{{ request('search') }}">
                     </div>
                 </div>
 
                 <div class="md:col-span-3">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Filter by Role</label>
-                    <select name="role" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <label for="role" class="block text-sm font-medium text-gray-600 mb-1">Filter by Role</label>
+                    <select id="role" name="role" class="block w-full h-10 px-3 border border-gray-300 bg-white rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="all" {{ request('role') == 'all' || !request('role') ? 'selected' : '' }}>All Roles</option>
                         <option value="Admin" {{ request('role') == 'Admin' ? 'selected' : '' }}>Admin</option>
                         <option value="Analis" {{ request('role') == 'Analis' ? 'selected' : '' }}>Analis</option>
@@ -37,21 +38,24 @@
                 </div>
 
                 <div class="md:col-span-3">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Filter by Status</label>
-                    <select name="status" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <label for="status" class="block text-sm font-medium text-gray-600 mb-1">Filter by Status</label>
+                    <select id="status" name="status" class="block w-full h-10 px-3 border border-gray-300 bg-white rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>All Status</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
 
-                <div class="md:col-span-2 flex items-end gap-2">
-                    <button type="submit" class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-                        <i class="bi bi-search mr-1"></i> Search
-                    </button>
-                    <a href="{{ route('user.index') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-colors" title="Reset filters">
-                        <i class="bi bi-x-circle text-lg leading-none"></i>
-                    </a>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-1 invisible select-none" aria-hidden="true">&nbsp;</label>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 inline-flex h-10 justify-center items-center px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                            <i class="bi bi-search mr-1"></i> Search
+                        </button>
+                        <a href="{{ route('user.index') }}" class="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-colors" title="Reset filters">
+                            <i class="bi bi-x-circle text-lg leading-none"></i>
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
