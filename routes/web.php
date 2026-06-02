@@ -92,6 +92,9 @@ Route::get('/take/{guid}', [LogbookController::class, 'takeReagen'])->name('data
 Route::get('/qrcode/{id}', [LogbookController::class, 'takeQRCode'])->name('qrcode')->middleware('auth')->middleware('auth');
 Route::post('/take-process', [LogbookController::class, 'store'])->middleware('auth')->name('take.process')->middleware('auth');
 Route::get('/logbook-history/{guid}', [LogbookController::class, 'logbookHistory'])->name('data.history');
+Route::delete('/logbook-history/delete/{guid}', [LogbookController::class, 'deleteLogbookHistory'])
+    ->middleware('admin')
+    ->name('logbook-history.delete');
 // Tambahkan rute ini jika belum ada
 Route::get('/take-admin/{guid}', [LogbookController::class, 'takeAdmin'])->name('take-admin')->middleware('auth');
 // Route untuk menyimpan data dari form
@@ -116,8 +119,11 @@ Route::middleware(['admin'])->group(function () {
 });
 
 
-// route report
+ // route report
 Route::get('/report', [ReportController::class, 'index'])->middleware('admin')->name('report.index');
+Route::get('/report/reagen-monthly', [ReportController::class, 'reagenMonthlyReport'])->middleware('admin')->name('report.reagen-monthly');
+Route::get('/report/reagen-monthly-excel', [ReportController::class, 'exportReagenMonthlyExcel'])->middleware('admin')->name('report.reagen-monthly-excel');
+Route::get('/report/reagen-monthly-pdf', [ReportController::class, 'generateReagenMonthlyPDF'])->middleware('admin')->name('report.reagen-monthly-pdf');
 Route::get('/report-detail', [ReportController::class, 'reportDetail'])->name('reportDetail');
 Route::get('/generate-pdf', [ReportController::class, 'generatePDF'])->name('report.print')->middleware('admin');
 Route::post('/filter-logbook', [ReportController::class, 'filterLogbook'])->name('report.filter');
@@ -226,5 +232,5 @@ Route::middleware(['admin'])->group(function () {
     Route::get('/storage-location', [StorageLocationController::class, 'index'])->name('storage.index');
     Route::post('/storage-location', [StorageLocationController::class, 'store'])->name('storage.store');
     Route::put('/storage-location/{guid}', [StorageLocationController::class, 'update'])->name('storage.update');
-    Route::delete('/storage-location/{guid}', [StorageLocationController::class, 'destroy'])->name('storage.delete');
+Route::delete('/storage-location/{guid}', [StorageLocationController::class, 'destroy'])->name('storage.delete');
 });

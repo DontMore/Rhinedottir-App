@@ -147,6 +147,57 @@ class LogbookController extends Controller
         return view('logbook.logbook-history', compact('reagen', 'logbookReagens'));
     }
 
+    // ✅ ADMIN DELETE LOGBOOK HISTORY + ROLLBACK STOCK_HISTORIES
+    public function deleteLogbookHistory($guid)
+    {
+        $user = auth()->user();
+
+        // Ambil logbook history berdasarkan guid + akses organisasi
+        $logbook = LogbookReagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
+        $qtyTaken = (float) ($logbook->quantity_taken ?? 0);
+        if ($qtyTaken <= 0) {
+            // Tetap hapus logbook, tapi tidak rollback bila qty tidak valid
+            $logbook->delete();
+            return redirect()->back()->with('success', 'Logbook history deleted.');
+        }
+
+        // Rollback berdasarkan bulan & tahun dari created_at logbook
+        $date = $logbook->created_at ? Carbon::parse($logbook->created_at) : now();
+        $month = $date->format('m');
+        $year = $date->format('Y');
+
+        $stockHistory = StockHistory::where('reagen_guid', $logbook->reagen_guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if ($stockHistory) {
+            $stockHistory->quantity = (float) $stockHistory->quantity + $qtyTaken;
+            $stockHistory->quantity_out = max((float) $stockHistory->quantity_out - $qtyTaken, 0);
+            $stockHistory->save();
+        }
+
+        // ✅ Update current stock (stock_reagens) so Reagent History "Current Stock" increases
+        // Since original TAKE used FIFO by StockReagen.noCatalog, rollback will add back qty to earliest batch.
+        $stockReagen = StockReagen::where('noCatalog', $logbook->noCatalog ?? null)
+            ->where('organization_guid', $user->organization_guid)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if ($stockReagen) {
+            $stockReagen->quantity = (float) $stockReagen->quantity + $qtyTaken;
+            $stockReagen->save();
+        }
+
+        $logbook->delete();
+
+        return redirect()->back()->with('success', 'Logbook history deleted and stock returned.');
+    }
+
     public function takeQRCode($id)
     {
         $user = auth()->user();

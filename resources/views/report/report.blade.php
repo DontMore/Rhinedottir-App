@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        <!-- Stock Opname Report Card -->
+        <!-- Stock Opname (Reagen In/Out & Stock Actual) Report Card -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:-translate-y-1 transition-transform duration-200">
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-4">
@@ -87,10 +87,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Stock Opname Report</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Reagen In/Out & Stock Actual (Bulanan)</h3>
                 </div>
-                <p class="text-sm text-gray-500 mb-4">Laporan stock opname bulanan untuk memastikan keakuratan data inventaris reagen.</p>
-                <a href="{{ route('report.stock-opname') }}" class="inline-flex w-full items-center justify-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <p class="text-sm text-gray-500 mb-4">Tampilkan total reagen masuk (In), keluar (Out), dan stock actual per bulan untuk semua reagen.</p>
+                <a href="{{ route('report.reagen-monthly') }}" class="inline-flex w-full items-center justify-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>

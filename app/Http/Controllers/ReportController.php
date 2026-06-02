@@ -19,6 +19,7 @@ use App\Exports\StockOpnameExport;
 use App\Exports\ExpiredReagenExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Exports\ReagenMonthlyReportExport;
 
 class ReportController extends Controller
 {
@@ -26,6 +27,175 @@ class ReportController extends Controller
     {
         $report = StockOpname::all();
         return view('report.report', compact('report'));
+    }
+
+    public function reagenMonthlyReport(Request $request)
+    {
+        $user = auth()->user();
+        $year = (int) ($request->input('year') ?? Carbon::now()->format('Y'));
+
+        $reagens = Reagen::where('organization_guid', $user->organization_guid)
+            ->orderBy('nameReagen')
+            ->get(['guid', 'nameReagen', 'noCatalog', 'merk', 'packSize']);
+
+        $reagenGuids = $reagens->pluck('guid');
+
+        // reagen in: from reagens_in table
+        $reagenIn = ReagenIn::select(
+                'reagen_guid',
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(quantity) as qty_in')
+            )
+            ->whereYear('created_at', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', DB::raw('MONTH(created_at)'))
+            ->get()
+            ->groupBy('reagen_guid');
+
+        // reagen out: from logbook_reagens table
+        $reagenOut = LogbookReagen::select(
+                'reagen_guid',
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(quantity_taken) as qty_out')
+            )
+            ->whereYear('created_at', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', DB::raw('MONTH(created_at)'))
+            ->get()
+            ->groupBy('reagen_guid');
+
+        // stock actual: from stock_histories table (uses stored month/year columns)
+        $stockActual = StockHistory::select(
+                'reagen_guid',
+                'month',
+                'year',
+                DB::raw('SUM(quantity_actual) as qty_actual')
+            )
+            ->where('year', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', 'month', 'year')
+            ->get()
+            ->groupBy('reagen_guid');
+
+        // Normalize to arrays Jan-Dec for each reagen
+        $data = $reagens->map(function ($reagen) use ($reagenIn, $reagenOut, $stockActual) {
+            $inMonths = $reagenIn->get($reagen->guid, collect());
+            $outMonths = $reagenOut->get($reagen->guid, collect());
+            $stockMonths = $stockActual->get($reagen->guid, collect());
+
+            $inByMonth = $inMonths->keyBy('month')->toArray();
+            $outByMonth = $outMonths->keyBy('month')->toArray();
+            $stockByMonth = $stockMonths->keyBy('month')->toArray();
+
+            $months = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $months[$m] = [
+                    'in' => isset($inByMonth[$m]) ? (float) $inByMonth[$m]['qty_in'] : 0,
+                    'out' => isset($outByMonth[$m]) ? (float) $outByMonth[$m]['qty_out'] : 0,
+                    'stock' => isset($stockByMonth[$m]) ? (float) $stockByMonth[$m]['qty_actual'] : 0,
+                ];
+            }
+
+            return [
+                'reagen' => $reagen,
+                'months' => $months,
+            ];
+        });
+
+        return view('report.reagen-monthly-report', compact('data', 'year'));
+    }
+
+    public function exportReagenMonthlyExcel(Request $request)
+    {
+        $user = auth()->user();
+        $year = (int) ($request->input('year') ?? Carbon::now()->format('Y'));
+
+        $filename = "reagen_monthly_report_{$user->organization_guid}_{$year}.xlsx";
+
+        return Excel::download(
+            new ReagenMonthlyReportExport($year, $user->organization_guid),
+            $filename
+        );
+    }
+
+    public function generateReagenMonthlyPDF(Request $request)
+    {
+        $user = auth()->user();
+        $year = (int) ($request->input('year') ?? Carbon::now()->format('Y'));
+
+        // Reuse the same aggregation logic as the main screen
+        $reagens = Reagen::where('organization_guid', $user->organization_guid)
+            ->orderBy('nameReagen')
+            ->get(['guid', 'nameReagen', 'noCatalog']);
+
+        $reagenGuids = $reagens->pluck('guid');
+
+        $reagenIn = ReagenIn::select(
+                'reagen_guid',
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(quantity) as qty_in')
+            )
+            ->whereYear('created_at', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', DB::raw('MONTH(created_at)'))
+            ->get()
+            ->groupBy('reagen_guid');
+
+        $reagenOut = LogbookReagen::select(
+                'reagen_guid',
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(quantity_taken) as qty_out')
+            )
+            ->whereYear('created_at', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', DB::raw('MONTH(created_at)'))
+            ->get()
+            ->groupBy('reagen_guid');
+
+        $stockActual = StockHistory::select(
+                'reagen_guid',
+                'month',
+                'year',
+                DB::raw('SUM(quantity_actual) as qty_actual')
+            )
+            ->where('year', $year)
+            ->whereIn('reagen_guid', $reagenGuids)
+            ->groupBy('reagen_guid', 'month', 'year')
+            ->get()
+            ->groupBy('reagen_guid');
+
+        $data = $reagens->map(function ($reagen) use ($reagenIn, $reagenOut, $stockActual) {
+            $inMonths = $reagenIn->get($reagen->guid, collect());
+            $outMonths = $reagenOut->get($reagen->guid, collect());
+            $stockMonths = $stockActual->get($reagen->guid, collect());
+
+            $inByMonth = $inMonths->keyBy('month')->toArray();
+            $outByMonth = $outMonths->keyBy('month')->toArray();
+            $stockByMonth = $stockMonths->keyBy('month')->toArray();
+
+            $months = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $months[$m] = [
+                    'in' => isset($inByMonth[$m]) ? (float) $inByMonth[$m]['qty_in'] : 0,
+                    'out' => isset($outByMonth[$m]) ? (float) $outByMonth[$m]['qty_out'] : 0,
+                    'stock' => isset($stockByMonth[$m]) ? (float) $stockByMonth[$m]['qty_actual'] : 0,
+                ];
+            }
+
+            return [
+                'reagen' => $reagen,
+                'months' => $months,
+            ];
+        });
+
+        $dataForPdf = [
+            'data' => $data,
+            'year' => $year,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i:s'),
+        ];
+
+        $pdf = PDF::loadView('report.reagen-monthly-report-pdf', $dataForPdf)->setPaper('a3', 'landscape');
+        return $pdf->stream("reagen_monthly_report_{$year}.pdf");
     }
 
     public function reportDetail(Request $request)

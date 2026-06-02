@@ -126,6 +126,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
+                        @if(auth()->check() && in_array(auth()->user()->role, ['superadmin', 'Admin'], true))
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
@@ -147,6 +150,18 @@
                         <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title="{{ $logbook->note }}">
                             {{ $logbook->note ?: '-' }}
                         </td>
+
+                        @if(auth()->check() && in_array(auth()->user()->role, ['superadmin', 'Admin'], true))
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <form action="{{ route('logbook-history.delete', $logbook->guid) }}" method="POST" onsubmit="return confirm('Hapus history logbook ini dan kembalikan stock ke stock_histories?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
