@@ -28,6 +28,8 @@ class Reagen extends Model implements AuditableContract
         'buffer_stock',
         'reagent_form', // ✅ Tambahkan ini
         'organization_guid',
+        'group_guid',
+        'category_guid',
         'storage_location_guid',
         'recommended_storage_location',
     ];

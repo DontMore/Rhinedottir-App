@@ -17,6 +17,22 @@
                 </svg>
                 Add New
             </a>
+
+            <!-- + Group / + Category -->
+            <button type="button" id="openGroupModal" class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                </svg>
+                + Group
+            </button>
+
+            <button type="button" id="openCategoryModal" class="inline-flex items-center justify-center px-4 py-2.5 bg-purple-600 text-white text-sm font-semibold rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                </svg>
+                + Category
+            </button>
+
             <a href="reagen-in" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
                 <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -29,6 +45,87 @@
                 </svg>
                 Stock Out
             </a>
+        </div>
+    </div>
+
+    <!-- + Group / + Category Modals -->
+    <div id="groupModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50" data-close-modal-group></div>
+        <div class="relative mx-auto mt-24 max-w-lg">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-gray-800">Add Group</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700" data-close-modal-group>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('group.store') }}" class="p-6 space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Group Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" required
+                               class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+
+                        @if($errors->has('name'))
+                            <p class="text-sm text-red-600 mt-1">
+                                {{ $errors->first('name') }}
+                            </p>
+                        @endif
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-close-modal-group>
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                            Save Group
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="categoryModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50" data-close-modal-category></div>
+        <div class="relative mx-auto mt-24 max-w-lg">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-gray-800">Add Category</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700" data-close-modal-category>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('category.store') }}" class="p-6 space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Category Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" required
+                               class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
+
+                        @if($errors->has('name'))
+                            <p class="text-sm text-red-600 mt-1">
+                                {{ $errors->first('name') }}
+                            </p>
+                        @endif
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-close-modal-category>
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
+                            Save Category
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -224,6 +321,38 @@
                 }
             });
         });
+    });
+
+    // Open/Close Group & Category Modals
+    const openGroupBtn = document.getElementById('openGroupModal');
+    const openCategoryBtn = document.getElementById('openCategoryModal');
+
+    const groupModal = document.getElementById('groupModal');
+    const categoryModal = document.getElementById('categoryModal');
+
+    function openModal(modalEl) {
+        if (!modalEl) return;
+        modalEl.classList.remove('hidden');
+    }
+
+    function closeModal(modalEl) {
+        if (!modalEl) return;
+        modalEl.classList.add('hidden');
+    }
+
+    if (openGroupBtn) {
+        openGroupBtn.addEventListener('click', () => openModal(groupModal));
+    }
+    if (openCategoryBtn) {
+        openCategoryBtn.addEventListener('click', () => openModal(categoryModal));
+    }
+
+    document.querySelectorAll('[data-close-modal-group]').forEach(el => {
+        el.addEventListener('click', () => closeModal(groupModal));
+    });
+
+    document.querySelectorAll('[data-close-modal-category]').forEach(el => {
+        el.addEventListener('click', () => closeModal(categoryModal));
     });
 </script>
 @endpush

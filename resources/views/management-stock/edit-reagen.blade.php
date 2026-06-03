@@ -49,6 +49,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Catalog Number</label>
                     <input type="text" value="{{ old('noCatalog', $data->noCatalog) }}" readonly
                            class="block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-500 shadow-sm focus:border-gray-300 focus:ring-0 sm:text-sm cursor-not-allowed">
+                    <input type="hidden" name="noCatalog" value="{{ old('noCatalog', $data->noCatalog) }}">
                 </div>
                 
                 <!-- Reagent Name -->

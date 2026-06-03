@@ -49,6 +49,13 @@
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->packSize }}</span>
                 </div>
 
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Buffer Stock</span>
+                    <span class="sm:col-span-2 text-sm font-medium text-gray-900">
+                        {{ isset($data->buffer_stock) ? number_format((float) $data->buffer_stock, 0, ',', '.') : '-' }}
+                    </span>
+                </div>
+
                 <!-- ✅ TAMBAHAN: Group & Category -->
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <span class="text-sm text-gray-500">Group</span>

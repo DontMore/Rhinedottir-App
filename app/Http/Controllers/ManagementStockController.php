@@ -140,7 +140,10 @@ class ManagementStockController extends Controller
         $validatedData['organization_guid'] = auth()->user()->organization_guid;
 
         // ✅ Generate Recommended Storage Otomatis
-        $validatedData['recommended_storage_location'] = \App\Models\Reagen::getRecommendedStorage($hazardOptions);
+        $validatedData['recommended_storage_location'] = \App\Models\Reagen::getRecommendedStorage(
+            $hazardOptions,
+            auth()->user()->organization_guid
+        );
 
         // Simpan ke Database
         \App\Models\Reagen::create($validatedData);
@@ -217,6 +220,13 @@ class ManagementStockController extends Controller
             'msds' => 'required',
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
+
+            // ✅ Agar perubahan saat edit tersimpan
+            'group_guid' => 'nullable|uuid|exists:reagen_groups,guid',
+            'category_guid' => 'nullable|uuid|exists:reagen_categories,guid',
+
+            'storage_location_guid' => 'nullable|uuid|exists:storage_locations,guid',
+
             'reagent_form' => 'required|in:liquid,solid,crystal', // ✅ Validasi baru
         ]);
 
