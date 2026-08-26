@@ -48,14 +48,13 @@
                     <span class="text-sm text-gray-500">Pack Size</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->packSize }}</span>
                 </div>
-
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <span class="text-sm text-gray-500">Buffer Stock</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">
                         {{ isset($data->buffer_stock) ? number_format((float) $data->buffer_stock, 0, ',', '.') : '-' }}
                     </span>
                 </div>
-
+                
                 <!-- ✅ TAMBAHAN: Group & Category -->
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <span class="text-sm text-gray-500">Group</span>
@@ -65,45 +64,72 @@
                     <span class="text-sm text-gray-500">Category</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">{{ $data->category->name ?? '-' }}</span>
                 </div>
-
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <span class="text-sm text-gray-500">Price</span>
                     <span class="sm:col-span-2 text-sm font-medium text-gray-900">Rp {{ number_format((float)$data->price, 0, ',', '.') }}</span>
                 </div>
+
+                <!-- ✅ TAMBAHAN BARU: SIGNAL WORD -->
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Signal Word</span>
+                    <span class="sm:col-span-2 text-sm font-medium">
+                        @if($data->signal_word)
+                            @php
+                                $color = match($data->signal_word) {
+                                    'Danger' => 'bg-red-50 text-red-700 ring-red-600/20',
+                                    'Warning' => 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
+                                    'None' => 'bg-gray-100 text-gray-700 ring-gray-600/20',
+                                    default => 'bg-gray-100 text-gray-700 ring-gray-600/20',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $color }} ring-1 ring-inset">
+                                {{ $data->signal_word }}
+                            </span>
+                        @else
+                            <span class="text-sm text-gray-400 italic">Not specified</span>
+                        @endif
+                    </span>
+                </div>
+
+                <!-- ✅ DIUBAH: MSDS MENJADI TOMBOL PREVIEW PDF -->
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
                     <span class="text-sm text-gray-500">MSDS Document</span>
                     <span class="sm:col-span-2">
-                        <a href="{{ $data->msds }}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors ring-1 ring-inset ring-blue-700/10">
-                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            View MSDS
-                        </a>
+                        @if($data->msds)
+                            <button type="button" id="previewMsdsBtn" data-url="{{ route('management-stock.msds', ['guid' => $data->guid]) }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors ring-1 ring-inset ring-blue-700/10">
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Preview PDF
+                            </button>
+                        @else
+                            <span class="text-sm text-gray-400 italic">No document uploaded</span>
+                        @endif
                     </span>
                 </div>
-            </div>
 
-            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <span class="text-sm text-gray-500">Storage Location</span>
-                <span class="sm:col-span-2">
-                    @if($data->storageLocation)
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
-                        {{ $data->storageLocation->code }} - {{ $data->storageLocation->name }}
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Storage Location</span>
+                    <span class="sm:col-span-2">
+                        @if($data->storageLocation)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-600/20">
+                            {{ $data->storageLocation->code }} - {{ $data->storageLocation->name }}
+                        </span>
+                        @else
+                        <span class="text-sm text-gray-400 italic">Not assigned</span>
+                        @endif
                     </span>
-                    @else
-                    <span class="text-sm text-gray-400 italic">Not assigned</span>
-                    @endif
-                </span>
+                </div>
+                @if($data->recommended_storage_location)
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <span class="text-sm text-gray-500">Recommended Storage</span>
+                    <span class="sm:col-span-2 text-sm text-blue-700 font-medium">
+                        {{ $data->recommended_storage_location }}
+                    </span>
+                </div>
+                @endif
             </div>
-
-            @if($data->recommended_storage_location)
-            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <span class="text-sm text-gray-500">Recommended Storage</span>
-                <span class="sm:col-span-2 text-sm text-blue-700 font-medium">
-                    {{ $data->recommended_storage_location }}
-                </span>
-            </div>
-            @endif
         </div>
 
         <!-- Hazard Symbols Card -->
@@ -116,8 +142,8 @@
                     @foreach($hazardOptions as $hazard)
                     @php
                     $imagePath = match($hazard) {
-                    'Environment' => 'Environmental-Hazard',
-                    default => strtolower($hazard)
+                        'Environment' => 'Environmental-Hazard',
+                        default => strtolower($hazard)
                     };
                     @endphp
                     <div class="flex flex-col items-center p-3 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
@@ -153,7 +179,6 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
-                    <!-- ✅ URUTAN DESCENDING -->
                     @forelse($data->reagenIn->sortByDesc('created_at') as $item)
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -207,7 +232,7 @@
     </div>
 </div>
 
-<!-- Label Modal -->
+<!-- Label Modal (Bawaan) -->
 <div id="labelModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" data-close-modal></div>
@@ -267,78 +292,134 @@
     </div>
 </div>
 
+<!-- ✅ TAMBAHAN BARU: MODAL PREVIEW MSDS PDF -->
+<div id="msdsModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" data-close-msds-modal></div>
+        <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-5xl">
+            <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">MSDS Document Preview</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500 transition-colors" data-close-msds-modal>
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <iframe id="msdsIframe" src="" class="w-full h-[70vh] border border-gray-200 rounded-lg bg-gray-50" frameborder="0"></iframe>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+                <a id="msdsDownloadBtn" href="" download class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download PDF
+                </a>
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-close-msds-modal>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('labelModal');
-        const closeButtons = document.querySelectorAll('[data-close-modal]');
-        const qrContainer = document.getElementById('qrcode');
-        let qrCodeInstance = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('labelModal');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+    const qrContainer = document.getElementById('qrcode');
+    let qrCodeInstance = null;
 
-        // Open Modal
-        document.querySelectorAll('.open-label-modal').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.getElementById('modalExpired').textContent = this.dataset.expired;
-                const id = this.dataset.id;
+    // Open Label Modal
+    document.querySelectorAll('.open-label-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('modalExpired').textContent = this.dataset.expired;
+            const id = this.dataset.id;
 
-                qrContainer.innerHTML = '';
-                qrCodeInstance = new QRCode(qrContainer, {
-                    text: `https://reagen.onexternal.com/qrcode/${id}`,
-                    width: 128,
-                    height: 128,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L
-                });
-
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+            qrContainer.innerHTML = '';
+            qrCodeInstance = new QRCode(qrContainer, {
+                text: `https://reagen.onexternal.com/qrcode/${id}`,
+                width: 128,
+                height: 128,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
             });
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         });
+    });
 
-        // Close Modal
-        const closeModal = () => {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-        };
-        closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+    // Close Label Modal
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+    closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
-        // Download Label
-        document.getElementById('downloadLabelBtn').addEventListener('click', function() {
-            const element = document.getElementById('modalContent');
-            html2canvas(element, {
-                scale: 2,
-                backgroundColor: '#ffffff',
-                logging: false
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `label_${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
+    // Download Label
+    document.getElementById('downloadLabelBtn').addEventListener('click', function() {
+        const element = document.getElementById('modalContent');
+        html2canvas(element, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `label_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         });
+    });
 
-        // Delete Confirmation (SweetAlert2)
-        document.querySelectorAll('.confirm-delete').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const form = this.closest('form');
-                Swal.fire({
-                    title: 'Delete Stock Record?',
-                    text: "This action cannot be undone.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Yes, delete it'
-                }).then((result) => {
-                    if (result.isConfirmed) form.submit();
-                });
+    // Delete Confirmation (SweetAlert2)
+    document.querySelectorAll('.confirm-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const form = this.closest('form');
+            Swal.fire({
+                title: 'Delete Stock Record?',
+                text: "This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it'
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
             });
         });
     });
+
+    // ✅ LOGIC BARU: MSDS PREVIEW MODAL
+    const msdsModal = document.getElementById('msdsModal');
+    const previewMsdsBtn = document.getElementById('previewMsdsBtn');
+    const msdsIframe = document.getElementById('msdsIframe');
+    const msdsDownloadBtn = document.getElementById('msdsDownloadBtn');
+
+    if (previewMsdsBtn) {
+        previewMsdsBtn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            msdsIframe.src = url;
+            msdsDownloadBtn.href = url;
+            msdsModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Close MSDS Modal
+    document.querySelectorAll('[data-close-msds-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            msdsModal.classList.add('hidden');
+            msdsIframe.src = ''; // Hapus src untuk menghentikan loading PDF
+            document.body.style.overflow = '';
+        });
+    });
+});
 </script>
 @endpush
 @endsection

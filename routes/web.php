@@ -70,6 +70,7 @@ Route::post('/add-reagen', [ManagementStockController::class, 'addReagenStore'])
 Route::get('/add-stock-reagen/{guid}', [ManagementStockController::class, 'addStockReagen'])->name('reagen.addstock')->middleware('admin');
 
 Route::get('/view/{guid}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
+Route::get('/msds/{guid}', [ManagementStockController::class, 'showMsds'])->name('management-stock.msds')->middleware('admin');
 Route::get('/edit/{guid}', [ManagementStockController::class, 'editReagen'])->name('data.edit')->middleware('admin');
 Route::post('/delete/{guid}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
 Route::post('/update/{guid}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');
@@ -133,8 +134,8 @@ Route::get('/generate-logbook-pdf', [ReportController::class, 'generateLogbookPD
 Route::get('/export-logbook-excel', [ReportController::class, 'exportExcel'])->name('report.logbook-excel');
 Route::get('/historical-report', [ReportController::class, 'historicalReport'])->name('report.historical');
 Route::get('/reagen-list', [ReportController::class, 'reagenList'])->name('report.reagen-list');
+Route::get('/report/reagen-annual-usage', [ReportController::class, 'annualReagenUsageReport'])->middleware('admin')->name('report.reagen-annual-usage');
 Route::get('/historical-pdf', [ReportController::class, 'generateHistoricalPDF'])->name('report.historical-pdf');
-Route::get('/historical-excel', [ReportController::class, 'exportHistoricalExcel'])->name('report.historical-excel');
 Route::get('/stock-opname-report', [ReportController::class, 'stockOpnameReport'])->name('report.stock-opname');
 Route::get('/stock-opname-pdf', [ReportController::class, 'generateStockOpnamePDF'])->name('report.stock-opname-pdf');
 Route::get('/stock-opname-excel', [ReportController::class, 'exportStockOpnameExcel'])->name('report.stock-opname-excel');
@@ -235,3 +236,9 @@ Route::middleware(['admin'])->group(function () {
     Route::put('/storage-location/{guid}', [StorageLocationController::class, 'update'])->name('storage.update');
 Route::delete('/storage-location/{guid}', [StorageLocationController::class, 'destroy'])->name('storage.delete');
 });
+
+use App\Http\Controllers\SsoController;
+
+// Taruh DI LUAR middleware auth (agar bisa diakses saat belum login)
+Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');

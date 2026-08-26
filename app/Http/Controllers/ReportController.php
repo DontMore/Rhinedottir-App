@@ -380,7 +380,7 @@ class ReportController extends Controller
     {
         $user = auth()->user();
 
-        $reagens = Reagen::select('reagen_guid', 'nameReagen', 'merk', 'packSize')
+        $reagens = Reagen::select('guid as reagen_guid', 'noCatalog', 'nameReagen', 'merk', 'packSize')
             ->whereHas('reagenIn.user', function ($q) use ($user) {
                 $q->where('organization_guid', $user->organization_guid); // ✅ Fixed
             })
@@ -605,7 +605,7 @@ class ReportController extends Controller
     {
         $user = auth()->user();
 
-        $reagens = Reagen::select('reagen_guid', 'nameReagen', 'merk', 'packSize')
+        $reagens = Reagen::select('guid as reagen_guid', 'noCatalog', 'nameReagen', 'merk', 'packSize')
             ->whereHas('reagenIn.user', function ($q) use ($user) {
                 $q->where('organization_guid', $user->organization_guid); // ✅ Fixed
             })
@@ -616,5 +616,51 @@ class ReportController extends Controller
 
         $pdf = PDF::loadView('report.reagen-list-pdf', compact('reagens'))->setPaper('a4', 'landscape');
         return $pdf->stream('reagen_list.pdf');
+    }
+
+    public function annualReagenUsageReport(Request $request)
+    {
+        $user = auth()->user();
+        $selectedSignalWord = $request->input('signal_word');
+        $sortBy = $request->input('sort_by', 'name');
+        $direction = $request->input('direction', 'asc');
+        $year = (int) ($request->input('year') ?? Carbon::now()->year);
+
+        $query = Reagen::where('organization_guid', $user->organization_guid);
+
+        if ($selectedSignalWord && in_array($selectedSignalWord, ['Danger', 'Warning', 'None'], true)) {
+            $query->where('signal_word', $selectedSignalWord);
+        }
+
+        $reagens = $query->orderBy('nameReagen')->get();
+
+        $report = $reagens->map(function ($reagen) use ($year) {
+            $usage = LogbookReagen::where('reagen_guid', $reagen->guid)
+                ->whereYear('created_at', $year)
+                ->sum('quantity_taken');
+
+            $hazards = array_values(array_filter(array_map(function ($hazard) {
+                return trim($hazard);
+            }, explode(',', $reagen->hazardOptions ?? ''))));
+
+            return [
+                'reagen' => $reagen,
+                'signal_word' => $reagen->signal_word ?? 'None',
+                'hazards' => $hazards,
+                'usage_total' => (float) $usage,
+            ];
+        })->values();
+
+        if ($sortBy === 'usage') {
+            $report = $report->sortBy(function ($item) {
+                return $item['usage_total'];
+            }, SORT_REGULAR, $direction === 'desc');
+        } else {
+            $report = $report->sortBy(function ($item) {
+                return strtolower($item['reagen']->nameReagen ?? '');
+            }, SORT_REGULAR, $direction === 'desc');
+        }
+
+        return view('report.reagen-annual-usage', compact('report', 'year', 'selectedSignalWord', 'sortBy', 'direction'));
     }
 }

@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use PDF;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class ManagementStockController extends Controller
 {
@@ -112,40 +113,81 @@ class ManagementStockController extends Controller
         return view('management-stock.add-reagen', compact('groups', 'categories', 'storageLocations'));
     }
 
+    private function handleMsdsUpload(Request $request, ?string $currentPath = null): ?string
+    {
+        if (!$request->hasFile('msds')) {
+            return $currentPath;
+        }
+
+        $file = $request->file('msds');
+
+        if (!$file || !$file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['File MSDS tidak valid atau gagal diupload.'],
+            ]);
+        }
+
+        if ($currentPath && \Storage::disk('public')->exists($currentPath)) {
+            \Storage::disk('public')->delete($currentPath);
+        }
+
+        try {
+            $storedPath = $file->storeAs('msds_files', $file->hashName(), 'public');
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['Gagal menyimpan file MSDS ke storage: ' . $e->getMessage()],
+            ]);
+        }
+
+        if (empty($storedPath) || $storedPath === false) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['Gagal menyimpan file MSDS ke storage. Periksa permission folder storage/app/public dan jalankan `php artisan storage:link`.'],
+            ]);
+        }
+
+        return $storedPath;
+    }
+
     public function addReagenStore(Request $request)
     {
-        // ✅ Validasi termasuk field baru
+        $filePath = null;
+
+        if ($request->hasFile('msds')) {
+            $filePath = $this->handleMsdsUpload($request);
+        }
+
         $validatedData = $request->validate([
             'noCatalog' => 'required',
             'nameReagen' => 'required',
             'merk' => 'required',
             'packSize' => 'required',
             'hazardOptions' => 'array',
-            'msds' => 'required',
+            'msds' => 'required|file|mimes:pdf|max:10240', // ✅ Ubah jadi validasi file
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
-
-            // ✅ Field Baru
+            'signal_word' => 'nullable|in:Danger,Warning,None',
             'group_guid' => 'nullable|uuid|exists:reagen_groups,guid',
             'category_guid' => 'nullable|uuid|exists:reagen_categories,guid',
             'storage_location_guid' => 'nullable|uuid|exists:storage_locations,guid',
             'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
 
-        // Proses Hazard Options
+        if (empty($filePath)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['File MSDS wajib diupload.'],
+            ]);
+        }
+
+        $validatedData['msds'] = $filePath;
+
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
-
-        // Set Organization GUID
         $validatedData['organization_guid'] = auth()->user()->organization_guid;
-
-        // ✅ Generate Recommended Storage Otomatis
         $validatedData['recommended_storage_location'] = \App\Models\Reagen::getRecommendedStorage(
             $hazardOptions,
             auth()->user()->organization_guid
         );
 
-        // Simpan ke Database
         \App\Models\Reagen::create($validatedData);
 
         Alert::success('Success!', 'Data has been added successfully');
@@ -170,6 +212,24 @@ class ManagementStockController extends Controller
 
         $hazardOptions = explode(',', $data->hazardOptions ?? '');
         return view('management-stock.view-reagen', compact('data', 'hazardOptions'));
+    }
+
+    public function showMsds($guid)
+    {
+        $user = auth()->user();
+        $reagen = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
+        if (empty($reagen->msds) || !Storage::disk('public')->exists($reagen->msds)) {
+            abort(404, 'MSDS file not found.');
+        }
+
+        return Storage::disk('public')->response(
+            $reagen->msds,
+            basename($reagen->msds),
+            ['Content-Disposition' => 'inline; filename="' . basename($reagen->msds) . '"']
+        );
     }
 
     // ✅ EDIT: Menggunakan $guid & filter organisasi langsung
@@ -217,29 +277,29 @@ class ManagementStockController extends Controller
             'merk' => 'required',
             'packSize' => 'required',
             'hazardOptions' => 'array',
-            'msds' => 'required',
+            // ✅ msds tidak wajib (nullable), tapi jika diisi harus file pdf
+            'msds' => 'nullable|file|mimes:pdf|max:10240', 
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
-
-            // ✅ Agar perubahan saat edit tersimpan
+            'signal_word' => 'nullable|in:Danger,Warning,None',
             'group_guid' => 'nullable|uuid|exists:reagen_groups,guid',
             'category_guid' => 'nullable|uuid|exists:reagen_categories,guid',
-
             'storage_location_guid' => 'nullable|uuid|exists:storage_locations,guid',
-
-            'reagent_form' => 'required|in:liquid,solid,crystal', // ✅ Validasi baru
+            'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
+
+        $validatedData['msds'] = $this->handleMsdsUpload($request, $data->msds);
 
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
 
-        // Update recommended storage location jika hazard berubah
         $validatedData['recommended_storage_location'] = Reagen::getRecommendedStorage(
             $hazardOptions,
             $user->organization_guid
         );
 
         $data->update($validatedData);
+
         Alert::success('SUCCESS!', 'Reagen updated successfully');
         return redirect()->route('data.view', ['guid' => $data->guid]);
     }

@@ -23,10 +23,11 @@ class Reagen extends Model implements AuditableContract
         'merk',
         'packSize',
         'hazardOptions',
-        'msds',
+        'msds', // Kolom ini sekarang akan menyimpan path file
+        'signal_word', // ✅ TAMBAHKAN INI
         'price',
         'buffer_stock',
-        'reagent_form', // ✅ Tambahkan ini
+        'reagent_form', 
         'organization_guid',
         'group_guid',
         'category_guid',

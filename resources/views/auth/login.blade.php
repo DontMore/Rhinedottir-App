@@ -291,6 +291,12 @@
                     </div>
                 </form>
 
+                <div class="mt-3 text-center">
+                    <a href="{{ route('sso.login') }}" class="btn btn-primary btn-block">
+                        🔐 Login dengan SSO
+                    </a>
+                </div>
+
                 <div class="mt-8 pt-6 border-t border-gray-400/20 bottom-links">
                     <div class="flex items-center justify-center space-x-4 text-sm font-medium dynamic-text-muted">
                         <a href="kirim-email" class="hover:text-blue-500 transition-colors">Forgot password?</a>
