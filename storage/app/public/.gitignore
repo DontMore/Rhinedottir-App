@@ -1,3 +1,4 @@
 *
 !.gitignore
 /storage/app/public/msds_files/*
+/storage/app/public/coa_files/*

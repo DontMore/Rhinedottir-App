@@ -28,6 +28,7 @@ class ReagenIn extends Model implements AuditableContract
         'quantity',
         'expiredDate',
         'note',
+        'coa',
         'stockUpdateDate',
         'user_id',
         'organization_guid',

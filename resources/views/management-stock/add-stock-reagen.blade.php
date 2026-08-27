@@ -10,7 +10,7 @@
     </div>
 
     <!-- Form Card -->
-    <form action="{{ route('reagen.addstockreagen') }}" method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <form action="{{ route('reagen.addstockreagen') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         @csrf
         <div class="p-6 space-y-6">
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -58,6 +58,15 @@
                     <input type="date" id="tanggalKadaluarsa" name="expiredDate" value="{{ old('expiredDate') }}" required
                         class="block w-full rounded-lg border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                     @error('expiredDate') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+
+                <!-- COA File -->
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label for="coa" class="block text-sm font-medium text-gray-700 mb-1.5">COA File (PDF) <span class="text-red-500">*</span></label>
+                    <input type="file" id="coa" name="coa" accept="application/pdf,.pdf" required
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="mt-1 text-xs text-gray-500">Upload dokumen Certificate of Analysis dalam format PDF.</p>
+                    @error('coa') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
             </div>
 

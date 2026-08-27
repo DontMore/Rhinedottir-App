@@ -200,6 +200,14 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <div class="flex items-center justify-end gap-2">
+                                @if($item->coa)
+                                <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-md transition-colors preview-coa-btn" data-url="{{ route('management-stock.coa', $item->Id) }}">
+                                    <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    COA
+                                </button>
+                                @endif
                                 <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors open-label-modal" data-id="{{ $item->Id }}" data-expired="{{ \Carbon\Carbon::parse($item->expiredDate)->format('d F Y') }}">
                                     <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -323,6 +331,37 @@
     </div>
 </div>
 
+<!-- ✅ MODAL PREVIEW COA PDF -->
+<div id="coaModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" data-close-coa-modal></div>
+        <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-5xl">
+            <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">COA Document Preview</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-500 transition-colors" data-close-coa-modal>
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <iframe id="coaIframe" src="" class="w-full h-[70vh] border border-gray-200 rounded-lg bg-gray-50" frameborder="0"></iframe>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+                <a id="coaDownloadBtn" href="" download class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download PDF
+                </a>
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-close-coa-modal>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -415,7 +454,31 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-close-msds-modal]').forEach(btn => {
         btn.addEventListener('click', () => {
             msdsModal.classList.add('hidden');
-            msdsIframe.src = ''; // Hapus src untuk menghentikan loading PDF
+            msdsIframe.src = '';
+            document.body.style.overflow = '';
+        });
+    });
+
+    // ✅ LOGIC BARU: COA PREVIEW MODAL
+    const coaModal = document.getElementById('coaModal');
+    const coaIframe = document.getElementById('coaIframe');
+    const coaDownloadBtn = document.getElementById('coaDownloadBtn');
+
+    document.querySelectorAll('.preview-coa-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            coaIframe.src = url;
+            coaDownloadBtn.href = url;
+            coaModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Close COA Modal
+    document.querySelectorAll('[data-close-coa-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            coaModal.classList.add('hidden');
+            coaIframe.src = '';
             document.body.style.overflow = '';
         });
     });

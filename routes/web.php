@@ -71,6 +71,7 @@ Route::get('/add-stock-reagen/{guid}', [ManagementStockController::class, 'addSt
 
 Route::get('/view/{guid}', [ManagementStockController::class, 'viewReagen'])->name('data.view')->middleware('admin');
 Route::get('/msds/{guid}', [ManagementStockController::class, 'showMsds'])->name('management-stock.msds')->middleware('admin');
+Route::get('/coa/{id}', [ManagementStockController::class, 'showCoa'])->name('management-stock.coa')->middleware('admin');
 Route::get('/edit/{guid}', [ManagementStockController::class, 'editReagen'])->name('data.edit')->middleware('admin');
 Route::post('/delete/{guid}', [ManagementStockController::class, 'deleteReagen'])->name('data.delete')->middleware('admin');
 Route::post('/update/{guid}', [ManagementStockController::class, 'updateReagen'])->name('data.update')->middleware('admin');

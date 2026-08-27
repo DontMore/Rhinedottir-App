@@ -148,6 +148,41 @@ class ManagementStockController extends Controller
         return $storedPath;
     }
 
+    private function handleCoaUpload(Request $request, ?string $currentPath = null): ?string
+    {
+        if (!$request->hasFile('coa')) {
+            return $currentPath;
+        }
+
+        $file = $request->file('coa');
+
+        if (!$file || !$file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['File COA tidak valid atau gagal diupload.'],
+            ]);
+        }
+
+        if ($currentPath && \Storage::disk('public')->exists($currentPath)) {
+            \Storage::disk('public')->delete($currentPath);
+        }
+
+        try {
+            $storedPath = $file->storeAs('coa_files', $file->hashName(), 'public');
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['Gagal menyimpan file COA ke storage: ' . $e->getMessage()],
+            ]);
+        }
+
+        if (empty($storedPath) || $storedPath === false) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['Gagal menyimpan file COA ke storage. Periksa permission folder storage/app/public dan jalankan `php artisan storage:link`.'],
+            ]);
+        }
+
+        return $storedPath;
+    }
+
     public function addReagenStore(Request $request)
     {
         $filePath = null;
@@ -321,13 +356,24 @@ class ManagementStockController extends Controller
     public function addStock(Request $request)
     {
         $user = auth()->user();
+        $filePath = null;
+
+        if ($request->hasFile('coa')) {
+            $filePath = $this->handleCoaUpload($request);
+        }
+
         $validatedDataStock = $request->validate([
             'noCatalog' => 'required',
             'batch' => 'required',
             'quantity' => 'required|numeric',
             'expiredDate' => 'required|date',
-            'note' => 'nullable'
+            'note' => 'nullable',
+            'coa' => 'required|file|mimes:pdf|max:10240',
         ]);
+
+        if (!empty($filePath)) {
+            $validatedDataStock['coa'] = $filePath;
+        }
 
         // Ambil GUID master reagen berdasarkan noCatalog yang diinput user
         $masterReagen = Reagen::where('noCatalog', $validatedDataStock['noCatalog'])
@@ -541,5 +587,23 @@ class ManagementStockController extends Controller
                 return $item;
             });
         return view('dashboard.reagen-expired', compact('reagenExpired'));
+    }
+
+    public function showCoa($id)
+    {
+        $user = auth()->user();
+        $reagenIn = ReagenIn::whereHas('reagen', function ($q) use ($user) {
+            $q->where('organization_guid', $user->organization_guid);
+        })->where('Id', $id)->firstOrFail();
+
+        if (empty($reagenIn->coa) || !Storage::disk('public')->exists($reagenIn->coa)) {
+            abort(404, 'COA file not found.');
+        }
+
+        return Storage::disk('public')->response(
+            $reagenIn->coa,
+            basename($reagenIn->coa),
+            ['Content-Disposition' => 'inline; filename="' . basename($reagenIn->coa) . '"']
+        );
     }
 }
