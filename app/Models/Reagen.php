@@ -159,4 +159,43 @@ class Reagen extends Model implements AuditableContract
 
         return $storageNames[$primaryStorage] ?? 'General Storage';
     }
+    
+        // ✅ TAMBAHKAN DI DALAM CLASS Reagen
+
+    /**
+     * ✅ Relasi ke MsdsDocument (One-to-Many)
+     * Satu reagen bisa memiliki banyak dokumen MSDS (PDF/PPT)
+     * 
+     * - Foreign key: 'reagen_guid' (di tabel msds_documents)
+     * - Local key: 'guid' (di tabel reagens)
+     */
+    public function msdsDocuments()
+    {
+        return $this->hasMany(MsdsDocument::class, 'reagen_guid', 'guid');
+    }
+
+    /**
+     * ✅ Ambil dokumen MSDS terbaru (hasOne dengan latestOfMany)
+     */
+    public function latestMsds()
+    {
+        return $this->hasOne(MsdsDocument::class, 'reagen_guid', 'guid')->latestOfMany();
+    }
+
+    /**
+     * ✅ Helper: Cek apakah reagen sudah memiliki MSDS
+     */
+    public function getHasMsdsAttribute(): bool
+    {
+        return $this->msdsDocuments()->exists();
+    }
+
+    /**
+     * ✅ Helper: URL untuk download MSDS terbaru
+     */
+    public function getMsdsUrlAttribute(): ?string
+    {
+        $latest = $this->latestMsds;
+        return $latest ? asset('storage/' . $latest->file_path) : null;
+    }
 }

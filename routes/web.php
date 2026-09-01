@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\MsdsController;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendEmail;
 use App\Http\Controllers\SettingsController;
@@ -243,3 +244,20 @@ use App\Http\Controllers\SsoController;
 // Taruh DI LUAR middleware auth (agar bisa diakses saat belum login)
 Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
 Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
+
+// 💼 MSDS Management Routes
+Route::prefix('msds')->name('msds.')->middleware(['auth'])->group(function () {
+    Route::get('/', [MsdsController::class, 'index'])->name('index');
+    
+    // ✅ PERBAIKAN: Parameter route menggunakan {reagen} yang akan di-bind ke 'guid'
+    Route::get('/upload/{reagen}', [MsdsController::class, 'create'])
+        ->name('create')
+        ->missing(function () {
+            return redirect()->route('msds.index')
+                ->with('error', 'Reagen tidak ditemukan.');
+        });
+    
+    Route::post('/store', [MsdsController::class, 'store'])->name('store');
+    Route::get('/view/{reagen}', [MsdsController::class, 'show'])->name('show');
+    Route::delete('/{reagen}', [MsdsController::class, 'destroy'])->name('destroy');
+});

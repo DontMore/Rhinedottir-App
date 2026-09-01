@@ -12,7 +12,6 @@
                     <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-white">Rhinedottir</span>
                 </a>
             </div>
-            
             {{-- User Menu --}}
             <div class="flex items-center">
                 <div class="relative ms-3">
@@ -126,7 +125,7 @@
             @endif
             @endcanany
 
-            {{-- ✅ STORAGE MENU (BARU) --}}
+            {{-- ✅ STORAGE MENU --}}
             @canany(['admin', 'superadmin'])
             @if(auth()->user()->organization_guid)
             <li>
@@ -135,6 +134,25 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
                     </svg>
                     <span class="sidebar-text ms-3">Storage Location</span>
+                </a>
+            </li>
+            @endif
+            @endcanany
+
+            {{-- ✅ MSDS DOCUMENTS (BARU) --}}
+            @canany(['admin', 'superadmin'])
+            @if(auth()->user()->organization_guid)
+            <li>
+                <a href="{{ route('msds.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('msds.*') ? 'bg-gray-700 text-white' : '' }}">
+                    <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition duration-75 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                    </svg>
+                    <span class="sidebar-text ms-3 flex-1">MSDS Documents</span>
+                    @if(($pendingMsdsCount ?? 0) > 0)
+                        <span class="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-amber-500 text-white rounded-full">
+                            {{ $pendingMsdsCount > 99 ? '99+' : $pendingMsdsCount }}
+                        </span>
+                    @endif
                 </a>
             </li>
             @endif
@@ -244,17 +262,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle Dropdown Settings
     const settingsBtn = document.querySelector('[data-collapse-toggle="dropdown-settings"]');
     const settingsDropdown = document.getElementById('dropdown-settings');
-    
+
     if (settingsBtn && settingsDropdown) {
         settingsBtn.addEventListener('click', function() {
             settingsDropdown.classList.toggle('hidden');
         });
     }
-    
+
     // User Dropdown Toggle
     const userBtn = document.querySelector('[data-dropdown-toggle="dropdown-user"]');
     const userDropdown = document.getElementById('dropdown-user');
-    
+
     if (userBtn && userDropdown) {
         userBtn.addEventListener('click', function() {
             userDropdown.classList.toggle('hidden');
