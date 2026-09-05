@@ -245,19 +245,14 @@ use App\Http\Controllers\SsoController;
 Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
 Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
-// 💼 MSDS Management Routes
 Route::prefix('msds')->name('msds.')->middleware(['auth'])->group(function () {
     Route::get('/', [MsdsController::class, 'index'])->name('index');
     
-    // ✅ PERBAIKAN: Parameter route menggunakan {reagen} yang akan di-bind ke 'guid'
-    Route::get('/upload/{reagen}', [MsdsController::class, 'create'])
-        ->name('create')
-        ->missing(function () {
-            return redirect()->route('msds.index')
-                ->with('error', 'Reagen tidak ditemukan.');
-        });
+    // ✅ BARU: Route untuk melihat semua materi training milik 1 reagen
+    Route::get('/manage/{reagen}', [MsdsController::class, 'manage'])->name('manage');
     
+    Route::get('/upload/{reagen}', [MsdsController::class, 'create'])->name('create');
     Route::post('/store', [MsdsController::class, 'store'])->name('store');
-    Route::get('/view/{reagen}', [MsdsController::class, 'show'])->name('show');
-    Route::delete('/{reagen}', [MsdsController::class, 'destroy'])->name('destroy');
+    Route::get('/view/{document}', [MsdsController::class, 'show'])->name('show'); // Ubah parameter ke document ID
+    Route::delete('/document/{document}', [MsdsController::class, 'destroy'])->name('destroy'); // Hapus per file
 });

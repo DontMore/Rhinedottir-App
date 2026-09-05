@@ -81,27 +81,27 @@ class MsdsController extends Controller
     }
 
     /**
-     * Hapus file MSDS
+     * ✅ BARU: Menampilkan daftar SEMUA materi training untuk 1 reagen
      */
-    public function destroy(Request $request, Reagen $reagen)
+    public function manage(Reagen $reagen)
     {
-        $documentId = $request->input('document_id');
+        // Ambil semua dokumen MSDS untuk reagen ini, diurutkan dari yang terbaru
+        $documents = $reagen->msdsDocuments()->latest()->get();
         
-        if ($documentId) {
-            // Hapus dokumen spesifik
-            $document = MsdsDocument::where('reagen_guid', $reagen->guid)
-                ->where('id', $documentId)
-                ->firstOrFail();
-        } else {
-            // Hapus dokumen terbaru
-            $document = $reagen->latestMsds;
-        }
+        return view('msds.manage', compact('reagen', 'documents'));
+    }
 
-        if ($document) {
-            Storage::disk('public')->delete($document->file_path);
-            $document->delete();
-        }
+    /**
+     * ✅ DIUBAH: Hapus 1 file dokumen spesifik (bukan semua file reagen)
+     */
+    public function destroy(MsdsDocument $document)
+    {
+        // Hapus file fisik
+        Storage::disk('public')->delete($document->file_path);
+        
+        // Hapus record dari database
+        $document->delete();
 
-        return back()->with('success', 'Dokumen MSDS berhasil dihapus.');
+        return back()->with('success', 'Materi training berhasil dihapus.');
     }
 }
