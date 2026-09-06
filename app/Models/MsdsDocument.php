@@ -7,8 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class MsdsDocument extends Model
 {
     protected $fillable = [
-        'reagen_id', 'file_path', 'file_name', 
-        'file_size', 'file_type', 'title', 'uploaded_by'
+        'reagen_guid',
+        'file_path',
+        'file_name',
+        'file_size',
+        'file_type',
+        'title',
+        'trainers', // ✅ Tambahkan ini
+        'uploaded_by',
+    ];
+
+    protected $casts = [
+        'trainers' => 'array', // ✅ Auto-convert JSON to array
     ];
 
     public function reagen()
@@ -40,4 +50,5 @@ class MsdsDocument extends Model
             default => 'bi-file-earmark-fill text-slate-400',
         };
     }
+
 }

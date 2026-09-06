@@ -51,7 +51,7 @@
         </div>
     </div>
 
-    {{-- Stats Ringkasan (Ditambah Total File Materi) --}}
+    {{-- Stats Ringkasan --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         @php
             $totalReagen = $reagens->total();
@@ -90,7 +90,6 @@
             </div>
         </div>
 
-        {{-- ✅ BARU: Total File Materi --}}
         <div class="bg-white p-6 rounded-[24px] shadow-[0px_15px_35px_rgba(0,0,0,0.04)] flex items-center gap-4 hover:shadow-[0px_20px_45px_rgba(0,0,0,0.06)] transition-all">
             <div class="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center">
                 <i class="bi bi-files text-2xl text-sky-500"></i>
@@ -163,7 +162,7 @@
                             @endif
                         </td>
 
-                        {{-- ✅ Kolom 3: Total Materi (BARU) --}}
+                        {{-- Kolom 3: Total Materi --}}
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-2.5">
                                 <span class="w-9 h-9 rounded-full {{ $reagen->msds_documents_count > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400' }} flex items-center justify-center text-xs font-extrabold shadow-sm">
@@ -195,19 +194,21 @@
                             @endif
                         </td>
 
-                        {{-- ✅ Kolom 5: Aksi (Ditambah Tombol Kelola) --}}
+                        {{-- Kolom 5: Aksi --}}
                         <td class="px-6 py-5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                {{-- Tombol Kelola Materi (Melihat semua file untuk reagen ini) --}}
-                                <a href="{{ route('msds.manage', $reagen) }}" 
-                                   class="px-4 py-2.5 text-xs font-extrabold bg-slate-50 text-slate-700 rounded-full hover:bg-slate-100 transition-all shadow-sm">
-                                    <i class="bi bi-folder2-open mr-1"></i> Kelola
+                                {{-- Tombol Upload - Primary Button (VISIBLE) --}}
+                                <a href="{{ route('msds.create', $reagen) }}" 
+                                class="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                                    <i class="bi bi-cloud-upload"></i> 
+                                    <span>Upload</span>
                                 </a>
                                 
-                                {{-- Tombol Upload Materi Baru --}}
-                                <a href="{{ route('msds.create', $reagen) }}" 
-                                   class="px-5 py-2.5 text-xs font-extrabold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-100 hover:shadow-indigo-200 hover:-translate-y-0.5 transition-all">
-                                    <i class="bi bi-cloud-upload mr-1"></i> Upload
+                                {{-- Tombol Kelola --}}
+                                <a href="{{ route('msds.manage', $reagen) }}" 
+                                   class="px-4 py-2.5 text-xs font-extrabold bg-slate-50 text-slate-700 rounded-full hover:bg-slate-100 transition-all shadow-sm flex items-center gap-1.5">
+                                    <i class="bi bi-folder2-open"></i> 
+                                    <span>Kelola</span>
                                 </a>
                             </div>
                         </td>
@@ -229,7 +230,7 @@
             </table>
         </div>
 
-        {{-- Pagination Footer --}}
+        {{-- Pagination --}}
         @if($reagens->hasPages())
         <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100/50 flex items-center justify-between">
             <p class="text-xs font-bold text-slate-500">

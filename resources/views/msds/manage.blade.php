@@ -2,56 +2,109 @@
 @section('title', 'Kelola Materi Training - ' . $reagen->nameReagen)
 
 @section('container')
-<div class="msds-page">
-    {{-- Header --}}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+.manage-page { 
+    font-family: 'Nunito', sans-serif; 
+    background: #F8FAFC; 
+    min-height: 100vh; 
+    padding: 24px; 
+}
+
+/* Soft UI List Item Hover Effect */
+.list-item {
+    transition: all 0.2s ease;
+}
+.list-item:hover {
+    background-color: #F8FAFC;
+}
+</style>
+
+<div class="manage-page">
+    {{-- Header Section --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <a href="{{ route('msds.index') }}" class="text-xs font-bold text-indigo-500 hover:text-indigo-700 mb-2 inline-flex items-center gap-1">
+            <a href="{{ route('msds.index') }}" class="text-xs font-bold text-indigo-500 hover:text-indigo-700 mb-2 inline-flex items-center gap-1 transition-colors">
                 <i class="bi bi-arrow-left"></i> Kembali ke Daftar Reagen
             </a>
             <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">📂 Materi Training: {{ $reagen->nameReagen }}</h2>
             <p class="text-sm font-medium text-slate-500 mt-1 font-mono">{{ $reagen->noCatalog }} • Total {{ $documents->count() }} File</p>
         </div>
-        <a href="{{ route('msds.create', $reagen) }}" class="px-6 py-3 text-sm font-extrabold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition-all">
+        <a href="{{ route('msds.create', $reagen) }}" class="inline-flex items-center px-6 py-3 text-sm font-extrabold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-100 hover:shadow-indigo-200 hover:-translate-y-0.5 transition-all">
             <i class="bi bi-cloud-upload mr-2"></i> Upload Materi Baru
         </a>
     </div>
 
-    {{-- List Materi --}}
-    <div class="bg-white rounded-[28px] shadow-[0px_15px_35px_rgba(0,0,0,0.04)] p-8">
+    {{-- Main List Card --}}
+    <div class="bg-white rounded-[28px] shadow-[0px_15px_35px_rgba(0,0,0,0.04)] overflow-hidden">
+        
         @if($documents->isEmpty())
-            <div class="text-center py-16">
+            {{-- Empty State --}}
+            <div class="text-center py-20 px-6">
                 <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
                     <i class="bi bi-folder2-open text-4xl text-slate-300"></i>
                 </div>
                 <h4 class="text-lg font-extrabold text-slate-700">Belum ada materi training</h4>
-                <p class="text-sm text-slate-400 mt-1">Klik tombol "Upload Materi Baru" untuk menambahkan file PDF/PPT.</p>
+                <p class="text-sm text-slate-400 mt-1 max-w-md mx-auto">Klik tombol "Upload Materi Baru" di atas untuk menambahkan file PDF atau PPT untuk reagen ini.</p>
             </div>
         @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {{-- List Header (Hidden on mobile) --}}
+            <div class="hidden md:flex items-center px-8 py-4 bg-slate-50/50">
+                <div class="md:w-2/5 text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Informasi File</div>
+                <div class="md:w-2/5 text-[11px] font-extrabold text-slate-400 uppercase tracking-widest px-4">Trainer</div>
+                <div class="md:w-1/5 text-[11px] font-extrabold text-slate-400 uppercase tracking-widest text-right">Aksi</div>
+            </div>
+
+            {{-- List Items --}}
+            <div class="divide-y divide-slate-100/50">
                 @foreach($documents as $doc)
-                <div class="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all group">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+                <div class="list-item flex flex-col md:flex-row md:items-center p-6 md:px-8">
+                    
+                    {{-- Column 1: File Info --}}
+                    <div class="md:w-2/5 flex items-center gap-4 mb-4 md:mb-0">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                             <i class="bi {{ $doc->file_icon }} text-2xl"></i>
                         </div>
-                        <form action="{{ route('msds.destroy', $doc) }}" method="POST" onsubmit="return confirm('Hapus materi ini?')">
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-extrabold text-slate-800 truncate max-w-[250px]" title="{{ $doc->title }}">{{ $doc->title }}</h3>
+                            <p class="text-xs font-semibold text-slate-400 mt-1">
+                                {{ $doc->formatted_size }} • {{ strtoupper($doc->file_type) }} • {{ $doc->created_at->diffForHumans() }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Column 2: Trainers --}}
+                    <div class="md:w-2/5 mb-4 md:mb-0 px-0 md:px-6">
+                        @if($doc->trainers && count($doc->trainers) > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($doc->trainers as $trainer)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-bold">
+                                    <i class="bi bi-person-fill text-indigo-500"></i>
+                                    {{ $trainer }}
+                                </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-xs font-medium text-slate-400 italic flex items-center gap-1.5">
+                                <i class="bi bi-dash"></i> Tidak ada trainer
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- Column 3: Actions --}}
+                    <div class="md:w-1/5 flex items-center justify-start md:justify-end gap-2">
+                        <a href="{{ route('msds.show', $doc) }}" target="_blank" 
+                           class="inline-flex items-center px-4 py-2.5 text-xs font-extrabold bg-slate-50 text-slate-700 rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm">
+                            <i class="bi bi-eye mr-1.5"></i> Lihat
+                        </a>
+                        <form action="{{ route('msds.destroy', $doc) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus materi ini?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm opacity-0 group-hover:opacity-100">
-                                <i class="bi bi-trash text-xs"></i>
+                            <button type="submit" class="inline-flex items-center px-4 py-2.5 text-xs font-extrabold bg-slate-50 text-slate-700 rounded-full hover:bg-red-50 hover:text-red-600 transition-all shadow-sm">
+                                <i class="bi bi-trash mr-1.5"></i> Hapus
                             </button>
                         </form>
                     </div>
-                    
-                    <h3 class="text-sm font-extrabold text-slate-800 truncate mb-1" title="{{ $doc->title }}">{{ $doc->title }}</h3>
-                    <p class="text-xs font-semibold text-slate-400 mb-4">
-                        {{ $doc->formatted_size }} • {{ strtoupper($doc->file_type) }} • {{ $doc->created_at->diffForHumans() }}
-                    </p>
-                    
-                    <a href="{{ route('msds.show', $doc) }}" target="_blank" 
-                       class="block w-full text-center px-4 py-2.5 text-xs font-extrabold bg-white text-indigo-600 rounded-full hover:bg-indigo-50 transition-all shadow-sm">
-                        <i class="bi bi-eye mr-1"></i> Lihat / Download
-                    </a>
                 </div>
                 @endforeach
             </div>

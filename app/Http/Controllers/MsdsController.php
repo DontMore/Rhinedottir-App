@@ -39,30 +39,36 @@ class MsdsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // ✅ PERBAIKAN: exists validation harus merujuk ke kolom 'guid'
             'reagen_guid'    => 'required|exists:reagens,guid',
             'msds_file'      => 'required|file|mimes:pdf,ppt,pptx|max:20480',
             'document_title' => 'nullable|string|max:255',
+            'trainers'       => 'nullable|array',
+            'trainers.*'     => 'nullable|string|max:255',
         ]);
 
         $file = $request->file('msds_file');
-        
-        // Simpan di folder: storage/app/public/msds/{reagen_guid}/
         $path = $file->store('msds/' . $request->reagen_guid, 'public');
 
+        // Filter empty trainer values
+        $trainers = collect($request->input('trainers', []))
+            ->filter(fn($t) => !empty(trim($t)))
+            ->values()
+            ->toArray();
+
         MsdsDocument::create([
-            'reagen_guid' => $request->reagen_guid,  // ✅ PERBAIKAN
+            'reagen_guid' => $request->reagen_guid,
             'file_path'   => $path,
             'file_name'   => $file->getClientOriginalName(),
             'file_size'   => $file->getSize(),
             'file_type'   => strtolower($file->getClientOriginalExtension()),
             'title'       => $request->document_title ?? $file->getClientOriginalName(),
+            'trainers'    => $trainers, // ✅ Simpan trainers sebagai JSON
             'uploaded_by' => auth()->id(),
         ]);
 
         return redirect()
             ->route('msds.index')
-            ->with('success', '✅ MSDS berhasil diunggah!');
+            ->with('success', '✅ Materi training berhasil diunggah!');
     }
 
     /**
