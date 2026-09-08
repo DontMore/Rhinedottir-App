@@ -74,16 +74,13 @@ class MsdsController extends Controller
     /**
      * Lihat / Download file MSDS
      */
-    public function show(Reagen $reagen)
+    public function show(MsdsDocument $document)
     {
-        // ✅ PERBAIKAN: Gunakan relasi yang sudah didefinisikan
-        $document = $reagen->latestMsds;
-        
-        if (!$document || !Storage::disk('public')->exists($document->file_path)) {
+        if (!Storage::disk('public')->exists($document->file_path)) {
             abort(404, 'Dokumen MSDS tidak ditemukan.');
         }
 
-        return response()->file(storage_path('app/public/' . $document->file_path));
+        return response()->file(Storage::disk('public')->path($document->file_path));
     }
 
     /**
