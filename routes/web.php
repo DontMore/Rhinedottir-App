@@ -96,6 +96,11 @@ Route::get('/reagen-msds/{id}/view', [ManagementStockController::class, 'viewRea
 Route::delete('/reagen-msds/{id}', [ManagementStockController::class, 'deleteReagenMsdsDocument'])
     ->name('reagen.msds.document.delete')->middleware('admin');
 
+// ✅ Toggle Active/Inactive Reagen
+Route::patch('/reagen/{guid}/toggle-status', [ManagementStockController::class, 'toggleReagenStatus'])
+    ->name('reagen.toggle-status')
+    ->middleware('admin');
+
 // route logbook
 Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index'); // Route untuk menampilkan data logbook
 Route::get('/take/{guid}', [LogbookController::class, 'takeReagen'])->name('data.take')->middleware('auth');

@@ -23,7 +23,7 @@ class Reagen extends Model implements AuditableContract
         'merk',
         'packSize',
         'hazardOptions',
-        'msds', // Kolom lama (legacy) - masih dipertahankan untuk backward compatibility
+        'msds',
         'signal_word',
         'price',
         'buffer_stock',
@@ -33,6 +33,11 @@ class Reagen extends Model implements AuditableContract
         'category_guid',
         'storage_location_guid',
         'recommended_storage_location',
+        'is_active', // ✅ TAMBAHKAN INI
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean', // ✅ TAMBAHKAN INI
     ];
 
     protected $auditExclude = ['guid'];

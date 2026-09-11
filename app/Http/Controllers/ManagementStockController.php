@@ -22,21 +22,31 @@ use Illuminate\Support\Facades\Storage;
 
 class ManagementStockController extends Controller
 {
+
     public function index(Request $request)
     {
         $keyword = $request->input('keyword');
         $groupGuid = $request->input('group_guid');
         $categoryGuid = $request->input('category_guid');
+        $status = $request->input('status', 'active'); // ✅ Filter status (active/inactive/all)
         $user = auth()->user();
 
-        $query = Reagen::with(['stockReagen', 'group', 'category', 'latestReagenMsds'])
+        $query = Reagen::with(['stockReagen', 'group', 'category'])
             ->where('organization_guid', $user->organization_guid);
+
+        // ✅ Filter berdasarkan status
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+        // Jika 'all', tidak ada filter
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('noCatalog', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
+                ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
+                ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
         if ($groupGuid) {
@@ -51,7 +61,7 @@ class ManagementStockController extends Controller
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->latest()->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->latest()->get();
 
-        return view('management-stock.management-stock', compact('reagens', 'groups', 'categories'));
+        return view('management-stock.management-stock', compact('reagens', 'groups', 'categories', 'status'));
     }
 
     public function storeGroup(Request $request)
@@ -716,5 +726,24 @@ class ManagementStockController extends Controller
             basename($reagenIn->coa),
             ['Content-Disposition' => 'inline; filename="' . basename($reagenIn->coa) . '"']
         );
+    }
+
+    // ============================================
+    // ✅ BARU: Toggle Active/Inactive Reagen
+    // ============================================
+    public function toggleReagenStatus($guid)
+    {
+        $user = auth()->user();
+        $data = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
+        $data->is_active = !$data->is_active;
+        $data->save();
+
+        $status = $data->is_active ? 'activated' : 'deactivated';
+        Alert::success('Success!', "Reagen has been {$status}");
+
+        return redirect()->back();
     }
 }

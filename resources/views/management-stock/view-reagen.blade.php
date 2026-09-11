@@ -9,6 +9,27 @@
             <p class="text-sm text-gray-500 mt-1">View specifications, hazard information, and stock movement history.</p>
         </div>
         <div class="flex gap-3">
+            <!-- ✅ BARU: Toggle Status Button -->
+            <form action="{{ route('reagen.toggle-status', $data->guid) }}" method="POST" class="inline">
+                @csrf
+                @method('PATCH')
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm
+                        {{ $data->is_active 
+                            ? 'text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-300' 
+                            : 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-300' }}"
+                        onclick="return confirm('{{ $data->is_active ? 'Non-aktifkan' : 'Aktifkan' }} reagen ini?')">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if($data->is_active)
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        @else
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        @endif
+                    </svg>
+                    {{ $data->is_active ? 'Non-aktifkan' : 'Aktifkan' }}
+                </button>
+            </form>
+
             <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -28,8 +49,16 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Information Card -->
         <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 class="text-base font-semibold text-gray-800">General Information</h3>
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-gray-800">General Information</h3>
+                    <!-- ✅ BARU: Status Badge -->
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                        {{ $data->is_active 
+                            ? 'bg-green-100 text-green-800 ring-1 ring-green-600/20' 
+                            : 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/20' }}">
+                        <span class="w-2 h-2 rounded-full mr-2 {{ $data->is_active ? 'bg-green-500' : 'bg-gray-400' }}"></span>
+                        {{ $data->is_active ? 'Active' : 'Inactive' }}
+                    </span>
             </div>
             <div class="divide-y divide-gray-100">
                 <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
