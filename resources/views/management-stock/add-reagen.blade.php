@@ -1,9 +1,7 @@
 @extends('layout.main')
 @section('title', 'Add New Reagent')
-
 @section('container')
 <style>
-/* 🎨 Soft UI Global Styles */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
 
 .soft-ui-page {
@@ -88,6 +86,9 @@ select.soft-input {
     transition: all 0.3s ease;
     border: none;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 }
 
 .soft-btn-secondary:hover {
@@ -104,6 +105,15 @@ select.soft-input {
     color: #64748B;
     margin-bottom: 8px;
     margin-left: 4px;
+}
+
+.msds-row {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
@@ -123,7 +133,7 @@ select.soft-input {
     <!-- Form Card -->
     <form action="{{ route('management-stock.add-reagen.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        
+
         @if ($errors->any())
             <div class="bg-red-50/80 p-6 rounded-[24px] mb-6 shadow-[0px_10px_25px_rgba(239,68,68,0.05)]">
                 <div class="flex items-start gap-4">
@@ -219,7 +229,6 @@ select.soft-input {
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Safety and physical properties</p>
                 </div>
             </div>
-            
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div>
                     <label class="label-soft">Physical Form <span class="text-red-400">*</span></label>
@@ -240,16 +249,13 @@ select.soft-input {
                     </select>
                 </div>
             </div>
-
             <div class="mb-8">
                 <label class="label-soft">Recommended Storage</label>
                 <div id="recommendedStorageText" class="block w-full rounded-[20px] border-2 border-indigo-100 bg-indigo-50/50 px-6 py-4 text-sm text-indigo-700 font-bold min-h-[52px] flex items-center">
                     Select Form & Hazards to see recommendation...
                 </div>
                 <p class="mt-2 text-xs font-semibold text-indigo-500 ml-1">Based on physical form + hazard classification</p>
-                <input type="hidden" name="recommended_storage_location" id="recommendedStorageInput">
             </div>
-
             <div>
                 <label class="label-soft mb-4">Hazard Symbols</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -282,18 +288,20 @@ select.soft-input {
             </div>
         </div>
 
-        <!-- SECTION 4: ACTUAL STORAGE & PRICING -->
+        <!-- SECTION 4: ACTUAL STORAGE & PRICING & MSDS -->
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
                     <svg class="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-extrabold text-slate-800">Details & Pricing</h3>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Storage location and financial data</p>
+                    <h3 class="text-lg font-extrabold text-slate-800">Details, Pricing & MSDS</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Storage location, financial data, and MSDS documents</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <!-- Actual Storage Location -->
                 <div class="lg:col-span-2">
                     <label class="label-soft">Actual Storage Location</label>
                     <select name="storage_location_guid" class="soft-input">
@@ -305,27 +313,71 @@ select.soft-input {
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="label-soft">MSDS File (PDF) <span class="text-red-400">*</span></label>
-                    <input type="file" name="msds" accept="application/pdf,.pdf" required
-                           class="block w-full text-sm text-slate-500 font-semibold file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-600 hover:file:bg-indigo-200 file:cursor-pointer file:transition-colors bg-slate-50 rounded-full py-3 px-5">
-                    <p class="mt-2 text-xs font-semibold text-slate-400 ml-1">Upload dokumen MSDS format PDF.</p>
-                </div>
+                <!-- Price -->
                 <div>
                     <label class="label-soft">Price <span class="text-red-400">*</span></label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                             <span class="text-sm font-bold text-slate-400">Rp</span>
                         </div>
-                        <input type="number" name="price" value="{{ old('price') }}" required placeholder="0"
-                               class="soft-input !pl-14">
+                        <input type="number" name="price" value="{{ old('price') }}" required placeholder="0" class="soft-input !pl-14">
                     </div>
                 </div>
-                <div class="sm:col-span-2 lg:col-span-4">
+                <!-- Buffer Stock -->
+                <div>
                     <label class="label-soft">Buffer Stock Limit <span class="text-red-400">*</span></label>
-                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', 5) }}" required placeholder="Minimum stock quantity"
-                           class="soft-input max-w-xs">
+                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', 5) }}" required placeholder="Minimum stock quantity" class="soft-input">
                 </div>
+            </div>
+
+            <!-- ✅ MULTIPLE MSDS UPLOAD DENGAN VERSI & TANGGAL REVISI -->
+            <div class="border-t-2 border-dashed border-slate-200 pt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div>
+                        <label class="label-soft !mb-0">MSDS Documents (PDF) <span class="text-red-400">*</span></label>
+                        <p class="text-xs text-slate-500 mt-1">Upload satu atau lebih file MSDS. Setiap file bisa memiliki versi & tanggal revisi berbeda.</p>
+                    </div>
+                </div>
+
+                <div id="msdsUploadContainer" class="space-y-3">
+                    <!-- Slot upload pertama (wajib) -->
+                    <div class="msds-row bg-gradient-to-r from-indigo-50/50 to-white rounded-2xl p-4 border-2 border-indigo-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                            <div class="sm:col-span-4">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF <span class="text-red-400">*</span></label>
+                                <input type="file" name="msds_files[]" accept="application/pdf,.pdf" required
+                                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-600 hover:file:bg-indigo-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
+                                <input type="text" name="msds_versions[]" placeholder="Rev. A"
+                                       class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
+                                <input type="date" name="msds_revision_dates[]"
+                                       class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
+                                <input type="text" name="msds_notes[]" placeholder="Optional"
+                                       class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-1 flex justify-end">
+                                <button type="button" onclick="addMsdsRow()"
+                                        class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center transition-all"
+                                        title="Tambah file lain">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-3 text-xs font-semibold text-indigo-500 ml-1">💡 Tips: Upload semua versi MSDS sekaligus (Rev. A, Rev. B, dll) atau tambahkan versi baru nanti via halaman Edit.</p>
             </div>
         </div>
 
@@ -342,7 +394,144 @@ select.soft-input {
 
 @push('scripts')
 <script>
-// ... (Salin seluruh script JS dari file asli Anda di sini) ...
+// ============================================
+// Search Logic for Dropdowns
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    function attachSearch(searchSelector, selectSelector) {
+        const searchInput = document.querySelector(searchSelector);
+        const select = document.querySelector(selectSelector);
+        if (!searchInput || !select) return;
+
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            Array.from(select.options).forEach(option => {
+                if (option.value === "") { option.style.display = ''; return; }
+                option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
+        select.addEventListener('change', () => { searchInput.value = ''; });
+    }
+    attachSearch('.group-search', '.group-select');
+    attachSearch('.category-search', '.category-select');
+});
+
+// ============================================
+// Dynamic Add MSDS Row
+// ============================================
+function addMsdsRow() {
+    const container = document.getElementById('msdsUploadContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'msds-row bg-gradient-to-r from-emerald-50/50 to-white rounded-2xl p-4 border-2 border-emerald-200';
+    newRow.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-4">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF</label>
+                <input type="file" name="msds_files[]" accept="application/pdf,.pdf"
+                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-600 hover:file:bg-emerald-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
+                <input type="text" name="msds_versions[]" placeholder="Rev. B"
+                       class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-3">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
+                <input type="date" name="msds_revision_dates[]"
+                       class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
+                <input type="text" name="msds_notes[]" placeholder="Optional"
+                       class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-1 flex justify-end">
+                <button type="button" onclick="removeMsdsRow(this)"
+                        class="w-10 h-10 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-all"
+                        title="Hapus baris ini">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newRow);
+}
+
+function removeMsdsRow(btn) {
+    const row = btn.closest('.msds-row');
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(20px)';
+    row.style.transition = 'all 0.3s ease';
+    setTimeout(() => row.remove(), 300);
+}
+
+// ============================================
+// Logic Rekomendasi Storage
+// ============================================
+function updateRecommendedStorage() {
+    const form = document.getElementById('reagentForm').value;
+    const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
+
+    const recDiv = document.getElementById('recommendedStorageText');
+    if (!form) {
+        recDiv.textContent = 'Please select Physical Form first...';
+        recDiv.className = 'block w-full rounded-[20px] border-2 border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 font-bold min-h-[52px] flex items-center';
+        return;
+    }
+
+    const hazardPriority = { 'Explosive': 1, 'Flammable': 2, 'Toxic': 3, 'Corrosive': 4, 'Oxidising': 5, 'Carcinogen': 6, 'Environment': 7, 'Irritant': 8 };
+    selectedHazards.sort((a, b) => (hazardPriority[a] || 99) - (hazardPriority[b] || 99));
+    const primaryHazard = selectedHazards.length > 0 ? selectedHazards[0] : null;
+
+    const storageMap = {
+        liquid: {
+            'Flammable': 'Flammable Liquid Cabinet - Lemari Tahan Api (NFPA Class I/II)',
+            'Corrosive': 'Corrosive Liquid Cabinet - Rak Plastik/PP Tahan Asam-Basa',
+            'Toxic': 'Poison Liquid Storage - Lemari Terkunci + Ventilasi',
+            'Oxidising': 'Oxidizer Liquid Storage - Terpisah dari Bahan Mudah Terbakar',
+            'Carcinogen': 'Carcinogen Liquid Storage - Area Terkontrol Fume Hood',
+            'Environment': 'Hazardous Liquid Waste Area - Kontainer B3',
+            'Explosive': '⚠️ EXPLOSIVE LIQUID - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Liquid Storage - Rak Kimia Basah',
+            null: 'General Liquid Storage - Rak Kimia Basah (Non-Hazard)'
+        },
+        solid: {
+            'Flammable': 'Flammable Solid Storage - Lemari Kering Tahan Api',
+            'Corrosive': 'Corrosive Solid Storage - Wadah Plastik Bersegel',
+            'Toxic': 'Toxic Solid Storage - Lemari Terkunci + Label Jelas',
+            'Oxidising': 'Oxidizer Solid Storage - Terpisah dari Reduser/Bahan Organik',
+            'Carcinogen': 'Carcinogen Solid Storage - Area Terkontrol',
+            'Environment': 'Hazardous Solid Waste Area - Kontainer B3',
+            'Explosive': '⚠️ EXPLOSIVE SOLID - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Solid Storage - Rak Kimia Kering',
+            null: 'General Solid Storage - Rak Kimia Kering (Non-Hazard)'
+        },
+        crystal: {
+            'Flammable': 'Flammable Crystal Storage - Wadah Kaca Gelap + Kering',
+            'Corrosive': 'Corrosive Crystal Storage - Desikator / Wadah Plastik',
+            'Toxic': 'Toxic Crystal Storage - Lemari Terkunci + Kelembaban Rendah',
+            'Oxidising': 'Oxidizer Crystal Storage - Terpisah, Suhu Stabil',
+            'Carcinogen': 'Carcinogen Crystal Storage - Area Terkontrol',
+            'Environment': 'Hazardous Crystal Waste Area',
+            'Explosive': '⚠️ EXPLOSIVE CRYSTAL - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Crystal Storage - Rak Kering + Silica Gel',
+            null: 'General Crystal Storage - Rak Kering + Desikator (Non-Hazard)'
+        }
+    };
+
+    const recommendation = storageMap[form]?.[primaryHazard] || 'General Storage';
+
+    recDiv.textContent = recommendation;
+    recDiv.className = 'block w-full rounded-[20px] border-2 border-indigo-100 bg-indigo-50/50 px-6 py-4 text-sm text-indigo-700 font-bold min-h-[52px] flex items-center';
+}
+
+// Event Listeners
+const formSelect = document.getElementById('reagentForm');
+if (formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
+document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
+
+// Jalankan saat load
+updateRecommendedStorage();
 </script>
 @endpush
 @endsection
