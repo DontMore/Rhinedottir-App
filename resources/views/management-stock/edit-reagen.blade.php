@@ -378,14 +378,10 @@ select.soft-input {
                                class="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white rounded-full hover:bg-indigo-50 transition-colors">
                                 View
                             </a>
-                            <form action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST"
-                                  onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-3 py-1.5 text-xs font-bold text-red-600 bg-white rounded-full hover:bg-red-50 transition-colors">
-                                    Delete
-                                </button>
-                            </form>
+                            <button type="submit" form="delete-msds-form-{{ $doc->id }}"
+                                    class="px-3 py-1.5 text-xs font-bold text-red-600 bg-white rounded-full hover:bg-red-50 transition-colors">
+                                Delete
+                            </button>
                         </div>
                     </div>
                     @endforeach
@@ -453,6 +449,16 @@ select.soft-input {
             </button>
         </div>
     </form>
+
+    <!-- Hidden Forms for MSDS Document Deletion (Placed outside main form to prevent HTML nested form issue) -->
+    @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
+        @foreach($reagenMsdsDocuments as $doc)
+            <form id="delete-msds-form-{{ $doc->id }}" action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST" class="hidden" onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
+    @endif
 </div>
 
 @push('scripts')
