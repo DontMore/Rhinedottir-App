@@ -107,15 +107,6 @@ select.soft-input {
     margin-bottom: 8px;
     margin-left: 4px;
 }
-
-.msds-row {
-    animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
 </style>
 
 <div class="soft-ui-page">
@@ -131,11 +122,11 @@ select.soft-input {
         </a>
     </div>
 
-    <!-- ✅ PENTING: enctype="multipart/form-data" wajib untuk upload file -->
+    <!-- ✅ PENTING: enctype="multipart/form-data" wajib ada untuk upload file -->
     <form action="{{ route('data.update', $data->guid) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-
+        
         @if ($errors->any())
             <div class="bg-red-50/80 p-6 rounded-[24px] mb-6 shadow-[0px_10px_25px_rgba(239,68,68,0.05)]">
                 <div class="flex items-start gap-4">
@@ -291,20 +282,18 @@ select.soft-input {
             </div>
         </div>
 
-        <!-- SECTION 4: ACTUAL STORAGE, PRICING & MSDS -->
+        <!-- SECTION 4: ACTUAL STORAGE & PRICING -->
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
                     <svg class="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-extrabold text-slate-800">Details, Pricing & MSDS</h3>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Storage location, financial data, and MSDS documents</p>
+                    <h3 class="text-lg font-extrabold text-slate-800">Details & Pricing</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Storage location and financial data</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <!-- Actual Storage Location -->
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="lg:col-span-2">
                     <label class="label-soft">Actual Storage Location</label>
                     <select name="storage_location_guid" class="soft-input">
@@ -316,131 +305,42 @@ select.soft-input {
                         @endforeach
                     </select>
                 </div>
-                <!-- Price -->
+                
+                <!-- ✅ PERBAIKAN MSDS: Input File & Route yang Benar -->
+                <div>
+                    <label class="label-soft">MSDS File (PDF)</label>
+                    <input type="file" name="msds" accept="application/pdf,.pdf"
+                           class="block w-full text-sm text-slate-500 font-semibold file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-600 hover:file:bg-indigo-200 file:cursor-pointer file:transition-colors bg-slate-50 rounded-full py-3 px-5">
+                    
+                    @if($data->msds)
+                        <p class="mt-2 text-xs font-semibold text-slate-500 ml-1">
+                            File saat ini: 
+                            <!-- ✅ Menggunakan route 'management-stock.msds' yang sudah ada di web.php -->
+                            <a href="{{ route('management-stock.msds', $data->guid) }}" target="_blank" class="text-indigo-600 underline hover:text-indigo-800 font-bold">
+                                Lihat MSDS
+                            </a> 
+                            <span class="text-slate-400">(Kosongkan input di atas jika tidak ingin mengubah file)</span>
+                        </p>
+                    @else
+                        <p class="mt-2 text-xs font-semibold text-slate-400 ml-1">Upload dokumen MSDS format PDF.</p>
+                    @endif
+                </div>
+
                 <div>
                     <label class="label-soft">Price <span class="text-red-400">*</span></label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                             <span class="text-sm font-bold text-slate-400">Rp</span>
                         </div>
-                        <input type="number" name="price" value="{{ old('price', $data->price) }}" required placeholder="0" class="soft-input !pl-14">
+                        <input type="number" name="price" value="{{ old('price', $data->price) }}" required placeholder="0"
+                               class="soft-input !pl-14">
                     </div>
                 </div>
-                <!-- Buffer Stock -->
-                <div>
+                <div class="sm:col-span-2 lg:col-span-4">
                     <label class="label-soft">Buffer Stock Limit <span class="text-red-400">*</span></label>
-                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', $data->buffer_stock) }}" required placeholder="Minimum stock quantity" class="soft-input">
+                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', $data->buffer_stock) }}" required placeholder="Minimum stock quantity"
+                           class="soft-input max-w-xs">
                 </div>
-            </div>
-
-            <!-- ✅ EXISTING MSDS DOCUMENTS (dari tabel reagen_msds) -->
-            @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
-            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
-                    </div>
-                    <div>
-                        <label class="label-soft !mb-0">Existing MSDS Documents</label>
-                        <p class="text-xs text-slate-500 mt-1">Dokumen MSDS yang sudah terupload. Anda bisa melihat atau menghapusnya.</p>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    @foreach($reagenMsdsDocuments as $doc)
-                    <div class="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 rounded-2xl px-4 py-3">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="w-10 h-10 rounded-xl {{ $doc->is_latest ? 'bg-emerald-100' : 'bg-red-100' }} flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <p class="text-sm font-bold text-slate-700 truncate">{{ $doc->file_name }}</p>
-                                    @if($doc->is_latest)
-                                        <span class="inline-block px-2 py-0.5 bg-emerald-500 text-white rounded-full text-xs font-bold">LATEST</span>
-                                    @endif
-                                </div>
-                                <p class="text-xs text-slate-500 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                                    @if($doc->version)
-                                        <span class="inline-block px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">{{ $doc->version }}</span>
-                                    @endif
-                                    @if($doc->revision_date)
-                                        <span>📅 Revised: {{ $doc->revision_date->format('d M Y') }}</span>
-                                    @endif
-                                    @if($doc->notes)
-                                        <span class="italic">"{{ $doc->notes }}"</span>
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 flex-shrink-0 ml-3">
-                            <a href="{{ route('reagen.msds.document.view', $doc->id) }}" target="_blank"
-                               class="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white rounded-full hover:bg-indigo-50 transition-colors">
-                                View
-                            </a>
-                            <form action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST"
-                                  onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-3 py-1.5 text-xs font-bold text-red-600 bg-white rounded-full hover:bg-red-50 transition-colors">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            <!-- ✅ UPLOAD MSDS BARU (Multiple - sebagai versi baru) -->
-            <div class="border-t-2 border-dashed border-slate-200 pt-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                    </div>
-                    <div>
-                        <label class="label-soft !mb-0">Add New MSDS Version (Optional)</label>
-                        <p class="text-xs text-slate-500 mt-1">Upload file baru untuk menambah versi MSDS. File lama tidak akan terhapus.</p>
-                    </div>
-                </div>
-
-                <div id="msdsUploadContainer" class="space-y-3">
-                    <!-- Slot upload pertama (optional saat edit) -->
-                    <div class="msds-row bg-gradient-to-r from-emerald-50/50 to-white rounded-2xl p-4 border-2 border-dashed border-emerald-200">
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                            <div class="sm:col-span-4">
-                                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF</label>
-                                <input type="file" name="msds_files[]" accept="application/pdf,.pdf"
-                                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-600 hover:file:bg-emerald-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
-                                <input type="text" name="msds_versions[]" placeholder="Rev. B"
-                                       class="soft-input !py-2.5 !text-sm">
-                            </div>
-                            <div class="sm:col-span-3">
-                                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
-                                <input type="date" name="msds_revision_dates[]"
-                                       class="soft-input !py-2.5 !text-sm">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
-                                <input type="text" name="msds_notes[]" placeholder="Optional"
-                                       class="soft-input !py-2.5 !text-sm">
-                            </div>
-                            <div class="sm:col-span-1 flex justify-end">
-                                <button type="button" onclick="addMsdsRow()"
-                                        class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center transition-all"
-                                        title="Tambah file lain">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <p class="mt-3 text-xs font-semibold text-indigo-500 ml-1">💡 Tips: Upload semua versi MSDS sekaligus (Rev. A, Rev. B, dll) atau tambahkan satu per satu.</p>
             </div>
         </div>
 
@@ -457,9 +357,7 @@ select.soft-input {
 
 @push('scripts')
 <script>
-// ============================================
 // Search Logic for Dropdowns
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     function attachSearch(searchSelector, selectSelector) {
         const searchInput = document.querySelector(searchSelector);
@@ -479,58 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
     attachSearch('.category-search', '.category-select');
 });
 
-// ============================================
-// Dynamic Add MSDS Row
-// ============================================
-function addMsdsRow() {
-    const container = document.getElementById('msdsUploadContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'msds-row bg-gradient-to-r from-indigo-50/50 to-white rounded-2xl p-4 border-2 border-indigo-100';
-    newRow.innerHTML = `
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-            <div class="sm:col-span-4">
-                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF</label>
-                <input type="file" name="msds_files[]" accept="application/pdf,.pdf"
-                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-600 hover:file:bg-indigo-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
-            </div>
-            <div class="sm:col-span-2">
-                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
-                <input type="text" name="msds_versions[]" placeholder="Rev. C"
-                       class="soft-input !py-2.5 !text-sm">
-            </div>
-            <div class="sm:col-span-3">
-                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
-                <input type="date" name="msds_revision_dates[]"
-                       class="soft-input !py-2.5 !text-sm">
-            </div>
-            <div class="sm:col-span-2">
-                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
-                <input type="text" name="msds_notes[]" placeholder="Optional"
-                       class="soft-input !py-2.5 !text-sm">
-            </div>
-            <div class="sm:col-span-1 flex justify-end">
-                <button type="button" onclick="removeMsdsRow(this)"
-                        class="w-10 h-10 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-all"
-                        title="Hapus baris ini">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-        </div>
-    `;
-    container.appendChild(newRow);
-}
-
-function removeMsdsRow(btn) {
-    const row = btn.closest('.msds-row');
-    row.style.opacity = '0';
-    row.style.transform = 'translateX(20px)';
-    row.style.transition = 'all 0.3s ease';
-    setTimeout(() => row.remove(), 300);
-}
-
-// ============================================
 // Logic Rekomendasi Storage
-// ============================================
 function updateRecommendedStorage() {
     const form = document.getElementById('reagentForm').value;
     const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
@@ -590,7 +437,7 @@ function updateRecommendedStorage() {
 
 // Event Listeners
 const formSelect = document.getElementById('reagentForm');
-if (formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
+if(formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
 document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
 
 // Jalankan saat load untuk memastikan value awal benar

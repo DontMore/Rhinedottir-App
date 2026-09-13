@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 09, 2026 at 02:49 AM
+-- Generation Time: Sep 11, 2026 at 05:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.5.7
 
@@ -24,19 +24,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `msds_documents`
+-- Table structure for table `reagen_msds`
 --
 
-CREATE TABLE `msds_documents` (
+CREATE TABLE `reagen_msds` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `reagen_guid` char(36) NOT NULL,
-  `file_path` varchar(255) NOT NULL,
   `file_name` varchar(255) NOT NULL,
-  `file_size` bigint(20) UNSIGNED NOT NULL,
-  `file_type` varchar(10) NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `trainers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`trainers`)),
-  `uploaded_by` char(36) DEFAULT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `version` varchar(255) DEFAULT NULL,
+  `revision_date` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `is_latest` tinyint(1) NOT NULL DEFAULT 0,
+  `organization_guid` char(36) NOT NULL,
+  `uploaded_by` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -46,21 +47,20 @@ CREATE TABLE `msds_documents` (
 --
 
 --
--- Indexes for table `msds_documents`
+-- Indexes for table `reagen_msds`
 --
-ALTER TABLE `msds_documents`
+ALTER TABLE `reagen_msds`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `msds_documents_reagen_guid_index` (`reagen_guid`),
-  ADD KEY `idx_uploaded_by` (`uploaded_by`);
+  ADD KEY `reagen_msds_reagen_guid_is_latest_index` (`reagen_guid`,`is_latest`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT for table `msds_documents`
+-- AUTO_INCREMENT for table `reagen_msds`
 --
-ALTER TABLE `msds_documents`
+ALTER TABLE `reagen_msds`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -68,10 +68,10 @@ ALTER TABLE `msds_documents`
 --
 
 --
--- Constraints for table `msds_documents`
+-- Constraints for table `reagen_msds`
 --
-ALTER TABLE `msds_documents`
-  ADD CONSTRAINT `msds_documents_reagen_guid_foreign` FOREIGN KEY (`reagen_guid`) REFERENCES `reagens` (`guid`) ON DELETE CASCADE;
+ALTER TABLE `reagen_msds`
+  ADD CONSTRAINT `reagen_msds_reagen_guid_foreign` FOREIGN KEY (`reagen_guid`) REFERENCES `reagens` (`guid`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

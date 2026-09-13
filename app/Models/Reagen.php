@@ -23,16 +23,21 @@ class Reagen extends Model implements AuditableContract
         'merk',
         'packSize',
         'hazardOptions',
-        'msds', // Kolom ini sekarang akan menyimpan path file
-        'signal_word', // ✅ TAMBAHKAN INI
+        'msds',
+        'signal_word',
         'price',
         'buffer_stock',
-        'reagent_form', 
+        'reagent_form',
         'organization_guid',
         'group_guid',
         'category_guid',
         'storage_location_guid',
         'recommended_storage_location',
+        'is_active', // ✅ TAMBAHKAN INI
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean', // ✅ TAMBAHKAN INI
     ];
 
     protected $auditExclude = ['guid'];
@@ -40,74 +45,119 @@ class Reagen extends Model implements AuditableContract
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function ($model) {
             if (empty($model->guid)) {
                 $model->guid = (string) Str::uuid();
             }
         });
+
+        // ✅ Hapus semua dokumen MSDS terkait saat reagen dihapus
+        static::deleting(function ($model) {
+            $model->reagenMsds()->each(function ($msds) {
+                if (\Storage::disk('public')->exists($msds->file_path)) {
+                    \Storage::disk('public')->delete($msds->file_path);
+                }
+                $msds->delete();
+            });
+        });
     }
 
-    // ✅ Relasi ke Organization
+    // ============================================
+    // RELASI
+    // ============================================
+
     public function organization()
     {
         return $this->belongsTo(Organization::class, 'organization_guid', 'guid');
     }
 
-    // ✅ Relasi ke ReagenGroup (NEW)
     public function group()
     {
         return $this->belongsTo(ReagenGroup::class, 'group_guid', 'guid');
     }
 
-    // ✅ Relasi ke ReagenCategory (NEW)
     public function category()
     {
         return $this->belongsTo(ReagenCategory::class, 'category_guid', 'guid');
     }
 
-    // ✅ Relasi ke StorageLocation (NEW)
     public function storageLocation()
     {
         return $this->belongsTo(StorageLocation::class, 'storage_location_guid', 'guid');
     }
 
-    // ✅ Relasi ke ReagenIn (batch stok masuk)
     public function reagenIn()
     {
         return $this->hasMany(ReagenIn::class, 'reagen_guid', 'guid');
     }
 
-    // ✅ Relasi ke LogbookReagen
     public function logbookReagens()
     {
         return $this->hasMany(LogbookReagen::class, 'reagen_guid', 'guid');
     }
 
-    // ✅ Relasi ke StockReagen (total stok saat ini)
     public function stockReagen()
     {
         return $this->hasOne(StockReagen::class, 'reagen_guid', 'guid');
     }
 
-    // ✅ Relasi ke StockHistory
     public function stockHistories()
     {
         return $this->hasMany(StockHistory::class, 'reagen_guid', 'guid');
     }
 
-    // ✅ Alias untuk stockReagen
     public function stocks()
     {
         return $this->hasMany(StockReagen::class, 'reagen_guid', 'guid');
     }
 
+    // ============================================
+    // ✅ RELASI BARU: Multiple MSDS (tabel reagen_msds)
+    // ============================================
+
     /**
-     * Generate recommended storage location based on hazards
+     * Relasi ke ReagenMsds (One-to-Many)
+     * Satu reagen bisa memiliki banyak dokumen MSDS dengan versi & tanggal revisi berbeda
      */
+    public function reagenMsds()
+    {
+        return $this->hasMany(ReagenMsds::class, 'reagen_guid', 'guid');
+    }
+
+    /**
+     * Ambil dokumen MSDS terbaru (yang ditandai is_latest = true)
+     */
+    public function latestReagenMsds()
+    {
+        return $this->hasOne(ReagenMsds::class, 'reagen_guid', 'guid')
+                    ->where('is_latest', true);
+    }
+
+    /**
+     * Helper: Cek apakah reagen sudah memiliki MSDS
+     */
+    public function getHasReagenMsdsAttribute(): bool
+    {
+        return $this->reagenMsds()->exists();
+    }
+
+    /**
+     * Helper: URL untuk download MSDS terbaru
+     */
+    public function getLatestReagenMsdsUrlAttribute(): ?string
+    {
+        $latest = $this->latestReagenMsds;
+        return $latest ? $latest->view_url : null;
+    }
+
+    // ============================================
+    // LOGIC: Recommended Storage
+    // ============================================
+
     public static function getRecommendedStorage($hazards, $organization_guid)
     {
         $recommendations = [];
-
         $hazardMap = [
             'Flammable' => 'flammable',
             'Corrosive' => 'corrosive',
@@ -145,7 +195,6 @@ class Reagen extends Model implements AuditableContract
         });
 
         $primaryStorage = $recommendations[0];
-
         $storageNames = [
             'explosive' => 'Explosive Storage - Ruang Khusus (Class I)',
             'flammable' => 'Flammable Cabinet - Lemari Tahan Api (Class II)',
@@ -158,44 +207,5 @@ class Reagen extends Model implements AuditableContract
         ];
 
         return $storageNames[$primaryStorage] ?? 'General Storage';
-    }
-    
-        // ✅ TAMBAHKAN DI DALAM CLASS Reagen
-
-    /**
-     * ✅ Relasi ke MsdsDocument (One-to-Many)
-     * Satu reagen bisa memiliki banyak dokumen MSDS (PDF/PPT)
-     * 
-     * - Foreign key: 'reagen_guid' (di tabel msds_documents)
-     * - Local key: 'guid' (di tabel reagens)
-     */
-    public function msdsDocuments()
-    {
-        return $this->hasMany(MsdsDocument::class, 'reagen_guid', 'guid');
-    }
-
-    /**
-     * ✅ Ambil dokumen MSDS terbaru (hasOne dengan latestOfMany)
-     */
-    public function latestMsds()
-    {
-        return $this->hasOne(MsdsDocument::class, 'reagen_guid', 'guid')->latestOfMany();
-    }
-
-    /**
-     * ✅ Helper: Cek apakah reagen sudah memiliki MSDS
-     */
-    public function getHasMsdsAttribute(): bool
-    {
-        return $this->msdsDocuments()->exists();
-    }
-
-    /**
-     * ✅ Helper: URL untuk download MSDS terbaru
-     */
-    public function getMsdsUrlAttribute(): ?string
-    {
-        $latest = $this->latestMsds;
-        return $latest ? asset('storage/' . $latest->file_path) : null;
     }
 }
