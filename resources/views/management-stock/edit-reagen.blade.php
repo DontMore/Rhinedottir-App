@@ -2,7 +2,9 @@
 @section('title', 'Edit Reagent')
 @section('container')
 <style>
-/* 🎨 Soft UI Global Styles */
+/* ==========================================
+   🎨 Soft UI Global Styles
+   ========================================== */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
 
 .soft-ui-page {
@@ -13,12 +15,13 @@
     padding: 24px;
 }
 
-.soft-ui-page h2, .soft-ui-page h3, .soft-ui-page h4 {
+.soft-ui-page h1, .soft-ui-page h2, .soft-ui-page h3, .soft-ui-page h4 {
     color: #1E293B;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
 
+/* Card Container */
 .soft-card {
     background: #FFFFFF;
     border-radius: 28px;
@@ -29,6 +32,7 @@
     transition: all 0.3s ease;
 }
 
+/* Input Fields - Pill shaped, soft background */
 .soft-input {
     background: #F1F5F9;
     border: none !important;
@@ -40,6 +44,7 @@
     width: 100%;
     transition: all 0.3s ease;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    font-family: 'Nunito', sans-serif;
 }
 
 .soft-input:focus {
@@ -59,6 +64,7 @@ select.soft-input {
     padding-right: 56px;
 }
 
+/* Buttons - Pill shaped */
 .soft-btn-primary {
     background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
     color: white;
@@ -70,6 +76,7 @@ select.soft-input {
     transition: all 0.3s ease;
     border: none;
     cursor: pointer;
+    font-family: 'Nunito', sans-serif;
 }
 
 .soft-btn-primary:hover {
@@ -90,6 +97,7 @@ select.soft-input {
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    font-family: 'Nunito', sans-serif;
 }
 
 .soft-btn-secondary:hover {
@@ -97,6 +105,7 @@ select.soft-input {
     transform: translateY(-1px);
 }
 
+/* Labels */
 .label-soft {
     display: block;
     font-size: 0.7rem;
@@ -108,6 +117,40 @@ select.soft-input {
     margin-left: 4px;
 }
 
+/* Hazard Checkbox Cards */
+.hazard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #F8FAFC;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.hazard-card:hover {
+    background: #F1F5F9;
+    transform: translateY(-2px);
+}
+
+.hazard-checkbox:checked + .hazard-card {
+    background: #EEF2FF;
+    border-color: #C7D2FE;
+    box-shadow: 0px 10px 25px rgba(99,102,241,0.1);
+}
+
+.hazard-checkbox:checked + .hazard-card img {
+    transform: scale(1.1);
+}
+
+.hazard-checkbox:checked + .hazard-card span {
+    color: #4F46E5;
+    font-weight: 700;
+}
+
+/* MSDS Row Animation */
 .msds-row {
     animation: slideIn 0.3s ease;
 }
@@ -125,13 +168,15 @@ select.soft-input {
             <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Edit Reagent Details</h2>
             <p class="text-sm font-medium text-slate-500 mt-1">Update specifications, storage location, and hazard classifications.</p>
         </div>
-        <a href="{{ url()->previous() }}" class="inline-flex items-center px-6 py-3 text-sm font-bold text-slate-600 bg-white rounded-full shadow-[0px_10px_20px_rgba(0,0,0,0.04)] hover:shadow-[0px_15px_25px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+        <a href="{{ url()->previous() }}" class="soft-btn-secondary">
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m0 0h12"/>
+            </svg>
             Back
         </a>
     </div>
 
-    <!-- ✅ PENTING: enctype="multipart/form-data" wajib untuk upload file -->
+    <!-- Form -->
     <form action="{{ route('data.update', $data->guid) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -140,7 +185,9 @@ select.soft-input {
             <div class="bg-red-50/80 p-6 rounded-[24px] mb-6 shadow-[0px_10px_25px_rgba(239,68,68,0.05)]">
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
                     </div>
                     <div>
                         <h3 class="text-sm font-bold text-red-800">Please correct the following errors:</h3>
@@ -158,7 +205,9 @@ select.soft-input {
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <svg class="h-6 w-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-800">Basic Information</h3>
@@ -190,7 +239,9 @@ select.soft-input {
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-800">Classification</h3>
@@ -225,7 +276,9 @@ select.soft-input {
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    <svg class="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-800">Storage Logic & Hazards</h3>
@@ -278,12 +331,11 @@ select.soft-input {
                         <div class="relative">
                             <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
                                 {{ in_array($hazard['name'], old('hazardOptions', $hazardOptions)) ? 'checked' : '' }}
-                                class="peer absolute opacity-0 w-full h-full cursor-pointer z-10" onchange="updateRecommendedStorage()">
-                            <label for="hazard{{ $hazard['id'] }}"
-                                class="flex flex-col items-center p-5 bg-slate-50 rounded-[24px] cursor-pointer transition-all hover:bg-slate-100 peer-checked:bg-indigo-50 peer-checked:shadow-[0px_10px_25px_rgba(99,102,241,0.1)] peer-checked:ring-2 peer-checked:ring-indigo-200">
+                                class="hazard-checkbox peer absolute opacity-0 w-full h-full cursor-pointer z-10" onchange="updateRecommendedStorage()">
+                            <label for="hazard{{ $hazard['id'] }}" class="hazard-card">
                                 <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
-                                    class="w-12 h-12 object-contain mb-3 transition-transform peer-checked:scale-110">
-                                <span class="text-xs font-bold text-slate-600 peer-checked:text-indigo-600">{{ $hazard['name'] }}</span>
+                                    class="w-12 h-12 object-contain mb-3 transition-transform">
+                                <span class="text-xs font-bold text-slate-600">{{ $hazard['name'] }}</span>
                             </label>
                         </div>
                     @endforeach
@@ -295,7 +347,9 @@ select.soft-input {
         <div class="soft-card">
             <div class="flex items-center gap-4 mb-8">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                    <svg class="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    <svg class="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-800">Details, Pricing & MSDS</h3>
@@ -304,7 +358,6 @@ select.soft-input {
             </div>
 
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <!-- Actual Storage Location -->
                 <div class="lg:col-span-2">
                     <label class="label-soft">Actual Storage Location</label>
                     <select name="storage_location_guid" class="soft-input">
@@ -316,7 +369,6 @@ select.soft-input {
                         @endforeach
                     </select>
                 </div>
-                <!-- Price -->
                 <div>
                     <label class="label-soft">Price <span class="text-red-400">*</span></label>
                     <div class="relative">
@@ -326,32 +378,101 @@ select.soft-input {
                         <input type="number" name="price" value="{{ old('price', $data->price) }}" required placeholder="0" class="soft-input !pl-14">
                     </div>
                 </div>
-                <!-- Buffer Stock -->
                 <div>
                     <label class="label-soft">Buffer Stock Limit <span class="text-red-400">*</span></label>
                     <input type="number" name="buffer_stock" value="{{ old('buffer_stock', $data->buffer_stock) }}" required placeholder="Minimum stock quantity" class="soft-input">
                 </div>
             </div>
 
-            <!-- ✅ EXISTING MSDS DOCUMENTS (dari tabel reagen_msds) -->
+            <!-- MSDS ANNUAL REVIEW CARD -->
+            @php
+                $latestMsdsForReview = isset($reagenMsdsDocuments) ? $reagenMsdsDocuments->where('is_latest', true)->first() : null;
+                $needsReviewAction = $latestMsdsForReview ? $latestMsdsForReview->needsReview() : false;
+            @endphp
+
+            @if($needsReviewAction)
+            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
+                <div class="bg-amber-50/90 border-2 border-amber-200 rounded-3xl p-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-base font-extrabold text-amber-900">⚠️ MSDS Annual Review Required</h4>
+                            <p class="text-xs text-amber-700 font-medium mt-1">
+                                Dokumen MSDS versi terbaru (<strong>{{ $latestMsdsForReview->version ?? 'Tanpa Versi' }}</strong>, Tanggal Revisi: <strong>{{ $latestMsdsForReview->revision_date ? $latestMsdsForReview->revision_date->format('d M Y') : 'Tidak ada' }}</strong>) sudah berusia <strong>{{ $latestMsdsForReview->getYearsSinceRevision() }} tahun</strong>.
+                            </p>
+
+                            <div class="mt-4 space-y-3">
+                                <p class="text-xs font-bold text-amber-900 uppercase tracking-wider">Pilih Aksi Penanganan Review:</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label class="relative flex items-start p-4 bg-white rounded-2xl border-2 border-amber-200 cursor-pointer hover:border-amber-400 transition-all">
+                                        <input type="radio" name="review_action" value="upload_new" class="mt-1 text-amber-600 focus:ring-amber-500" onchange="toggleReviewOptions(this.value)">
+                                        <div class="ml-3">
+                                            <span class="block text-xs font-extrabold text-slate-800">1. Upload Versi Baru (PDF)</span>
+                                            <span class="block text-[11px] font-medium text-slate-500">Upload file MSDS versi terbaru di bagian bawah. Notifikasi akan diperbarui.</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="relative flex items-start p-4 bg-white rounded-2xl border-2 border-amber-200 cursor-pointer hover:border-amber-400 transition-all">
+                                        <input type="radio" name="review_action" value="no_update" class="mt-1 text-amber-600 focus:ring-amber-500" onchange="toggleReviewOptions(this.value)">
+                                        <div class="ml-3">
+                                            <span class="block text-xs font-extrabold text-slate-800">2. Belum Ada Revisi Baru dari Produsen</span>
+                                            <span class="block text-[11px] font-medium text-slate-500">Sudah dicek ke produsen, belum ada revisi. Pengingat akan ditunda 1 tahun.</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div id="noUpdateNoteContainer" class="hidden mt-3 p-4 bg-white rounded-2xl border border-amber-200 space-y-2">
+                                    <label class="label-soft !mb-1">Catatan Konfirmasi Review <span class="text-red-400">*</span></label>
+                                    <textarea name="review_no_update_note" rows="2" placeholder="Contoh: Sudah dicek di portal resmi Merck per September 2026, belum ada revisi baru." class="soft-input !rounded-2xl !py-3"></textarea>
+                                    <p class="text-[11px] text-amber-700 font-semibold">💡 Catatan ini akan disimpan dan pengingat review akan muncul kembali setahun kemudian.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @elseif($latestMsdsForReview && $latestMsdsForReview->review_status === 'no_update' && $latestMsdsForReview->reviewed_at)
+            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
+                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xs text-blue-900">
+                        <strong>Review Terkonfirmasi:</strong> Belum ada revisi baru dari produsen (Dikonfirmasi pada {{ $latestMsdsForReview->reviewed_at->format('d M Y') }}). Note: <em>"{{ $latestMsdsForReview->review_note }}"</em>. Pengingat akan muncul kembali 1 tahun dari tanggal konfirmasi.
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- EXISTING MSDS DOCUMENTS -->
             @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
             <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                        <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
                     </div>
                     <div>
                         <label class="label-soft !mb-0">Existing MSDS Documents</label>
-                        <p class="text-xs text-slate-500 mt-1">Dokumen MSDS yang sudah terupload. Anda bisa melihat atau menghapusnya.</p>
+                        <p class="text-xs text-slate-500 mt-1">Dokumen MSDS yang sudah terupload.</p>
                     </div>
                 </div>
-
                 <div class="space-y-2">
                     @foreach($reagenMsdsDocuments as $doc)
                     <div class="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 rounded-2xl px-4 py-3">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                             <div class="w-10 h-10 rounded-xl {{ $doc->is_latest ? 'bg-emerald-100' : 'bg-red-100' }} flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                                <svg class="w-5 h-5 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                </svg>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2 flex-wrap">
@@ -389,20 +510,20 @@ select.soft-input {
             </div>
             @endif
 
-            <!-- ✅ UPLOAD MSDS BARU (Multiple - sebagai versi baru) -->
+            <!-- UPLOAD MSDS BARU -->
             <div class="border-t-2 border-dashed border-slate-200 pt-8">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
                     </div>
                     <div>
                         <label class="label-soft !mb-0">Add New MSDS Version (Optional)</label>
-                        <p class="text-xs text-slate-500 mt-1">Upload file baru untuk menambah versi MSDS. File lama tidak akan terhapus.</p>
+                        <p class="text-xs text-slate-500 mt-1">Upload file baru untuk menambah versi MSDS.</p>
                     </div>
                 </div>
-
                 <div id="msdsUploadContainer" class="space-y-3">
-                    <!-- Slot upload pertama (optional saat edit) -->
                     <div class="msds-row bg-gradient-to-r from-emerald-50/50 to-white rounded-2xl p-4 border-2 border-dashed border-emerald-200">
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                             <div class="sm:col-span-4">
@@ -412,31 +533,29 @@ select.soft-input {
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
-                                <input type="text" name="msds_versions[]" placeholder="Rev. B"
-                                       class="soft-input !py-2.5 !text-sm">
+                                <input type="text" name="msds_versions[]" placeholder="Rev. B" class="soft-input !py-2.5 !text-sm">
                             </div>
                             <div class="sm:col-span-3">
                                 <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
-                                <input type="date" name="msds_revision_dates[]"
-                                       class="soft-input !py-2.5 !text-sm">
+                                <input type="date" name="msds_revision_dates[]" class="soft-input !py-2.5 !text-sm">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
-                                <input type="text" name="msds_notes[]" placeholder="Optional"
-                                       class="soft-input !py-2.5 !text-sm">
+                                <input type="text" name="msds_notes[]" placeholder="Optional" class="soft-input !py-2.5 !text-sm">
                             </div>
                             <div class="sm:col-span-1 flex justify-end">
                                 <button type="button" onclick="addMsdsRow()"
                                         class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center transition-all"
                                         title="Tambah file lain">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <p class="mt-3 text-xs font-semibold text-indigo-500 ml-1">💡 Tips: Upload semua versi MSDS sekaligus (Rev. A, Rev. B, dll) atau tambahkan satu per satu.</p>
+                <p class="mt-3 text-xs font-semibold text-indigo-500 ml-1">💡 Tips: Upload semua versi MSDS sekaligus (Rev. A, Rev. B, dll).</p>
             </div>
         </div>
 
@@ -444,7 +563,9 @@ select.soft-input {
         <div class="flex justify-end gap-4 pt-4 pb-8">
             <a href="{{ url()->previous() }}" class="soft-btn-secondary">Cancel</a>
             <button type="submit" class="soft-btn-primary flex items-center">
-                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
                 Update Reagent
             </button>
         </div>
@@ -463,9 +584,7 @@ select.soft-input {
 
 @push('scripts')
 <script>
-// ============================================
 // Search Logic for Dropdowns
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     function attachSearch(searchSelector, selectSelector) {
         const searchInput = document.querySelector(searchSelector);
@@ -485,9 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
     attachSearch('.category-search', '.category-select');
 });
 
-// ============================================
 // Dynamic Add MSDS Row
-// ============================================
 function addMsdsRow() {
     const container = document.getElementById('msdsUploadContainer');
     const newRow = document.createElement('div');
@@ -501,24 +618,23 @@ function addMsdsRow() {
             </div>
             <div class="sm:col-span-2">
                 <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
-                <input type="text" name="msds_versions[]" placeholder="Rev. C"
-                       class="soft-input !py-2.5 !text-sm">
+                <input type="text" name="msds_versions[]" placeholder="Rev. C" class="soft-input !py-2.5 !text-sm">
             </div>
             <div class="sm:col-span-3">
                 <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
-                <input type="date" name="msds_revision_dates[]"
-                       class="soft-input !py-2.5 !text-sm">
+                <input type="date" name="msds_revision_dates[]" class="soft-input !py-2.5 !text-sm">
             </div>
             <div class="sm:col-span-2">
                 <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
-                <input type="text" name="msds_notes[]" placeholder="Optional"
-                       class="soft-input !py-2.5 !text-sm">
+                <input type="text" name="msds_notes[]" placeholder="Optional" class="soft-input !py-2.5 !text-sm">
             </div>
             <div class="sm:col-span-1 flex justify-end">
-                <button type="button" onclick="removeMsdsRow(this)"
+                <button type="button" onclick="this.closest('.msds-row').remove()"
                         class="w-10 h-10 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-all"
                         title="Hapus baris ini">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -526,17 +642,7 @@ function addMsdsRow() {
     container.appendChild(newRow);
 }
 
-function removeMsdsRow(btn) {
-    const row = btn.closest('.msds-row');
-    row.style.opacity = '0';
-    row.style.transform = 'translateX(20px)';
-    row.style.transition = 'all 0.3s ease';
-    setTimeout(() => row.remove(), 300);
-}
-
-// ============================================
 // Logic Rekomendasi Storage
-// ============================================
 function updateRecommendedStorage() {
     const form = document.getElementById('reagentForm').value;
     const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
@@ -589,17 +695,25 @@ function updateRecommendedStorage() {
     };
 
     const recommendation = storageMap[form]?.[primaryHazard] || 'General Storage';
-
     recDiv.textContent = recommendation;
     recDiv.className = 'block w-full rounded-[20px] border-2 border-indigo-100 bg-indigo-50/50 px-6 py-4 text-sm text-indigo-700 font-bold min-h-[52px] flex items-center';
+}
+
+// Toggle MSDS Review Note Container
+function toggleReviewOptions(val) {
+    const noteContainer = document.getElementById('noUpdateNoteContainer');
+    if (!noteContainer) return;
+    if (val === 'no_update') {
+        noteContainer.classList.remove('hidden');
+    } else {
+        noteContainer.classList.add('hidden');
+    }
 }
 
 // Event Listeners
 const formSelect = document.getElementById('reagentForm');
 if (formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
 document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
-
-// Jalankan saat load untuk memastikan value awal benar
 updateRecommendedStorage();
 </script>
 @endpush

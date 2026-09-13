@@ -31,7 +31,7 @@ class ManagementStockController extends Controller
         $status = $request->input('status', 'active'); // ✅ Filter status (active/inactive/all)
         $user = auth()->user();
 
-        $query = Reagen::with(['stockReagen', 'group', 'category'])
+        $query = Reagen::with(['stockReagen', 'group', 'category', 'latestReagenMsds'])
             ->where('organization_guid', $user->organization_guid);
 
         // ✅ Filter berdasarkan status
@@ -298,7 +298,6 @@ class ManagementStockController extends Controller
             'merk' => 'required',
             'packSize' => 'required',
             'hazardOptions' => 'array',
-            // ✅ MSDS optional saat edit (karena sudah ada versi lama)
             'msds_files' => 'nullable|array',
             'msds_files.*' => 'file|mimes:pdf|max:10240',
             'msds_versions' => 'nullable|array',
@@ -307,6 +306,9 @@ class ManagementStockController extends Controller
             'msds_revision_dates.*' => 'nullable|date',
             'msds_notes' => 'nullable|array',
             'msds_notes.*' => 'nullable|string|max:500',
+            // ✅ BARU: Validasi untuk review
+            'review_action' => 'nullable|in:upload_new,no_update',
+            'review_no_update_note' => 'nullable|string|max:1000',
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
             'signal_word' => 'nullable|in:Danger,Warning,None',
@@ -316,6 +318,41 @@ class ManagementStockController extends Controller
             'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
 
+        // ✅ BARU: Handle Review Logic
+        $reviewAction = $request->input('review_action');
+        $latestMsds = \App\Models\ReagenMsds::where('reagen_guid', $guid)
+            ->where('is_latest', true)
+            ->first();
+
+        if ($latestMsds && $latestMsds->needsReview()) {
+            if ($reviewAction === 'upload_new') {
+                // Validasi: Harus ada file yang diupload
+                if (!$request->hasFile('msds_files') || empty($request->file('msds_files')[0] ?? null)) {
+                    return back()->withErrors([
+                        'msds_files' => 'Anda memilih upload versi baru, silakan upload file MSDS.'
+                    ])->withInput();
+                }
+            } elseif ($reviewAction === 'no_update') {
+                // Validasi: Harus ada note
+                $reviewNote = $request->input('review_no_update_note');
+                if (empty($reviewNote)) {
+                    return back()->withErrors([
+                        'review_no_update_note' => 'Anda memilih belum ada update, silakan tuliskan catatan konfirmasi.'
+                    ])->withInput();
+                }
+
+                // Update status review di MSDS terbaru
+                $latestMsds->update([
+                    'review_status' => 'no_update',
+                    'review_note' => $reviewNote,
+                    'reviewed_at' => now(),
+                    'reviewed_by' => $user->id,
+                ]);
+
+                Alert::success('Review Recorded', 'Catatan review berhasil disimpan. MSDS tetap valid.');
+            }
+        }
+
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
         $validatedData['recommended_storage_location'] = Reagen::getRecommendedStorage(
@@ -324,13 +361,25 @@ class ManagementStockController extends Controller
         );
 
         unset($validatedData['msds_files'], $validatedData['msds_versions'],
-              $validatedData['msds_revision_dates'], $validatedData['msds_notes']);
+            $validatedData['msds_revision_dates'], $validatedData['msds_notes'],
+            $validatedData['review_action'], $validatedData['review_no_update_note']);
 
         $data->update($validatedData);
 
         // ✅ Jika ada file baru, tambahkan sebagai versi baru
         if ($request->hasFile('msds_files')) {
             $uploadedDocs = $this->handleMultipleReagenMsdsUpload($request, $data->guid);
+            
+            // ✅ Tandai review sebagai "reviewed" jika upload baru
+            if ($latestMsds && $latestMsds->needsReview()) {
+                $latestMsds->update([
+                    'review_status' => 'reviewed',
+                    'review_note' => 'Replaced with new version',
+                    'reviewed_at' => now(),
+                    'reviewed_by' => $user->id,
+                ]);
+            }
+
             Alert::success('SUCCESS!', 'Reagen updated & ' . count($uploadedDocs) . ' new MSDS version(s) added');
         } else {
             Alert::success('SUCCESS!', 'Reagen updated successfully');
