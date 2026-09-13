@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 use OwenIt\Auditing\Auditable;
+use App\Models\MsdsDocument;
 
 class Reagen extends Model implements AuditableContract
 {
@@ -207,5 +208,21 @@ class Reagen extends Model implements AuditableContract
         ];
 
         return $storageNames[$primaryStorage] ?? 'General Storage';
+    }
+
+        /**
+     * ✅ Relasi ke MsdsDocument (One-to-Many)
+     */
+    public function msdsDocuments()
+    {
+        return $this->hasMany(MsdsDocument::class, 'reagen_guid', 'guid');
+    }
+
+    /**
+     * ✅ Ambil dokumen MSDS terbaru
+     */
+    public function latestMsds()
+    {
+        return $this->hasOne(MsdsDocument::class, 'reagen_guid', 'guid')->latestOfMany();
     }
 }
