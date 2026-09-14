@@ -45,6 +45,33 @@
         </div>
     </div>
 
+    <!-- ✅ BARU: Alert Notifikasi Review MSDS Annual -->
+    @php
+        $latestMsdsDoc = isset($reagenMsdsDocuments) ? $reagenMsdsDocuments->where('is_latest', true)->first() : null;
+        $msdsNeedsReview = $latestMsdsDoc ? $latestMsdsDoc->needsReview() : false;
+    @endphp
+
+    @if($msdsNeedsReview)
+    <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-amber-900">⚠️ Peringatan Review Tahunan Dokumen MSDS</h4>
+                <p class="text-xs text-amber-700 mt-0.5">
+                    Dokumen MSDS {{ $latestMsdsDoc->version ? 'Versi (' . $latestMsdsDoc->version . ')' : '' }} sudah lebih dari 1 tahun sejak revisi terakhir ({{ $latestMsdsDoc->revision_date ? $latestMsdsDoc->revision_date->format('d M Y') : '-' }}). Mohon lakukan upload versi baru atau konfirmasi review di halaman Edit.
+                </p>
+            </div>
+        </div>
+        <a href="{{ route('data.edit', ['guid' => $data->guid]) }}" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors flex-shrink-0 shadow-sm">
+            Review / Update MSDS →
+        </a>
+    </div>
+    @endif
+
     <!-- Details & Hazards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Information Card -->
@@ -153,10 +180,12 @@
                     @endif
                 </div>
 
-                <!-- Row 2: MSDS Documents List (Multi-Versi) -->
+                <!-- Row 2: MSDS Documents List (Multi-Versi) dengan Review Status -->
                 <div>
                     <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
                         MSDS Documents
                         @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
@@ -168,47 +197,113 @@
                     @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
                         <div class="space-y-2">
                             @foreach($reagenMsdsDocuments as $doc)
-                            <div class="flex items-center justify-between p-3 rounded-lg {{ $doc->is_latest ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50 border border-gray-100' }} hover:shadow-sm transition-all">
-                                <div class="flex items-center gap-2 flex-1 min-w-0">
-                                    <div class="w-8 h-8 rounded-lg {{ $doc->is_latest ? 'bg-emerald-100' : 'bg-red-100' }} flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <p class="text-xs font-medium text-gray-800 truncate">{{ $doc->file_name }}</p>
-                                            @if($doc->is_latest)
-                                                <span class="inline-block px-1.5 py-0.5 bg-emerald-500 text-white rounded-full text-[10px] font-bold">LATEST</span>
+                                @php
+                                    $needsReview = $doc->needsReview();
+                                    $yearsSince = $doc->getYearsSinceRevision();
+                                @endphp
+                                <div class="flex items-center justify-between p-3 rounded-lg {{ 
+                                    $doc->is_latest 
+                                        ? ($needsReview ? 'bg-amber-50 border-2 border-amber-300' : 'bg-emerald-50 border border-emerald-200') 
+                                        : 'bg-gray-50 border border-gray-100' 
+                                }} hover:shadow-sm transition-all">
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <!-- Icon dengan indikator review -->
+                                        <div class="relative">
+                                            <div class="w-10 h-10 rounded-lg {{ 
+                                                $doc->is_latest 
+                                                    ? ($needsReview ? 'bg-amber-100' : 'bg-emerald-100') 
+                                                    : 'bg-red-100' 
+                                            }} flex items-center justify-center flex-shrink-0">
+                                                @if($needsReview && $doc->is_latest)
+                                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                    </svg>
+                                                @else
+                                                    <svg class="w-5 h-5 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                            @if($needsReview && $doc->is_latest)
+                                                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                                                </span>
                                             @endif
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
-                                            @if($doc->version)
-                                                <span class="inline-block px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">{{ $doc->version }}</span>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <p class="text-xs font-medium text-gray-800 truncate">{{ $doc->file_name }}</p>
+                                                @if($doc->is_latest)
+                                                    @if($needsReview)
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/>
+                                                            </svg>
+                                                            NEEDS REVIEW
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-block px-1.5 py-0.5 bg-emerald-500 text-white rounded-full text-[10px] font-bold">LATEST</span>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                            <p class="text-[10px] text-gray-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                                                @if($doc->version)
+                                                    <span class="inline-block px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">{{ $doc->version }}</span>
+                                                @endif
+                                                @if($doc->revision_date)
+                                                    <span>📅 {{ $doc->revision_date->format('d M Y') }}</span>
+                                                    @if($needsReview)
+                                                        <span class="text-amber-600 font-semibold">({{ $yearsSince }} years ago)</span>
+                                                    @endif
+                                                @endif
+                                            </p>
+                                            @if($needsReview && $doc->is_latest)
+                                                <div class="mt-1 p-1.5 bg-amber-100 rounded text-[10px] text-amber-800 font-medium flex items-center gap-1">
+                                                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    MSDS ini sudah lebih dari 1 tahun. Silakan review dan update di halaman Edit.
+                                                </div>
+                                            @elseif(!$needsReview && $doc->is_latest && $doc->review_status === 'no_update' && $doc->reviewed_at)
+                                                <div class="mt-1 p-1.5 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800 font-medium flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    <span>Telah dikonfirmasi belum ada revisi baru pada <strong>{{ $doc->reviewed_at->format('d M Y') }}</strong> ("{{ $doc->review_note }}"). Pengingat akan aktif kembali setahun lagi.</span>
+                                                </div>
                                             @endif
-                                            @if($doc->revision_date)
-                                                <span>📅 {{ $doc->revision_date->format('d M Y') }}</span>
-                                            @endif
-                                        </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-1 flex-shrink-0 ml-2">
+                                        <a href="{{ route('reagen.msds.document.view', $doc->id) }}" target="_blank"
+                                        class="inline-flex items-center p-1.5 text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 rounded-md transition-colors ring-1 ring-blue-200">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </a>
+                                        <form action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST"
+                                            onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center p-1.5 text-xs font-medium text-red-700 bg-white hover:bg-red-50 rounded-md transition-colors ring-1 ring-red-200">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
-                                <div class="flex gap-1 flex-shrink-0 ml-2">
-                                    <button type="button" class="preview-msds-btn inline-flex items-center p-1.5 text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 rounded-md transition-colors ring-1 ring-blue-200" data-url="{{ route('reagen.msds.document.view', $doc->id) }}">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    </button>
-                                    <form action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST" onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center p-1.5 text-xs font-medium text-red-700 bg-white hover:bg-red-50 rounded-md transition-colors ring-1 ring-red-200">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
                             @endforeach
                         </div>
                     @else
                         <div class="flex items-center justify-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                             <div class="text-center">
-                                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
                                 <p class="mt-1 text-xs text-gray-500">Belum ada MSDS</p>
                                 <a href="{{ route('data.edit', $data->guid) }}" class="mt-1 inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-500">
                                     Upload sekarang →
