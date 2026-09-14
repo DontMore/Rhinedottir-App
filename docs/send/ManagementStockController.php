@@ -12,7 +12,6 @@ use App\Models\LogbookReagen;
 use App\Models\ReagenGroup;
 use App\Models\ReagenCategory;
 use App\Models\StorageLocation;
-use App\Models\ReagenMsds;
 use RealRashid\SweetAlert\Facades\Alert;
 use Carbon\Carbon;
 use PDF;
@@ -22,48 +21,43 @@ use Illuminate\Support\Facades\Storage;
 
 class ManagementStockController extends Controller
 {
-
     public function index(Request $request)
     {
         $keyword = $request->input('keyword');
         $groupGuid = $request->input('group_guid');
         $categoryGuid = $request->input('category_guid');
-        $status = $request->input('status', 'active'); // ✅ Filter status (active/inactive/all)
         $user = auth()->user();
 
-        $query = Reagen::with(['stockReagen', 'group', 'category', 'latestReagenMsds'])
-            ->where('organization_guid', $user->organization_guid);
-
-        // ✅ Filter berdasarkan status
-        if ($status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', false);
-        }
-        // Jika 'all', tidak ada filter
+        $query = Reagen::with(['stockReagen', 'group', 'category'])->where('organization_guid', $user->organization_guid);
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('noCatalog', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
+                    ->orWhere('nameReagen', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('merk', 'LIKE', '%' . $keyword . '%');
             });
         }
+
         if ($groupGuid) {
             $query->where('group_guid', $groupGuid);
         }
+
         if ($categoryGuid) {
             $query->where('category_guid', $categoryGuid);
         }
 
         $reagens = $query->paginate(20);
 
+        // ✅ Ambil Group & Category milik organisasi user
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->latest()->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->latest()->get();
 
-        return view('management-stock.management-stock', compact('reagens', 'groups', 'categories', 'status'));
+        return view('management-stock.management-stock', compact('reagens', 'groups', 'categories'));
     }
 
+    /**
+     * Simpan Group baru
+     */
     public function storeGroup(Request $request)
     {
         $validated = $request->validate([
@@ -84,6 +78,9 @@ class ManagementStockController extends Controller
         return back();
     }
 
+    /**
+     * Simpan Category baru
+     */
     public function storeCategory(Request $request)
     {
         $validated = $request->validate([
@@ -107,6 +104,8 @@ class ManagementStockController extends Controller
     public function addReagen()
     {
         $user = auth()->user();
+
+        // ✅ Ambil data berdasarkan organisasi user
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $storageLocations = StorageLocation::where('organization_guid', $user->organization_guid)->orderBy('code')->get();
@@ -114,76 +113,91 @@ class ManagementStockController extends Controller
         return view('management-stock.add-reagen', compact('groups', 'categories', 'storageLocations'));
     }
 
-    // ============================================
-    // ✅ BARU: Handle Multiple MSDS Upload
-    // ============================================
-    private function handleMultipleReagenMsdsUpload(Request $request, string $reagenGuid): array
+    private function handleMsdsUpload(Request $request, ?string $currentPath = null): ?string
     {
-        if (!$request->hasFile('msds_files')) {
-            return [];
+        if (!$request->hasFile('msds')) {
+            return $currentPath;
         }
 
-        $user = auth()->user();
-        $files = $request->file('msds_files');
-        $versions = $request->input('msds_versions', []);
-        $revisionDates = $request->input('msds_revision_dates', []);
-        $notes = $request->input('msds_notes', []);
-        $uploadedDocs = [];
+        $file = $request->file('msds');
 
-        // Reset flag is_latest untuk semua dokumen lama
-        ReagenMsds::where('reagen_guid', $reagenGuid)
-            ->update(['is_latest' => false]);
-
-        foreach ($files as $index => $file) {
-            if (!$file || !$file->isValid()) continue;
-
-            $destinationPath = 'reagen_msds/' . $reagenGuid;
-            if (!Storage::disk('public')->exists($destinationPath)) {
-                Storage::disk('public')->makeDirectory($destinationPath);
-            }
-
-            $fileName = time() . '_' . $index . '_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $file->getClientOriginalName());
-            $storedPath = $file->storeAs($destinationPath, $fileName, 'public');
-
-            if ($storedPath) {
-                $doc = ReagenMsds::create([
-                    'reagen_guid' => $reagenGuid,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $storedPath,
-                    'version' => !empty($versions[$index]) ? $versions[$index] : null,
-                    'revision_date' => !empty($revisionDates[$index]) ? $revisionDates[$index] : null,
-                    'notes' => !empty($notes[$index]) ? $notes[$index] : null,
-                    'is_latest' => true,
-                    'organization_guid' => $user->organization_guid,
-                    'uploaded_by' => $user->id,
-                ]);
-                $uploadedDocs[] = $doc;
-            }
+        if (!$file || !$file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['File MSDS tidak valid atau gagal diupload.'],
+            ]);
         }
 
-        return $uploadedDocs;
+        if ($currentPath && \Storage::disk('public')->exists($currentPath)) {
+            \Storage::disk('public')->delete($currentPath);
+        }
+
+        try {
+            $storedPath = $file->storeAs('msds_files', $file->hashName(), 'public');
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['Gagal menyimpan file MSDS ke storage: ' . $e->getMessage()],
+            ]);
+        }
+
+        if (empty($storedPath) || $storedPath === false) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['Gagal menyimpan file MSDS ke storage. Periksa permission folder storage/app/public dan jalankan `php artisan storage:link`.'],
+            ]);
+        }
+
+        return $storedPath;
     }
 
-    // ============================================
-    // ✅ UPDATE: addReagenStore dengan Multiple MSDS
-    // ============================================
+    private function handleCoaUpload(Request $request, ?string $currentPath = null): ?string
+    {
+        if (!$request->hasFile('coa')) {
+            return $currentPath;
+        }
+
+        $file = $request->file('coa');
+
+        if (!$file || !$file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['File COA tidak valid atau gagal diupload.'],
+            ]);
+        }
+
+        if ($currentPath && \Storage::disk('public')->exists($currentPath)) {
+            \Storage::disk('public')->delete($currentPath);
+        }
+
+        try {
+            $storedPath = $file->storeAs('coa_files', $file->hashName(), 'public');
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['Gagal menyimpan file COA ke storage: ' . $e->getMessage()],
+            ]);
+        }
+
+        if (empty($storedPath) || $storedPath === false) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'coa' => ['Gagal menyimpan file COA ke storage. Periksa permission folder storage/app/public dan jalankan `php artisan storage:link`.'],
+            ]);
+        }
+
+        return $storedPath;
+    }
+
     public function addReagenStore(Request $request)
     {
+        $filePath = null;
+
+        if ($request->hasFile('msds')) {
+            $filePath = $this->handleMsdsUpload($request);
+        }
+
         $validatedData = $request->validate([
             'noCatalog' => 'required',
             'nameReagen' => 'required',
             'merk' => 'required',
             'packSize' => 'required',
             'hazardOptions' => 'array',
-            // ✅ Multiple MSDS files dengan versi & tanggal revisi
-            'msds_files' => 'required|array|min:1',
-            'msds_files.*' => 'file|mimes:pdf|max:10240',
-            'msds_versions' => 'nullable|array',
-            'msds_versions.*' => 'nullable|string|max:50',
-            'msds_revision_dates' => 'nullable|array',
-            'msds_revision_dates.*' => 'nullable|date',
-            'msds_notes' => 'nullable|array',
-            'msds_notes.*' => 'nullable|string|max:500',
+            'msds' => 'required|file|mimes:pdf|max:10240', // ✅ Ubah jadi validasi file
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
             'signal_word' => 'nullable|in:Danger,Warning,None',
@@ -193,33 +207,28 @@ class ManagementStockController extends Controller
             'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
 
+        if (empty($filePath)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'msds' => ['File MSDS wajib diupload.'],
+            ]);
+        }
+
+        $validatedData['msds'] = $filePath;
+
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
         $validatedData['organization_guid'] = auth()->user()->organization_guid;
-        $validatedData['recommended_storage_location'] = Reagen::getRecommendedStorage(
+        $validatedData['recommended_storage_location'] = \App\Models\Reagen::getRecommendedStorage(
             $hazardOptions,
             auth()->user()->organization_guid
         );
 
-        // Hapus field msds_files dari validated data (bukan kolom reagens)
-        unset($validatedData['msds_files'], $validatedData['msds_versions'],
-              $validatedData['msds_revision_dates'], $validatedData['msds_notes']);
+        \App\Models\Reagen::create($validatedData);
 
-        // Kosongkan kolom msds lama (legacy)
-        $validatedData['msds'] = '';
-
-        $reagen = Reagen::create($validatedData);
-
-        // ✅ Upload multiple MSDS ke tabel reagen_msds
-        $uploadedDocs = $this->handleMultipleReagenMsdsUpload($request, $reagen->guid);
-
-        Alert::success('Success!', 'Data has been added successfully with ' . count($uploadedDocs) . ' MSDS document(s)');
+        Alert::success('Success!', 'Data has been added successfully');
         return redirect()->route('management-stock.index');
     }
 
-    // ============================================
-    // ✅ UPDATE: viewReagen dengan MSDS documents
-    // ============================================
     public function viewReagen($guid)
     {
         $user = auth()->user();
@@ -228,36 +237,37 @@ class ManagementStockController extends Controller
             'stockHistories' => function ($q) {
                 $q->orderBy('created_at', 'desc');
             },
-            'group',
-            'category'
+            'reagenIn',
+            'group',      // ✅ Tambahkan ini
+            'category'    // ✅ Tambahkan ini
         ])
-        ->where('guid', $guid)
-        ->where('organization_guid', $user->organization_guid)
-        ->firstOrFail();
-
-        // ✅ PAGINATION: Ambil ReagenIn dengan pagination (10 per halaman)
-        $reagenInPaginated = ReagenIn::where('reagen_guid', $guid)
+            ->where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->firstOrFail();
 
-        // ✅ Ambil semua dokumen MSDS (multi-versi)
-        $reagenMsdsDocuments = \App\Models\ReagenMsds::where('reagen_guid', $guid)
-            ->orderBy('is_latest', 'desc')
-            ->orderBy('revision_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $hazardOptions = array_filter(explode(',', $data->hazardOptions ?? ''));
-
-        return view('management-stock.view-reagen', compact(
-            'data', 'hazardOptions', 'reagenInPaginated', 'reagenMsdsDocuments'
-        ));
+        $hazardOptions = explode(',', $data->hazardOptions ?? '');
+        return view('management-stock.view-reagen', compact('data', 'hazardOptions'));
     }
 
-    // ============================================
-    // ✅ UPDATE: editReagen dengan MSDS documents
-    // ============================================
+    public function showMsds($guid)
+    {
+        $user = auth()->user();
+        $reagen = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
+        if (empty($reagen->msds) || !Storage::disk('public')->exists($reagen->msds)) {
+            abort(404, 'MSDS file not found.');
+        }
+
+        return Storage::disk('public')->response(
+            $reagen->msds,
+            basename($reagen->msds),
+            ['Content-Disposition' => 'inline; filename="' . basename($reagen->msds) . '"']
+        );
+    }
+
+    // ✅ EDIT: Menggunakan $guid & filter organisasi langsung
     public function editReagen($guid)
     {
         $user = auth()->user();
@@ -265,26 +275,30 @@ class ManagementStockController extends Controller
             ->where('organization_guid', $user->organization_guid)
             ->firstOrFail();
 
-        // ✅ Ambil semua dokumen MSDS yang sudah ada
-        $reagenMsdsDocuments = \App\Models\ReagenMsds::where('reagen_guid', $guid)
-            ->orderBy('is_latest', 'desc')
-            ->orderBy('revision_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $hazardOptions = explode(',', $data->hazardOptions ?? '');
 
-        $hazardOptions = array_filter(explode(',', $data->hazardOptions ?? ''));
+        // ✅ Ambil data untuk dropdown edit
         $groups = ReagenGroup::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $categories = ReagenCategory::where('organization_guid', $user->organization_guid)->orderBy('name')->get();
         $storageLocations = StorageLocation::where('organization_guid', $user->organization_guid)->orderBy('code')->get();
 
-        return view('management-stock.edit-reagen', compact(
-            'data', 'hazardOptions', 'groups', 'categories', 'storageLocations', 'reagenMsdsDocuments'
-        ));
+        return view('management-stock.edit-reagen', compact('data', 'hazardOptions', 'groups', 'categories', 'storageLocations'));
     }
 
-    // ============================================
-    // ✅ UPDATE: updateReagen dengan Multiple MSDS
-    // ============================================
+    // ✅ DELETE: Menggunakan $guid
+    public function deleteReagen($guid)
+    {
+        $user = auth()->user();
+        $data = Reagen::where('guid', $guid)
+            ->where('organization_guid', $user->organization_guid)
+            ->firstOrFail();
+
+        $data->delete();
+        Alert::success('Success!', 'Data has been deleted successfully');
+        return redirect()->route('management-stock.index');
+    }
+
+    // ✅ UPDATE: Menggunakan $guid & redirect ke route berbasis guid
     public function updateReagen(Request $request, $guid)
     {
         $user = auth()->user();
@@ -298,17 +312,8 @@ class ManagementStockController extends Controller
             'merk' => 'required',
             'packSize' => 'required',
             'hazardOptions' => 'array',
-            'msds_files' => 'nullable|array',
-            'msds_files.*' => 'file|mimes:pdf|max:10240',
-            'msds_versions' => 'nullable|array',
-            'msds_versions.*' => 'nullable|string|max:50',
-            'msds_revision_dates' => 'nullable|array',
-            'msds_revision_dates.*' => 'nullable|date',
-            'msds_notes' => 'nullable|array',
-            'msds_notes.*' => 'nullable|string|max:500',
-            // ✅ BARU: Validasi untuk review
-            'review_action' => 'nullable|in:upload_new,no_update',
-            'review_no_update_note' => 'nullable|string|max:1000',
+            // ✅ msds tidak wajib (nullable), tapi jika diisi harus file pdf
+            'msds' => 'nullable|file|mimes:pdf|max:10240', 
             'price' => 'required',
             'buffer_stock' => 'required|numeric|min:0',
             'signal_word' => 'nullable|in:Danger,Warning,None',
@@ -318,165 +323,25 @@ class ManagementStockController extends Controller
             'reagent_form' => 'required|in:liquid,solid,crystal',
         ]);
 
-        // ✅ BARU: Handle Review Logic
-        $reviewAction = $request->input('review_action');
-        $latestMsds = \App\Models\ReagenMsds::where('reagen_guid', $guid)
-            ->where('is_latest', true)
-            ->first();
-
-        if ($latestMsds && $latestMsds->needsReview()) {
-            if ($reviewAction === 'upload_new') {
-                // Validasi: Harus ada file yang diupload
-                if (!$request->hasFile('msds_files') || empty($request->file('msds_files')[0] ?? null)) {
-                    return back()->withErrors([
-                        'msds_files' => 'Anda memilih upload versi baru, silakan upload file MSDS.'
-                    ])->withInput();
-                }
-            } elseif ($reviewAction === 'no_update') {
-                // Validasi: Harus ada note
-                $reviewNote = $request->input('review_no_update_note');
-                if (empty($reviewNote)) {
-                    return back()->withErrors([
-                        'review_no_update_note' => 'Anda memilih belum ada update, silakan tuliskan catatan konfirmasi.'
-                    ])->withInput();
-                }
-
-                // Update status review di MSDS terbaru
-                $latestMsds->update([
-                    'review_status' => 'no_update',
-                    'review_note' => $reviewNote,
-                    'reviewed_at' => now(),
-                    'reviewed_by' => $user->id,
-                ]);
-
-                Alert::success('Review Recorded', 'Catatan review berhasil disimpan. MSDS tetap valid.');
-            }
-        }
-
+        // ✅ Handle upload MSDS (Jika tidak ada file baru, pertahankan path lama)
+        $validatedData['msds'] = $this->handleMsdsUpload($request, $data->msds);
+        
         $hazardOptions = $request->has('hazardOptions') ? $request->input('hazardOptions') : [];
         $validatedData['hazardOptions'] = implode(',', $hazardOptions);
+        
+        // ✅ Trigger rekomendasi storage otomatis
         $validatedData['recommended_storage_location'] = Reagen::getRecommendedStorage(
             $hazardOptions,
             $user->organization_guid
         );
 
-        unset($validatedData['msds_files'], $validatedData['msds_versions'],
-            $validatedData['msds_revision_dates'], $validatedData['msds_notes'],
-            $validatedData['review_action'], $validatedData['review_no_update_note']);
-
         $data->update($validatedData);
 
-        // ✅ Jika ada file baru, tambahkan sebagai versi baru
-        if ($request->hasFile('msds_files')) {
-            $uploadedDocs = $this->handleMultipleReagenMsdsUpload($request, $data->guid);
-            
-            // ✅ Tandai review sebagai "reviewed" jika upload baru
-            if ($latestMsds && $latestMsds->needsReview()) {
-                $latestMsds->update([
-                    'review_status' => 'reviewed',
-                    'review_note' => 'Replaced with new version',
-                    'reviewed_at' => now(),
-                    'reviewed_by' => $user->id,
-                ]);
-            }
-
-            Alert::success('SUCCESS!', 'Reagen updated & ' . count($uploadedDocs) . ' new MSDS version(s) added');
-        } else {
-            Alert::success('SUCCESS!', 'Reagen updated successfully');
-        }
-
+        Alert::success('SUCCESS!', 'Reagen updated successfully');
         return redirect()->route('data.view', ['guid' => $data->guid]);
     }
 
-    // ============================================
-    // ✅ BARU: View/Download MSDS by document ID
-    // ============================================
-    public function viewReagenMsdsDocument($documentId)
-    {
-        $user = auth()->user();
-        $doc = ReagenMsds::where('id', $documentId)
-            ->where('organization_guid', $user->organization_guid)
-            ->firstOrFail();
-
-        if (!Storage::disk('public')->exists($doc->file_path)) {
-            abort(404, 'File not found.');
-        }
-
-        return Storage::disk('public')->response(
-            $doc->file_path,
-            $doc->file_name,
-            ['Content-Disposition' => 'inline; filename="' . $doc->file_name . '"']
-        );
-    }
-
-    // ============================================
-    // ✅ BARU: Delete single MSDS document
-    // ============================================
-    public function deleteReagenMsdsDocument($documentId)
-    {
-        $user = auth()->user();
-        $doc = ReagenMsds::where('id', $documentId)
-            ->where('organization_guid', $user->organization_guid)
-            ->firstOrFail();
-
-        if (Storage::disk('public')->exists($doc->file_path)) {
-            Storage::disk('public')->delete($doc->file_path);
-        }
-
-        $doc->delete();
-
-        Alert::success('Success', 'MSDS document deleted');
-        return redirect()->back();
-    }
-
-    // ============================================
-    // LEGACY: showMsds (untuk backward compatibility)
-    // ============================================
-    public function showMsds($guid)
-    {
-        $user = auth()->user();
-        $reagen = Reagen::where('guid', $guid)
-            ->where('organization_guid', $user->organization_guid)
-            ->firstOrFail();
-
-        // Coba ambil dari tabel reagen_msds dulu (latest)
-        $latestMsds = ReagenMsds::where('reagen_guid', $guid)
-            ->where('is_latest', true)
-            ->first();
-
-        if ($latestMsds && Storage::disk('public')->exists($latestMsds->file_path)) {
-            return Storage::disk('public')->response(
-                $latestMsds->file_path,
-                $latestMsds->file_name,
-                ['Content-Disposition' => 'inline; filename="' . $latestMsds->file_name . '"']
-            );
-        }
-
-        // Fallback ke kolom msds lama
-        if (empty($reagen->msds) || !Storage::disk('public')->exists($reagen->msds)) {
-            abort(404, 'MSDS file not found.');
-        }
-
-        return Storage::disk('public')->response(
-            $reagen->msds,
-            basename($reagen->msds),
-            ['Content-Disposition' => 'inline; filename="' . basename($reagen->msds) . '"']
-        );
-    }
-
-    public function deleteReagen($guid)
-    {
-        $user = auth()->user();
-        $data = Reagen::where('guid', $guid)
-            ->where('organization_guid', $user->organization_guid)
-            ->firstOrFail();
-
-        $data->delete();
-
-        Alert::success('Success!', 'Data has been deleted successfully');
-        return redirect()->route('management-stock.index');
-    }
-
+    // ✅ AJAX/FETCH DATA: Menggunakan $guid
     public function getReagenData($guid)
     {
         $user = auth()->user();
@@ -487,45 +352,7 @@ class ManagementStockController extends Controller
         if (!$reagen) {
             return response()->json(['error' => 'Data not found'], 404);
         }
-
         return response()->json($reagen);
-    }
-
-    // ============================================
-    // COA Upload Handler
-    // ============================================
-    private function handleCoaUpload(Request $request, ?string $currentPath = null): ?string
-    {
-        if (!$request->hasFile('coa')) {
-            return $currentPath;
-        }
-
-        $file = $request->file('coa');
-        if (!$file || !$file->isValid()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'coa' => ['File COA tidak valid atau gagal diupload.'],
-            ]);
-        }
-
-        if ($currentPath && Storage::disk('public')->exists($currentPath)) {
-            Storage::disk('public')->delete($currentPath);
-        }
-
-        try {
-            $storedPath = $file->storeAs('coa_files', $file->hashName(), 'public');
-        } catch (\Throwable $e) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'coa' => ['Gagal menyimpan file COA ke storage: ' . $e->getMessage()],
-            ]);
-        }
-
-        if (empty($storedPath) || $storedPath === false) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'coa' => ['Gagal menyimpan file COA ke storage.'],
-            ]);
-        }
-
-        return $storedPath;
     }
 
     public function addStock(Request $request)
@@ -550,16 +377,19 @@ class ManagementStockController extends Controller
             $validatedDataStock['coa'] = $filePath;
         }
 
+        // Ambil GUID master reagen berdasarkan noCatalog yang diinput user
         $masterReagen = Reagen::where('noCatalog', $validatedDataStock['noCatalog'])
             ->where('organization_guid', $user->organization_guid)
             ->firstOrFail();
 
+        // ✅ Simpan relasi GUID ke tabel ReagenIn
         $validatedDataStock['reagen_guid'] = $masterReagen->guid;
         $validatedDataStock['user_id'] = $user->id;
         $validatedDataStock['organization_guid'] = $user->organization_guid;
 
         ReagenIn::create($validatedDataStock);
 
+        // Update/Cbuat total stock di tabel StockReagen
         $stockReagen = StockReagen::where('reagen_guid', $masterReagen->guid)
             ->where('organization_guid', $user->organization_guid)
             ->first();
@@ -577,14 +407,20 @@ class ManagementStockController extends Controller
         }
 
         Alert::success('SUCCESS!', 'Stok berhasil ditambahkan');
-        OrderController::refreshRecommendations($user->organization_guid);
+
+        // ✅ TRIGGER UPDATE REKOMENDASI OTOMATIS
+        \App\Http\Controllers\OrderController::refreshRecommendations($user->organization_guid);
 
         return redirect()->back();
     }
 
-    public function addStockReagen($guid)
+    // app/Http/Controllers/ManagementStockController.php
+
+    public function addStockReagen($guid) // ✅ Ganti menjadi $guid
     {
         $user = auth()->user();
+
+        // Query menggunakan guid, bukan noCatalog
         $reagen = Reagen::where('guid', $guid)
             ->where('organization_guid', $user->organization_guid)
             ->first();
@@ -634,7 +470,6 @@ class ManagementStockController extends Controller
             $stockReagen = StockReagen::where('noCatalog', $reagenIn->noCatalog)
                 ->where('organization_guid', $user->organization_guid)
                 ->first();
-
             if ($stockReagen) {
                 $stockReagen->quantity -= $reagenIn->quantity;
                 if ($stockReagen->quantity < 0) $stockReagen->quantity = 0;
@@ -647,7 +482,6 @@ class ManagementStockController extends Controller
                 ->where('month', $currentMonth)
                 ->where('year', $currentYear)
                 ->first();
-
             if ($stockHistory) {
                 $stockHistory->quantity -= $reagenIn->quantity;
                 $stockHistory->quantity_in -= $reagenIn->quantity;
@@ -660,7 +494,6 @@ class ManagementStockController extends Controller
         } else {
             Alert::error('Error', 'Stock not found');
         }
-
         return redirect()->route('management-stock.index');
     }
 
@@ -685,13 +518,14 @@ class ManagementStockController extends Controller
             $currentPage,
             ['path' => request()->url()]
         );
-
         return view('management-stock.reagen-in', compact('paginatedData'));
     }
 
     public function reagenOut()
     {
         $user = auth()->user();
+
+        // ✅ WAJIB ADA ->with(['reagen', 'user'])
         $reagenOut = LogbookReagen::with(['reagen', 'user'])
             ->whereHas('user', function ($q) use ($user) {
                 $q->where('organization_guid', $user->organization_guid);
@@ -705,7 +539,7 @@ class ManagementStockController extends Controller
         $groupedData = collect($reagenOut);
         $currentPage = request()->get('page', 1);
         $perPage = 10;
-        $paginatedData = new LengthAwarePaginator(
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $groupedData->forPage($currentPage, $perPage),
             $groupedData->count(),
             $perPage,
@@ -727,7 +561,7 @@ class ManagementStockController extends Controller
             $search = $request->search;
             $query->whereHas('reagen', function ($q) use ($search) {
                 $q->where('nameReagen', 'LIKE', "%{$search}%")
-                  ->orWhere('noCatalog', 'LIKE', "%{$search}%");
+                    ->orWhere('noCatalog', 'LIKE', "%{$search}%");
             });
         }
 
@@ -751,11 +585,9 @@ class ManagementStockController extends Controller
                     $item->status = 'Tidak Expired';
                     $item->status_color = 'success';
                 }
-
                 $item->days_until_expired = $daysUntilExpired;
                 return $item;
             });
-
         return view('dashboard.reagen-expired', compact('reagenExpired'));
     }
 
@@ -775,24 +607,5 @@ class ManagementStockController extends Controller
             basename($reagenIn->coa),
             ['Content-Disposition' => 'inline; filename="' . basename($reagenIn->coa) . '"']
         );
-    }
-
-    // ============================================
-    // ✅ BARU: Toggle Active/Inactive Reagen
-    // ============================================
-    public function toggleReagenStatus($guid)
-    {
-        $user = auth()->user();
-        $data = Reagen::where('guid', $guid)
-            ->where('organization_guid', $user->organization_guid)
-            ->firstOrFail();
-
-        $data->is_active = !$data->is_active;
-        $data->save();
-
-        $status = $data->is_active ? 'activated' : 'deactivated';
-        Alert::success('Success!', "Reagen has been {$status}");
-
-        return redirect()->back();
     }
 }

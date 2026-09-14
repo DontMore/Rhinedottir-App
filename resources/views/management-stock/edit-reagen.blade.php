@@ -1,33 +1,197 @@
 @extends('layout.main')
 @section('title', 'Edit Reagent')
 @section('container')
-<div class="space-y-6">
+<style>
+/* ==========================================
+   🎨 Soft UI Global Styles
+   ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+.soft-ui-page {
+    font-family: 'Nunito', 'Poppins', sans-serif;
+    background-color: #F8FAFC;
+    color: #334155;
+    min-height: 100vh;
+    padding: 24px;
+}
+
+.soft-ui-page h1, .soft-ui-page h2, .soft-ui-page h3, .soft-ui-page h4 {
+    color: #1E293B;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+/* Card Container */
+.soft-card {
+    background: #FFFFFF;
+    border-radius: 28px;
+    box-shadow: 0px 15px 35px rgba(0,0,0,0.04);
+    padding: 32px;
+    margin-bottom: 24px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+/* Input Fields - Pill shaped, soft background */
+.soft-input {
+    background: #F1F5F9;
+    border: none !important;
+    border-radius: 50px;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    font-family: 'Nunito', sans-serif;
+}
+
+.soft-input:focus {
+    outline: none;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1), inset 0 2px 4px rgba(0,0,0,0);
+}
+
+select.soft-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 24px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 56px;
+}
+
+/* Buttons - Pill shaped */
+.soft-btn-primary {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    color: white;
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    box-shadow: 0px 10px 25px rgba(79, 70, 229, 0.25);
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+}
+
+.soft-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 15px 30px rgba(79, 70, 229, 0.35);
+}
+
+.soft-btn-secondary {
+    background: #F1F5F9;
+    color: #475569;
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Nunito', sans-serif;
+}
+
+.soft-btn-secondary:hover {
+    background: #E2E8F0;
+    transform: translateY(-1px);
+}
+
+/* Labels */
+.label-soft {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748B;
+    margin-bottom: 8px;
+    margin-left: 4px;
+}
+
+/* Hazard Checkbox Cards */
+.hazard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #F8FAFC;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.hazard-card:hover {
+    background: #F1F5F9;
+    transform: translateY(-2px);
+}
+
+.hazard-checkbox:checked + .hazard-card {
+    background: #EEF2FF;
+    border-color: #C7D2FE;
+    box-shadow: 0px 10px 25px rgba(99,102,241,0.1);
+}
+
+.hazard-checkbox:checked + .hazard-card img {
+    transform: scale(1.1);
+}
+
+.hazard-checkbox:checked + .hazard-card span {
+    color: #4F46E5;
+    font-weight: 700;
+}
+
+/* MSDS Row Animation */
+.msds-row {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="soft-ui-page">
     <!-- Header & Navigation -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-            <h2 class="text-xl font-semibold text-gray-800">Edit Reagent Details</h2>
-            <p class="text-sm text-gray-500 mt-1">Update specifications, storage location, and hazard classifications.</p>
+            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Edit Reagent Details</h2>
+            <p class="text-sm font-medium text-slate-500 mt-1">Update specifications, storage location, and hazard classifications.</p>
         </div>
-        <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0h12"/></svg>
+        <a href="{{ url()->previous() }}" class="soft-btn-secondary">
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m0 0h12"/>
+            </svg>
             Back
         </a>
     </div>
 
-    <!-- Form Card -->
-    <form method="POST" action="{{ route('data.update', $data->guid) }}" class="space-y-6">
+    <!-- Form -->
+    <form action="{{ route('data.update', $data->guid) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
         @if ($errors->any())
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div class="bg-red-50/80 p-6 rounded-[24px] mb-6 shadow-[0px_10px_25px_rgba(239,68,68,0.05)]">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
                     </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
-                        <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    <div>
+                        <h3 class="text-sm font-bold text-red-800">Please correct the following errors:</h3>
+                        <ul class="mt-2 text-sm text-red-600 list-disc list-inside space-y-1">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -38,67 +202,67 @@
         @endif
 
         <!-- SECTION 1: BASIC INFO -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h3 class="text-base font-semibold text-gray-800">Basic Information</h3>
-            </div>
-            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Catalog Number (Read Only) -->
+        <div class="soft-card">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Catalog Number</label>
-                    <input type="text" value="{{ old('noCatalog', $data->noCatalog) }}" readonly
-                           class="block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-500 shadow-sm focus:border-gray-300 focus:ring-0 sm:text-sm cursor-not-allowed">
+                    <h3 class="text-lg font-extrabold text-slate-800">Basic Information</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Core details of the reagent</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="lg:col-span-1">
+                    <label class="label-soft">Catalog Number</label>
+                    <input type="text" value="{{ old('noCatalog', $data->noCatalog) }}" readonly class="soft-input !bg-slate-100 !text-slate-500 cursor-not-allowed">
                     <input type="hidden" name="noCatalog" value="{{ old('noCatalog', $data->noCatalog) }}">
                 </div>
-                
-                <!-- Reagent Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagent Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="nameReagen" value="{{ old('nameReagen', $data->nameReagen) }}" required
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                <div class="lg:col-span-2">
+                    <label class="label-soft">Reagent Name <span class="text-red-400">*</span></label>
+                    <input type="text" name="nameReagen" value="{{ old('nameReagen', $data->nameReagen) }}" required placeholder="e.g., Acetone AR" class="soft-input">
                 </div>
-
-                <!-- Brand -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Brand <span class="text-red-500">*</span></label>
-                    <input type="text" name="merk" value="{{ old('merk', $data->merk) }}" required
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <label class="label-soft">Brand / Merk <span class="text-red-400">*</span></label>
+                    <input type="text" name="merk" value="{{ old('merk', $data->merk) }}" required placeholder="e.g., Merck" class="soft-input">
                 </div>
-
-                <!-- Pack Size -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Pack Size <span class="text-red-500">*</span></label>
-                    <input type="text" name="packSize" value="{{ old('packSize', $data->packSize) }}" required
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <label class="label-soft">Pack Size <span class="text-red-400">*</span></label>
+                    <input type="text" name="packSize" value="{{ old('packSize', $data->packSize) }}" required placeholder="e.g., 500ml" class="soft-input">
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 2: CLASSIFICATION (Group & Category) -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                <svg class="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                <h3 class="text-base font-semibold text-gray-800">Classification</h3>
-            </div>
-            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <!-- Group Dropdown -->
+        <!-- SECTION 2: CLASSIFICATION -->
+        <div class="soft-card">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagen Group <span class="text-gray-400 font-normal">(Optional)</span></label>
-                    <input type="text" placeholder="🔍 Search group..." class="group-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    <select name="group_guid" class="group-select block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <h3 class="text-lg font-extrabold text-slate-800">Classification</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Group and category mapping</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label class="label-soft">Reagen Group</label>
+                    <input type="text" placeholder="🔍 Search group..." class="group-search soft-input !bg-white !shadow-[0px_5px_15px_rgba(0,0,0,0.02)] mb-2">
+                    <select name="group_guid" class="group-select soft-input">
                         <option value="">-- Select Group --</option>
                         @foreach($groups as $group)
                             <option value="{{ $group->guid }}" {{ old('group_guid', $data->group_guid) == $group->guid ? 'selected' : '' }}>{{ $group->name }}</option>
                         @endforeach
                     </select>
                 </div>
-
-                <!-- Category Dropdown -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Reagen Category <span class="text-gray-400 font-normal">(Optional)</span></label>
-                    <input type="text" placeholder="🔍 Search category..." class="category-search block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    <select name="category_guid" class="category-select block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <label class="label-soft">Reagen Category</label>
+                    <input type="text" placeholder="🔍 Search category..." class="category-search soft-input !bg-white !shadow-[0px_5px_15px_rgba(0,0,0,0.02)] mb-2">
+                    <select name="category_guid" class="category-select soft-input">
                         <option value="">-- Select Category --</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->guid }}" {{ old('category_guid', $data->category_guid) == $category->guid ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -109,35 +273,48 @@
         </div>
 
         <!-- SECTION 3: STORAGE LOGIC & HAZARDS -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                <svg class="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                <h3 class="text-base font-semibold text-gray-800">Storage Logic & Hazards</h3>
-            </div>
-            <div class="p-6">
-                <!-- Physical Form & Recommendation -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div class="lg:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Physical Form <span class="text-red-500">*</span></label>
-                        <select name="reagent_form" id="reagentForm" required class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value="">-- Select Form --</option>
-                            <option value="liquid" {{ old('reagent_form', $data->reagent_form) == 'liquid' ? 'selected' : '' }}>Liquid (Cairan)</option>
-                            <option value="solid" {{ old('reagent_form', $data->reagent_form) == 'solid' ? 'selected' : '' }}>Solid (Padatan)</option>
-                            <option value="crystal" {{ old('reagent_form', $data->reagent_form) == 'crystal' ? 'selected' : '' }}>Crystal (Kristal)</option>
-                        </select>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Recommended Storage</label>
-                        <div id="recommendedStorage" class="block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800 min-h-[42px] flex items-center">
-                            {{ $data->recommended_storage_location ?? 'General Storage' }}
-                        </div>
-                        <p class="mt-1 text-xs text-blue-600">Based on physical form + hazard classification</p>
-                    </div>
+        <div class="soft-card">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
                 </div>
-
-                <!-- Hazard Symbols -->
-                <label class="block text-sm font-medium text-gray-700 mb-3">Hazard Symbols</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-slate-800">Storage Logic & Hazards</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Safety and physical properties</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="label-soft">Physical Form <span class="text-red-400">*</span></label>
+                    <select name="reagent_form" id="reagentForm" required class="soft-input">
+                        <option value="">-- Select Form --</option>
+                        <option value="liquid" {{ old('reagent_form', $data->reagent_form) == 'liquid' ? 'selected' : '' }}>Liquid (Cairan)</option>
+                        <option value="solid" {{ old('reagent_form', $data->reagent_form) == 'solid' ? 'selected' : '' }}>Solid (Padatan)</option>
+                        <option value="crystal" {{ old('reagent_form', $data->reagent_form) == 'crystal' ? 'selected' : '' }}>Crystal (Kristal)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label-soft">Signal Word (GHS)</label>
+                    <select name="signal_word" class="soft-input">
+                        <option value="">-- Select Signal Word --</option>
+                        <option value="Danger" {{ old('signal_word', $data->signal_word) == 'Danger' ? 'selected' : '' }}>Danger</option>
+                        <option value="Warning" {{ old('signal_word', $data->signal_word) == 'Warning' ? 'selected' : '' }}>Warning</option>
+                        <option value="None" {{ old('signal_word', $data->signal_word) == 'None' ? 'selected' : '' }}>None</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-8">
+                <label class="label-soft">Recommended Storage</label>
+                <div id="recommendedStorageText" class="block w-full rounded-[20px] border-2 border-indigo-100 bg-indigo-50/50 px-6 py-4 text-sm text-indigo-700 font-bold min-h-[52px] flex items-center">
+                    {{ $data->recommended_storage_location ?? 'Select Form & Hazards to see recommendation...' }}
+                </div>
+                <p class="mt-2 text-xs font-semibold text-indigo-500 ml-1">Based on physical form + hazard classification</p>
+            </div>
+            <div>
+                <label class="label-soft mb-4">Hazard Symbols</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     @php
                         $hazards = [
                             ['id' => 1, 'name' => 'Toxic', 'image' => 'toxic.png'],
@@ -153,13 +330,12 @@
                     @foreach($hazards as $hazard)
                         <div class="relative">
                             <input type="checkbox" id="hazard{{ $hazard['id'] }}" name="hazardOptions[]" value="{{ $hazard['name'] }}"
-                                {{ in_array($hazard['name'], $hazardOptions) ? 'checked' : '' }}
-                                class="peer absolute opacity-0 w-full h-full cursor-pointer z-10" onchange="updateRecommendedStorage()">
-                            <label for="hazard{{ $hazard['id'] }}"
-                                class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all bg-white hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                {{ in_array($hazard['name'], old('hazardOptions', $hazardOptions)) ? 'checked' : '' }}
+                                class="hazard-checkbox peer absolute opacity-0 w-full h-full cursor-pointer z-10" onchange="updateRecommendedStorage()">
+                            <label for="hazard{{ $hazard['id'] }}" class="hazard-card">
                                 <img src="{{ asset('public/images/' . $hazard['image']) }}" alt="{{ $hazard['name'] }}"
-                                    class="w-12 h-12 object-contain mb-2 transition-transform peer-checked:scale-110">
-                                <span class="text-xs font-medium text-gray-600 peer-checked:text-blue-700">{{ $hazard['name'] }}</span>
+                                    class="w-12 h-12 object-contain mb-3 transition-transform">
+                                <span class="text-xs font-bold text-slate-600">{{ $hazard['name'] }}</span>
                             </label>
                         </div>
                     @endforeach
@@ -167,18 +343,25 @@
             </div>
         </div>
 
-        <!-- SECTION 4: DETAILS (MSDS, Price, Storage) -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                <svg class="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                <h3 class="text-base font-semibold text-gray-800">Details & Pricing</h3>
+        <!-- SECTION 4: ACTUAL STORAGE, PRICING & MSDS -->
+        <div class="soft-card">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                    <svg class="h-6 w-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-slate-800">Details, Pricing & MSDS</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Storage location, financial data, and MSDS documents</p>
+                </div>
             </div>
-            <div class="p-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Actual Storage Location -->
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
                 <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Actual Storage Location</label>
-                    <select name="storage_location_guid" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        <option value="">-- Select Storage Location --</option>
+                    <label class="label-soft">Actual Storage Location</label>
+                    <select name="storage_location_guid" class="soft-input">
+                        <option value="">-- Select Location --</option>
                         @foreach($storageLocations as $location)
                             <option value="{{ $location->guid }}" {{ old('storage_location_guid', $data->storage_location_guid) == $location->guid ? 'selected' : '' }}>
                                 {{ $location->code }} - {{ $location->name }} ({{ $location->state_type }})
@@ -186,136 +369,352 @@
                         @endforeach
                     </select>
                 </div>
-                
-                <!-- MSDS -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">MSDS Link <span class="text-red-500">*</span></label>
-                    <input type="url" name="msds" value="{{ old('msds', $data->msds) }}" required placeholder="https://..."
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                </div>
-
-                <!-- Price -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Price <span class="text-red-500">*</span></label>
+                    <label class="label-soft">Price <span class="text-red-400">*</span></label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-sm text-gray-500">Rp</span>
+                        <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                            <span class="text-sm font-bold text-slate-400">Rp</span>
                         </div>
-                        <input type="number" name="price" value="{{ old('price', $data->price) }}" required placeholder="0"
-                               class="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <input type="number" name="price" value="{{ old('price', $data->price) }}" required placeholder="0" class="soft-input !pl-14">
                     </div>
                 </div>
-
-                <!-- Buffer Stock -->
-                <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Buffer Stock Limit <span class="text-red-500">*</span></label>
-                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', $data->buffer_stock) }}" required placeholder="Minimum quantity"
-                           class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                    <p class="mt-1 text-xs text-gray-500">Alert triggered when stock is below this number.</p>
+                <div>
+                    <label class="label-soft">Buffer Stock Limit <span class="text-red-400">*</span></label>
+                    <input type="number" name="buffer_stock" value="{{ old('buffer_stock', $data->buffer_stock) }}" required placeholder="Minimum stock quantity" class="soft-input">
                 </div>
+            </div>
+
+            <!-- MSDS ANNUAL REVIEW CARD -->
+            @php
+                $latestMsdsForReview = isset($reagenMsdsDocuments) ? $reagenMsdsDocuments->where('is_latest', true)->first() : null;
+                $needsReviewAction = $latestMsdsForReview ? $latestMsdsForReview->needsReview() : false;
+            @endphp
+
+            @if($needsReviewAction)
+            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
+                <div class="bg-amber-50/90 border-2 border-amber-200 rounded-3xl p-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-base font-extrabold text-amber-900">⚠️ MSDS Annual Review Required</h4>
+                            <p class="text-xs text-amber-700 font-medium mt-1">
+                                Dokumen MSDS versi terbaru (<strong>{{ $latestMsdsForReview->version ?? 'Tanpa Versi' }}</strong>, Tanggal Revisi: <strong>{{ $latestMsdsForReview->revision_date ? $latestMsdsForReview->revision_date->format('d M Y') : 'Tidak ada' }}</strong>) sudah berusia <strong>{{ $latestMsdsForReview->getYearsSinceRevision() }} tahun</strong>.
+                            </p>
+
+                            <div class="mt-4 space-y-3">
+                                <p class="text-xs font-bold text-amber-900 uppercase tracking-wider">Pilih Aksi Penanganan Review:</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label class="relative flex items-start p-4 bg-white rounded-2xl border-2 border-amber-200 cursor-pointer hover:border-amber-400 transition-all">
+                                        <input type="radio" name="review_action" value="upload_new" class="mt-1 text-amber-600 focus:ring-amber-500" onchange="toggleReviewOptions(this.value)">
+                                        <div class="ml-3">
+                                            <span class="block text-xs font-extrabold text-slate-800">1. Upload Versi Baru (PDF)</span>
+                                            <span class="block text-[11px] font-medium text-slate-500">Upload file MSDS versi terbaru di bagian bawah. Notifikasi akan diperbarui.</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="relative flex items-start p-4 bg-white rounded-2xl border-2 border-amber-200 cursor-pointer hover:border-amber-400 transition-all">
+                                        <input type="radio" name="review_action" value="no_update" class="mt-1 text-amber-600 focus:ring-amber-500" onchange="toggleReviewOptions(this.value)">
+                                        <div class="ml-3">
+                                            <span class="block text-xs font-extrabold text-slate-800">2. Belum Ada Revisi Baru dari Produsen</span>
+                                            <span class="block text-[11px] font-medium text-slate-500">Sudah dicek ke produsen, belum ada revisi. Pengingat akan ditunda 1 tahun.</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div id="noUpdateNoteContainer" class="hidden mt-3 p-4 bg-white rounded-2xl border border-amber-200 space-y-2">
+                                    <label class="label-soft !mb-1">Catatan Konfirmasi Review <span class="text-red-400">*</span></label>
+                                    <textarea name="review_no_update_note" rows="2" placeholder="Contoh: Sudah dicek di portal resmi Merck per September 2026, belum ada revisi baru." class="soft-input !rounded-2xl !py-3"></textarea>
+                                    <p class="text-[11px] text-amber-700 font-semibold">💡 Catatan ini akan disimpan dan pengingat review akan muncul kembali setahun kemudian.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @elseif($latestMsdsForReview && $latestMsdsForReview->review_status === 'no_update' && $latestMsdsForReview->reviewed_at)
+            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
+                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xs text-blue-900">
+                        <strong>Review Terkonfirmasi:</strong> Belum ada revisi baru dari produsen (Dikonfirmasi pada {{ $latestMsdsForReview->reviewed_at->format('d M Y') }}). Note: <em>"{{ $latestMsdsForReview->review_note }}"</em>. Pengingat akan muncul kembali 1 tahun dari tanggal konfirmasi.
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- EXISTING MSDS DOCUMENTS -->
+            @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
+            <div class="border-t-2 border-dashed border-slate-200 pt-8 mb-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <label class="label-soft !mb-0">Existing MSDS Documents</label>
+                        <p class="text-xs text-slate-500 mt-1">Dokumen MSDS yang sudah terupload.</p>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    @foreach($reagenMsdsDocuments as $doc)
+                    <div class="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 rounded-2xl px-4 py-3">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-xl {{ $doc->is_latest ? 'bg-emerald-100' : 'bg-red-100' }} flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 {{ $doc->is_latest ? 'text-emerald-600' : 'text-red-500' }}" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-sm font-bold text-slate-700 truncate">{{ $doc->file_name }}</p>
+                                    @if($doc->is_latest)
+                                        <span class="inline-block px-2 py-0.5 bg-emerald-500 text-white rounded-full text-xs font-bold">LATEST</span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                                    @if($doc->version)
+                                        <span class="inline-block px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">{{ $doc->version }}</span>
+                                    @endif
+                                    @if($doc->revision_date)
+                                        <span>📅 Revised: {{ $doc->revision_date->format('d M Y') }}</span>
+                                    @endif
+                                    @if($doc->notes)
+                                        <span class="italic">"{{ $doc->notes }}"</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0 ml-3">
+                            <a href="{{ route('reagen.msds.document.view', $doc->id) }}" target="_blank"
+                               class="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white rounded-full hover:bg-indigo-50 transition-colors">
+                                View
+                            </a>
+                            <button type="submit" form="delete-msds-form-{{ $doc->id }}"
+                                    class="px-3 py-1.5 text-xs font-bold text-red-600 bg-white rounded-full hover:bg-red-50 transition-colors">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- UPLOAD MSDS BARU -->
+            <div class="border-t-2 border-dashed border-slate-200 pt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <label class="label-soft !mb-0">Add New MSDS Version (Optional)</label>
+                        <p class="text-xs text-slate-500 mt-1">Upload file baru untuk menambah versi MSDS.</p>
+                    </div>
+                </div>
+                <div id="msdsUploadContainer" class="space-y-3">
+                    <div class="msds-row bg-gradient-to-r from-emerald-50/50 to-white rounded-2xl p-4 border-2 border-dashed border-emerald-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                            <div class="sm:col-span-4">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF</label>
+                                <input type="file" name="msds_files[]" accept="application/pdf,.pdf"
+                                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-600 hover:file:bg-emerald-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
+                                <input type="text" name="msds_versions[]" placeholder="Rev. B" class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
+                                <input type="date" name="msds_revision_dates[]" class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
+                                <input type="text" name="msds_notes[]" placeholder="Optional" class="soft-input !py-2.5 !text-sm">
+                            </div>
+                            <div class="sm:col-span-1 flex justify-end">
+                                <button type="button" onclick="addMsdsRow()"
+                                        class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center transition-all"
+                                        title="Tambah file lain">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs font-semibold text-indigo-500 ml-1">💡 Tips: Upload semua versi MSDS sekaligus (Rev. A, Rev. B, dll).</p>
             </div>
         </div>
 
         <!-- Footer Actions -->
-        <div class="flex justify-end gap-3 pt-4">
-            <a href="{{ url()->previous() }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                Cancel
-            </a>
-            <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center">
-                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Save Changes
+        <div class="flex justify-end gap-4 pt-4 pb-8">
+            <a href="{{ url()->previous() }}" class="soft-btn-secondary">Cancel</a>
+            <button type="submit" class="soft-btn-primary flex items-center">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                Update Reagent
             </button>
         </div>
     </form>
+
+    <!-- Hidden Forms for MSDS Document Deletion (Placed outside main form to prevent HTML nested form issue) -->
+    @if(isset($reagenMsdsDocuments) && $reagenMsdsDocuments->count() > 0)
+        @foreach($reagenMsdsDocuments as $doc)
+            <form id="delete-msds-form-{{ $doc->id }}" action="{{ route('reagen.msds.document.delete', $doc->id) }}" method="POST" class="hidden" onsubmit="return confirm('Hapus dokumen MSDS {{ $doc->version ?? 'ini' }}?')">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
+    @endif
 </div>
 
 @push('scripts')
 <script>
-    // Search Logic for Dropdowns
-    document.addEventListener('DOMContentLoaded', function() {
-        function attachSearch(searchSelector, selectSelector) {
-            const searchInput = document.querySelector(searchSelector);
-            const select = document.querySelector(selectSelector);
-            if (!searchInput || !select) return;
+// Search Logic for Dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    function attachSearch(searchSelector, selectSelector) {
+        const searchInput = document.querySelector(searchSelector);
+        const select = document.querySelector(selectSelector);
+        if (!searchInput || !select) return;
 
-            searchInput.addEventListener('input', function() {
-                const filter = this.value.toLowerCase();
-                Array.from(select.options).forEach(option => {
-                    if (option.value === "") { option.style.display = ''; return; }
-                    option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
-                });
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            Array.from(select.options).forEach(option => {
+                if (option.value === "") { option.style.display = ''; return; }
+                option.style.display = option.text.toLowerCase().includes(filter) ? '' : 'none';
             });
-            select.addEventListener('change', () => { searchInput.value = ''; });
-        }
-        attachSearch('.group-search', '.group-select');
-        attachSearch('.category-search', '.category-select');
-    });
+        });
+        select.addEventListener('change', () => { searchInput.value = ''; });
+    }
+    attachSearch('.group-search', '.group-select');
+    attachSearch('.category-search', '.category-select');
+});
 
-    // Logic Rekomendasi Storage
-    function updateRecommendedStorage() {
-        const form = document.getElementById('reagentForm').value;
-        const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
-        
-        const recDiv = document.getElementById('recommendedStorage');
-        if (!form) {
-            recDiv.textContent = 'Please select Physical Form first...';
-            recDiv.className = 'block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-500 min-h-[42px] flex items-center';
-            return;
-        }
+// Dynamic Add MSDS Row
+function addMsdsRow() {
+    const container = document.getElementById('msdsUploadContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'msds-row bg-gradient-to-r from-indigo-50/50 to-white rounded-2xl p-4 border-2 border-indigo-100';
+    newRow.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-4">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">File PDF</label>
+                <input type="file" name="msds_files[]" accept="application/pdf,.pdf"
+                       class="block w-full text-sm text-slate-500 font-semibold file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-600 hover:file:bg-indigo-200 file:cursor-pointer bg-white rounded-full py-2.5 px-4">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Version</label>
+                <input type="text" name="msds_versions[]" placeholder="Rev. C" class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-3">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Revision Date</label>
+                <input type="date" name="msds_revision_dates[]" class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-bold text-slate-600 mb-1 block">Notes</label>
+                <input type="text" name="msds_notes[]" placeholder="Optional" class="soft-input !py-2.5 !text-sm">
+            </div>
+            <div class="sm:col-span-1 flex justify-end">
+                <button type="button" onclick="this.closest('.msds-row').remove()"
+                        class="w-10 h-10 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-all"
+                        title="Hapus baris ini">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newRow);
+}
 
-        const hazardPriority = { 'Explosive': 1, 'Flammable': 2, 'Toxic': 3, 'Corrosive': 4, 'Oxidising': 5, 'Carcinogen': 6, 'Environment': 7, 'Irritant': 8 };
-        selectedHazards.sort((a, b) => (hazardPriority[a] || 99) - (hazardPriority[b] || 99));
-        const primaryHazard = selectedHazards.length > 0 ? selectedHazards[0] : null;
+// Logic Rekomendasi Storage
+function updateRecommendedStorage() {
+    const form = document.getElementById('reagentForm').value;
+    const selectedHazards = Array.from(document.querySelectorAll('input[name="hazardOptions[]"]:checked')).map(cb => cb.value);
 
-        const storageMap = {
-            liquid: {
-                'Flammable': 'Flammable Liquid Cabinet - Lemari Tahan Api (NFPA Class I/II)',
-                'Corrosive': 'Corrosive Liquid Cabinet - Rak Plastik/PP Tahan Asam-Basa',
-                'Toxic': 'Poison Liquid Storage - Lemari Terkunci + Ventilasi',
-                'Oxidising': 'Oxidizer Liquid Storage - Terpisah dari Bahan Mudah Terbakar',
-                'Carcinogen': 'Carcinogen Liquid Storage - Area Terkontrol Fume Hood',
-                'Environment': 'Hazardous Liquid Waste Area - Kontainer B3',
-                'Explosive': '⚠️ EXPLOSIVE LIQUID - Ruang Khusus Berstandar ATP',
-                'Irritant': 'General Liquid Storage - Rak Kimia Basah',
-                null: 'General Liquid Storage - Rak Kimia Basah (Non-Hazard)'
-            },
-            solid: {
-                'Flammable': 'Flammable Solid Storage - Lemari Kering Tahan Api',
-                'Corrosive': 'Corrosive Solid Storage - Wadah Plastik Bersegel',
-                'Toxic': 'Toxic Solid Storage - Lemari Terkunci + Label Jelas',
-                'Oxidising': 'Oxidizer Solid Storage - Terpisah dari Reduser/Bahan Organik',
-                'Carcinogen': 'Carcinogen Solid Storage - Area Terkontrol',
-                'Environment': 'Hazardous Solid Waste Area - Kontainer B3',
-                'Explosive': '⚠️ EXPLOSIVE SOLID - Ruang Khusus Berstandar ATP',
-                'Irritant': 'General Solid Storage - Rak Kimia Kering',
-                null: 'General Solid Storage - Rak Kimia Kering (Non-Hazard)'
-            },
-            crystal: {
-                'Flammable': 'Flammable Crystal Storage - Wadah Kaca Gelap + Kering',
-                'Corrosive': 'Corrosive Crystal Storage - Desikator / Wadah Plastik',
-                'Toxic': 'Toxic Crystal Storage - Lemari Terkunci + Kelembaban Rendah',
-                'Oxidising': 'Oxidizer Crystal Storage - Terpisah, Suhu Stabil',
-                'Carcinogen': 'Carcinogen Crystal Storage - Area Terkontrol',
-                'Environment': 'Hazardous Crystal Waste Area',
-                'Explosive': '⚠️ EXPLOSIVE CRYSTAL - Ruang Khusus Berstandar ATP',
-                'Irritant': 'General Crystal Storage - Rak Kering + Silica Gel',
-                null: 'General Crystal Storage - Rak Kering + Desikator (Non-Hazard)'
-            }
-        };
-
-        const recommendation = storageMap[form]?.[primaryHazard] || 'General Storage';
-        
-        recDiv.textContent = recommendation;
-        recDiv.className = 'block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800 min-h-[42px] flex items-center';
+    const recDiv = document.getElementById('recommendedStorageText');
+    if (!form) {
+        recDiv.textContent = 'Please select Physical Form first...';
+        recDiv.className = 'block w-full rounded-[20px] border-2 border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 font-bold min-h-[52px] flex items-center';
+        return;
     }
 
-    // Event Listeners
-    const formSelect = document.getElementById('reagentForm');
-    if(formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
-    document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
-    
-    // Jalankan saat load untuk memastikan value awal benar
-    updateRecommendedStorage();
+    const hazardPriority = { 'Explosive': 1, 'Flammable': 2, 'Toxic': 3, 'Corrosive': 4, 'Oxidising': 5, 'Carcinogen': 6, 'Environment': 7, 'Irritant': 8 };
+    selectedHazards.sort((a, b) => (hazardPriority[a] || 99) - (hazardPriority[b] || 99));
+    const primaryHazard = selectedHazards.length > 0 ? selectedHazards[0] : null;
+
+    const storageMap = {
+        liquid: {
+            'Flammable': 'Flammable Liquid Cabinet - Lemari Tahan Api (NFPA Class I/II)',
+            'Corrosive': 'Corrosive Liquid Cabinet - Rak Plastik/PP Tahan Asam-Basa',
+            'Toxic': 'Poison Liquid Storage - Lemari Terkunci + Ventilasi',
+            'Oxidising': 'Oxidizer Liquid Storage - Terpisah dari Bahan Mudah Terbakar',
+            'Carcinogen': 'Carcinogen Liquid Storage - Area Terkontrol Fume Hood',
+            'Environment': 'Hazardous Liquid Waste Area - Kontainer B3',
+            'Explosive': '⚠️ EXPLOSIVE LIQUID - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Liquid Storage - Rak Kimia Basah',
+            null: 'General Liquid Storage - Rak Kimia Basah (Non-Hazard)'
+        },
+        solid: {
+            'Flammable': 'Flammable Solid Storage - Lemari Kering Tahan Api',
+            'Corrosive': 'Corrosive Solid Storage - Wadah Plastik Bersegel',
+            'Toxic': 'Toxic Solid Storage - Lemari Terkunci + Label Jelas',
+            'Oxidising': 'Oxidizer Solid Storage - Terpisah dari Reduser/Bahan Organik',
+            'Carcinogen': 'Carcinogen Solid Storage - Area Terkontrol',
+            'Environment': 'Hazardous Solid Waste Area - Kontainer B3',
+            'Explosive': '⚠️ EXPLOSIVE SOLID - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Solid Storage - Rak Kimia Kering',
+            null: 'General Solid Storage - Rak Kimia Kering (Non-Hazard)'
+        },
+        crystal: {
+            'Flammable': 'Flammable Crystal Storage - Wadah Kaca Gelap + Kering',
+            'Corrosive': 'Corrosive Crystal Storage - Desikator / Wadah Plastik',
+            'Toxic': 'Toxic Crystal Storage - Lemari Terkunci + Kelembaban Rendah',
+            'Oxidising': 'Oxidizer Crystal Storage - Terpisah, Suhu Stabil',
+            'Carcinogen': 'Carcinogen Crystal Storage - Area Terkontrol',
+            'Environment': 'Hazardous Crystal Waste Area',
+            'Explosive': '⚠️ EXPLOSIVE CRYSTAL - Ruang Khusus Berstandar ATP',
+            'Irritant': 'General Crystal Storage - Rak Kering + Silica Gel',
+            null: 'General Crystal Storage - Rak Kering + Desikator (Non-Hazard)'
+        }
+    };
+
+    const recommendation = storageMap[form]?.[primaryHazard] || 'General Storage';
+    recDiv.textContent = recommendation;
+    recDiv.className = 'block w-full rounded-[20px] border-2 border-indigo-100 bg-indigo-50/50 px-6 py-4 text-sm text-indigo-700 font-bold min-h-[52px] flex items-center';
+}
+
+// Toggle MSDS Review Note Container
+function toggleReviewOptions(val) {
+    const noteContainer = document.getElementById('noUpdateNoteContainer');
+    if (!noteContainer) return;
+    if (val === 'no_update') {
+        noteContainer.classList.remove('hidden');
+    } else {
+        noteContainer.classList.add('hidden');
+    }
+}
+
+// Event Listeners
+const formSelect = document.getElementById('reagentForm');
+if (formSelect) formSelect.addEventListener('change', updateRecommendedStorage);
+document.querySelectorAll('input[name="hazardOptions[]"]').forEach(cb => cb.addEventListener('change', updateRecommendedStorage));
+updateRecommendedStorage();
 </script>
 @endpush
 @endsection

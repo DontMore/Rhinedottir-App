@@ -1,3 +1,5 @@
+<?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -9,11 +11,11 @@ return new class extends Migration
         Schema::create('audits', function (Blueprint $table) {
             $table->bigIncrements('id');
 
-            // ✅ PERBAIKAN: Ganti morphs() dengan UUID-compatible columns
+            // UUID-compatible columns
             $table->string('auditable_type');
-            $table->char('auditable_id', 36); // UUID = 36 karakter
+            $table->char('auditable_id', 36);
             $table->string('user_type')->nullable();
-            $table->char('user_id', 36)->nullable(); // Jika user juga pakai UUID
+            $table->char('user_id', 36)->nullable();
 
             $table->string('event');
             $table->text('old_values')->nullable();
@@ -25,7 +27,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // ✅ Index untuk performa query
             $table->index(['auditable_type', 'auditable_id']);
         });
     }

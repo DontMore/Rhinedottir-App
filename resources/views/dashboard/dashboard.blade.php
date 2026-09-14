@@ -254,6 +254,7 @@ $(document).ready(function() {
         let deviationChartInstance = null;
         let currentUsageData = @json($monthlyActualUsage ?? []);
         let currentLabels = @json($monthLabels ?? []);
+        let currentAverage = 0; // ✅ TAMBAHKAN variable untuk menyimpan average
 
         function renderDeviationChart(usageData = null, labels = null) {
             const ctx = document.getElementById('deviationChart')?.getContext('2d');
@@ -262,9 +263,28 @@ $(document).ready(function() {
             if (usageData) currentUsageData = usageData;
             if (labels) currentLabels = labels;
 
-            const count = currentUsageData.length;
+            // ==========================================
+            // 🔍 DEBUG: Tampilkan data di console
+            // ==========================================
+            console.group("📊 DEBUG: Grafik Deviasi");
+            console.log("📅 Labels (12 bulan):", currentLabels);
+            console.log("📦 Data Pemakaian:", currentUsageData);
+            console.log("📊 Jumlah Bulan:", currentUsageData.length);
+            
             const sum = currentUsageData.reduce((a, b) => a + b, 0);
+            console.log("➕ Total Pemakaian:", sum);
+            
+            const count = currentUsageData.length; // Selalu 12
             const average = sum / (count || 1);
+            
+            // ✅ SIMPAN average ke variable global module
+            currentAverage = average;
+            
+            console.log(" Rata-rata (Total / 12):", average.toFixed(2));
+            console.log("   Perhitungan:", sum, "/ 12 =", average.toFixed(2));
+            console.groupEnd();
+            // ==========================================
+
             const deviations = currentUsageData.map(val => (val - average).toFixed(2));
 
             if (deviationChartInstance) {
@@ -304,7 +324,7 @@ $(document).ready(function() {
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: '#1E293B',
+                            backgroundColor: '#1E293B', 
                             padding: 16,
                             cornerRadius: 16,
                             titleFont: { size: 13, weight: 'bold', family: "'Nunito', sans-serif" },
@@ -317,7 +337,7 @@ $(document).ready(function() {
                                     const isAbove = dev >= 0;
                                     return [
                                         `Pemakaian: ${actual} unit`,
-                                        `Rata-rata: ${average.toFixed(2)} unit`,
+                                        `Rata-rata: ${currentAverage.toFixed(2)} unit`, // ✅ GUNAKAN currentAverage
                                         `Deviasi: ${isAbove ? '+' : ''}${dev} unit`,
                                         `📌 Status: ${isAbove ? '⚠️ Di Atas Rata-rata' : '✅ Di Bawah Rata-rata'}`
                                     ];
