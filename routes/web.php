@@ -267,3 +267,9 @@ Route::prefix('msds')->name('msds.')->middleware(['auth'])->group(function () {
     Route::get('/view/{document}', [MsdsController::class, 'show'])->name('show'); // Ubah parameter ke document ID
     Route::delete('/document/{document}', [MsdsController::class, 'destroy'])->name('destroy'); // Hapus per file
 });
+
+use App\Http\Controllers\SsoQcController;
+
+// Route untuk menerima callback SSO dari QC
+Route::get('/sso/qc/callback', [SsoQcController::class, 'callback'])
+    ->name('sso.qc.callback');
