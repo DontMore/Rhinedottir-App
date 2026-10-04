@@ -156,6 +156,28 @@ Route::get('/expired-reagen', [ReportController::class, 'expiredReagen'])->name(
 Route::get('/expired-reagen-pdf', [ReportController::class, 'exportExpiredPDF'])->name('report.expired-pdf');
 Route::get('/expired-reagen-excel', [ReportController::class, 'exportExpiredExcel'])->name('report.expired-excel');
 Route::get('/reagen-list-pdf', [ReportController::class, 'generateReagenListPDF'])->name('report.reagen-pdf');
+Route::middleware(['auth'])->group(function () {
+    // Halaman Reagen List
+    Route::get('/report/reagen-list', [ReportController::class, 'reagenList'])
+        ->name('report.reagen-list');
+
+    // Export Excel
+    Route::get('/report/reagen-list/export-excel', [ReportController::class, 'exportReagenListExcel'])
+        ->name('report.reagen-list.export');
+});
+Route::middleware(['auth'])->prefix('report')->name('report.')->group(function () {
+    // Halaman Historical Report
+    Route::get('/historical', [ReportController::class, 'historicalReport'])
+        ->name('historical');
+
+    // Generate PDF
+    Route::get('/historical/pdf', [ReportController::class, 'generateHistoricalPDF'])
+        ->name('historical-pdf');
+
+    // Export Excel  ← ✅ ini yang menyebabkan error
+    Route::get('/historical/excel', [ReportController::class, 'exportHistoricalExcel'])
+        ->name('historical-excel');
+});
 
 
 // route stock opname
