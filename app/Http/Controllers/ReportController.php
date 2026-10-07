@@ -20,6 +20,7 @@ use App\Exports\ExpiredReagenExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Exports\ReagenMonthlyReportExport;
+use App\Exports\ReagenListExport;
 
 class ReportController extends Controller
 {
@@ -304,10 +305,10 @@ class ReportController extends Controller
     {
         $user = auth()->user();
 
-        // Get Reagen In data, filter by organization_guid
+        // Get Reagen In data
         $reagenInQuery = ReagenIn::with(['reagen'])
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->where('users.organization_guid', $user->organization_guid) // ✅ Fixed
+            ->where('users.organization_guid', $user->organization_guid)
             ->select(
                 'reagens_in.created_at',
                 'reagens_in.reagen_guid',
@@ -318,21 +319,21 @@ class ReportController extends Controller
                 DB::raw("'in' as transaction_type")
             );
 
-        // Get Logbook (Reagen Out) data, filter by organization_guid
+        // Get Logbook (Reagen Out) data
         $reagenOutQuery = LogbookReagen::with(['reagen'])
             ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
-            ->where('users.organization_guid', $user->organization_guid) // ✅ Fixed
+            ->where('users.organization_guid', $user->organization_guid)
             ->select(
                 'logbook_reagens.created_at',
                 'logbook_reagens.reagen_guid',
                 'logbook_reagens.id as Id',
                 DB::raw('CAST(logbook_reagens.quantity_taken AS SIGNED) as quantity'),
-                'logbook_reagens.note as description',
+                'logbook_reagens.note as description', 
                 'users.name as user_name',
                 DB::raw("'out' as transaction_type")
             );
 
-        // Apply filters to both queries
+        // Apply filters
         if ($request->filled('start_date')) {
             $reagenInQuery->whereDate('reagens_in.created_at', '>=', $request->start_date);
             $reagenOutQuery->whereDate('logbook_reagens.created_at', '>=', $request->start_date);
@@ -346,27 +347,33 @@ class ReportController extends Controller
             $reagenOutQuery->where('logbook_reagens.reagen_guid', $request->reagen);
         }
 
-        // Combine and sort results
         $histories = $reagenInQuery->union($reagenOutQuery)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Recalculate summary with explicit casting
+        // ✅ FIX: Buang baris yang relasi reagen-nya NULL (reagen terhapus / reagen_guid kosong)
+        //    agar tidak terjadi error "Attempt to read property 'guid' on null"
+        $histories = $histories->filter(function ($item) {
+            return $item->reagen !== null;
+        })->values();
+
+        // ✅ Summary sekarang aman karena semua item pasti punya reagen
         $summary = [
             'total_in' => $histories->where('transaction_type', 'in')->sum('quantity'),
             'total_out' => $histories->where('transaction_type', 'out')->sum('quantity'),
             'per_reagen' => $histories->groupBy(function ($item) {
-                return $item->reagen->guid . '|' . $item->reagen->nameReagen;
-            })
+                    return $item->reagen->guid . '|' . $item->reagen->nameReagen;
+                })
                 ->map(function ($group) {
-                    list($reagen_guid, $nameReagen) = explode('|', $group->first()->reagen->reagen_guid . '|' . $group->first()->reagen->nameReagen);
+                    $first = $group->first();
                     return [
-                        'no_catalog' => $reagen_guid,
-                        'name' => $nameReagen,
+                        // ✅ FIX: pakai atribut yang benar (noCatalog & guid dari model Reagen)
+                        'no_catalog' => $first->reagen->noCatalog ?? '-',
+                        'name' => $first->reagen->nameReagen,
                         'in' => $group->where('transaction_type', 'in')->sum('quantity'),
-                        'out' => $group->where('transaction_type', 'out')->sum('quantity')
+                        'out' => $group->where('transaction_type', 'out')->sum('quantity'),
                     ];
-                })->values()
+                })->values(),
         ];
 
         $reagens = Reagen::where('organization_guid', $user->organization_guid)
@@ -381,16 +388,23 @@ class ReportController extends Controller
         $user = auth()->user();
 
         $reagens = Reagen::select('guid as reagen_guid', 'noCatalog', 'nameReagen', 'merk', 'packSize')
-            ->whereHas('reagenIn.user', function ($q) use ($user) {
-                $q->where('organization_guid', $user->organization_guid); // ✅ Fixed
-            })
-            ->withCount(['stocks as total_quantity' => function ($query) {
-                $query->select(DB::raw('SUM(quantity)'));
-            }])
+            ->where('organization_guid', $user->organization_guid) // ✅ Filter langsung, lebih reliable
+            ->withSum('stocks as total_quantity', 'quantity')      // ✅ Total stok saat ini
             ->orderBy('nameReagen')
             ->get();
 
         return view('report.reagen-list', compact('reagens'));
+    }
+
+    // ============================================
+    // ✅ BARU: Export Reagen List ke Excel
+    // ============================================
+    public function exportReagenListExcel()
+    {
+        $user = auth()->user();
+        $filename = 'reagen_list_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new ReagenListExport($user->organization_guid), $filename);
     }
 
     public function generateHistoricalPDF(Request $request)

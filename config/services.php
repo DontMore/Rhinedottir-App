@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'qc' => [
+        'url' => env('QC_APP_URL'),
+        'secret' => env('SSO_SHARED_SECRET'),
+    ],
+
 ];
