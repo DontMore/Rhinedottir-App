@@ -69,8 +69,9 @@
 <aside id="sidebar-content" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-all duration-300 bg-gray-900 border-r border-gray-700 overflow-x-hidden">
     <div class="h-full px-3 pb-4 overflow-y-auto bg-gray-900">
         <ul class="space-y-2 font-medium">
-            {{-- Dashboard --}}
-            @canany(['admin', 'superadmin'])
+            
+            {{-- ✅ Dashboard (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('dashboard.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('dashboard.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -83,8 +84,8 @@
             @endif
             @endcanany
 
-            {{-- Stock Management --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Stock Management (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('management-stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('management-stock.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -97,8 +98,8 @@
             @endif
             @endcanany
 
-            {{-- Stock Opname --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Stock Opname (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('stock.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('stock.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -111,8 +112,8 @@
             @endif
             @endcanany
 
-            {{-- Orders --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Orders (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('order.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('order.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -125,8 +126,8 @@
             @endif
             @endcanany
 
-            {{-- ✅ STORAGE MENU --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Storage Location (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('storage.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('storage.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -139,8 +140,8 @@
             @endif
             @endcanany
 
-            {{-- ✅ MSDS DOCUMENTS (BARU) --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ MSDS Documents (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('msds.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('msds.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -158,8 +159,8 @@
             @endif
             @endcanany
 
-            {{-- Reports --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Reports (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('report.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('report.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -172,7 +173,7 @@
             @endif
             @endcanany
 
-            {{-- Users --}}
+            {{-- ❌ Users Management (HANYA Admin & Superadmin, PIC TIDAK BOLEH) --}}
             @canany(['admin', 'superadmin'])
             @if(auth()->user()->organization_guid)
             <li>
@@ -186,8 +187,8 @@
             @endif
             @endcanany
 
-            {{-- Audit Trail --}}
-            @canany(['admin', 'superadmin'])
+            {{-- ✅ Audit Trail (Admin, Superadmin, PIC) --}}
+            @canany(['admin', 'superadmin', 'pic'])
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('audit-logs.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('audit-logs.*') ? 'bg-gray-700 text-white' : '' }}">
@@ -200,7 +201,7 @@
             @endif
             @endcanany
 
-            {{-- Settings Dropdown --}}
+            {{-- ✅ Settings Dropdown (Profile untuk semua, Config hanya Admin) --}}
             @if(auth()->user()->organization_guid)
             <li>
                 <button type="button" class="flex items-center w-full p-2 text-base text-gray-300 transition duration-75 rounded-lg group hover:bg-gray-700 hover:text-white" aria-controls="dropdown-settings" data-collapse-toggle="dropdown-settings">
@@ -217,6 +218,7 @@
                     <li>
                         <a href="{{ route('settings.profile') }}" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-gray-700 hover:text-white {{ request()->routeIs('settings.profile') ? 'text-white bg-gray-700' : '' }}">Profile Settings</a>
                     </li>
+                    {{-- ❌ Email & API Config HANYA untuk Admin --}}
                     @can('admin')
                     <li>
                         <a href="{{ route('settings.index') }}" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-gray-700 hover:text-white {{ request()->routeIs('settings.index') ? 'text-white bg-gray-700' : '' }}">Email Configuration</a>
@@ -229,7 +231,7 @@
             </li>
             @endif
 
-            {{-- Super Admin Menu --}}
+            {{-- ✅ Super Admin Menu (HANYA Superadmin) --}}
             @can('superadmin')
             <li>
                 <a href="{{ route('superadmin.index') }}" class="flex items-center p-2 text-yellow-300 rounded-lg hover:bg-yellow-700 hover:text-white group {{ request()->routeIs('superadmin.*') ? 'bg-yellow-700 text-white' : '' }}">
@@ -241,7 +243,7 @@
             </li>
             @endcan
 
-            {{-- Logbook --}}
+            {{-- ✅ Logbook (Semua Role yang punya organization_guid) --}}
             @if(auth()->user()->organization_guid)
             <li>
                 <a href="{{ route('logbook.index') }}" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white group {{ request()->routeIs('logbook.*') ? 'bg-gray-700 text-white' : '' }}">

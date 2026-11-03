@@ -41,13 +41,14 @@ class AuthenticationController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'name'     => 'required|string|max:255',
-                'username' => 'required|string|max:255|unique:users',
-                'email'    => 'required|email|max:255|unique:users',
-                'password' => 'required|min:6',
+                'name'       => 'required|string|max:255',
+                'username'   => 'required|string|max:255|unique:users',
+                'email'      => 'required|email|max:255|unique:users',
+                'password'   => 'required|min:6',
                 'repassword' => 'required|same:password',
-                'role'     => 'required|in:Admin,Analis,superadmin'
+                'role'       => 'required|in:Admin,Analis,PIC,superadmin', // ✅ ROLE PIC DITAMBAHKAN
             ]);
+
             unset($validatedData['repassword']);
 
             // ✅ Otomatis isi organization_guid sesuai dengan pembuat akun
@@ -87,6 +88,7 @@ class AuthenticationController extends Controller
             }
 
             $request->session()->regenerate();
+
             $role = strtolower(Auth::user()->role);
 
             switch ($role) {
@@ -94,6 +96,8 @@ class AuthenticationController extends Controller
                     return redirect()->route('dashboard.index');
                 case 'analis':
                     return redirect()->route('logbook.index');
+                case 'pic': // ✅ BARU: Redirect untuk role PIC
+                    return redirect()->route('dashboard.index'); // Ganti route ini jika PIC punya halaman khusus
                 case 'superadmin':
                     return redirect()->route('superadmin.index');
                 default:
@@ -165,6 +169,7 @@ class AuthenticationController extends Controller
         if (!$user) {
             return redirect()->route('user.index')->with('error', 'User not found.');
         }
+
         return view('auth.edit-user', compact('user'));
     }
 
@@ -174,22 +179,24 @@ class AuthenticationController extends Controller
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
-            'name'     => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . $id . ',guid',
-            'email'    => 'required|string|email|max:255|unique:users,email,' . $id . ',guid',
-            'password' => 'nullable|string|min:6|confirmed',
-            'role'     => 'sometimes|required|in:Admin,Analis,superadmin',
+            'name'      => 'required|string|max:255',
+            'username'  => 'required|string|max:255|unique:users,username,' . $id . ',guid',
+            'email'     => 'required|string|email|max:255|unique:users,email,' . $id . ',guid',
+            'password'  => 'nullable|string|min:6|confirmed',
+            'role'      => 'sometimes|required|in:Admin,Analis,PIC,superadmin', // ✅ ROLE PIC DITAMBAHKAN
             'is_active' => 'nullable|boolean',
         ]);
 
         $user = User::find($id);
+
         if (!$user) {
             return redirect()->route('user.index')->with('error', 'User not found.');
         }
 
-        $user->name  = $request->input('name');
+        $user->name     = $request->input('name');
         $user->username = $request->input('username');
-        $user->email = $request->input('email');
+        $user->email    = $request->input('email');
+
         if ($request->has('role')) {
             $user->role = $request->input('role');
         }
@@ -215,6 +222,7 @@ class AuthenticationController extends Controller
     public function deleteUser($userId)
     {
         $user = User::find($userId);
+
         if (!$user) {
             return redirect()->back()->with('error', 'User not found or deletion failed.');
         }
@@ -231,6 +239,7 @@ class AuthenticationController extends Controller
     public function toggleStatus($id)
     {
         $user = User::find($id);
+
         if (!$user) {
             return redirect()->back()->with('error', 'User not found.');
         }
@@ -238,7 +247,7 @@ class AuthenticationController extends Controller
         // Toggle status aktif/non-aktif
         $user->is_active = !$user->is_active;
 
-        // ✅ LOGIKA BARU: Jika user DI-AKTIFKAN dan belum punya organization_guid,
+        // ✅ LOGIKA: Jika user DI-AKTIFKAN dan belum punya organization_guid,
         // otomatis isi dengan organization_guid milik user yang sedang login (admin/pengelola).
         if ($user->is_active && empty($user->organization_guid)) {
             if (auth()->check() && !empty(auth()->user()->organization_guid)) {

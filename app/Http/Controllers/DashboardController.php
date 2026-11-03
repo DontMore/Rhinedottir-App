@@ -70,6 +70,7 @@ class DashboardController extends Controller
 
         $zeroStockReagen = StockReagen::where('organization_guid', $user->organization_guid)
             ->where('quantity', 0)
+            ->whereHas('reagen') // ✅ Hanya ambil yang punya relasi reagen valid
             ->get();
 
         $reagenOrder = Order::where('organization_guid', $user->organization_guid)->get();
