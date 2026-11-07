@@ -82,17 +82,20 @@ class StockOpnameController extends Controller
     public function soDetail(Request $request)
     {
         $user = auth()->user();
-        $month = $request->input('month') ?? Carbon::now()->format('m');
-        $year = $request->input('year') ?? Carbon::now()->format('Y');
+        $month = (int) ($request->input('month') ?? Carbon::now()->format('m'));
+        $year = (int) ($request->input('year') ?? Carbon::now()->format('Y'));
+        
+        $noCatalog = StockHistory::where('year', $year)
+            ->where('month', $month)
+            ->pluck('noCatalog')
+            ->toArray();
 
-        $noCatalog = StockHistory::where('year', $year)->where('month', $month)->pluck('noCatalog')->toArray();
-
-        // ✅ PERBAIKAN: Ambil noCatalog DAN guid dari tabel reagens
+        // Ambil noCatalog DAN guid dari tabel reagens
         $reagents = DB::table('reagens')
             ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
             ->join('users', 'reagens_in.user_id', '=', 'users.id')
             ->where('users.organization_guid', $user->organization_guid)
-            ->select('reagens.noCatalog', 'reagens.guid as reagen_guid') // ✅ Ambil guid juga
+            ->select('reagens.noCatalog', 'reagens.guid as reagen_guid')
             ->distinct()
             ->get();
 
@@ -105,8 +108,8 @@ class StockOpnameController extends Controller
 
         foreach ($missNoCatalog as $item) {
             $noCatalog = $item->noCatalog;
-            $reagenGuid = $item->reagen_guid; // ✅ Simpan guid dari query
-
+            $reagenGuid = $item->reagen_guid;
+            
             if (empty($noCatalog)) continue;
 
             $previousData = StockHistory::where('year', $previousYear)
@@ -130,7 +133,6 @@ class StockOpnameController extends Controller
                 ->whereMonth('logbook_reagens.created_at', $month)
                 ->sum('logbook_reagens.quantity_taken');
 
-            // ✅ updateOrCreate dengan menyertakan reagen_guid di array update/insert
             StockHistory::updateOrCreate(
                 [
                     'month' => $month,
@@ -138,7 +140,7 @@ class StockOpnameController extends Controller
                     'noCatalog' => $noCatalog,
                 ],
                 [
-                    'reagen_guid' => $reagenGuid, // ✅ Wajib disimpan agar relasi tidak null
+                    'reagen_guid' => $reagenGuid,
                     'quantity' => $previousData ? $previousData->quantity_actual : 0,
                     'quantity_in' => $reagenInQuantitySum ?? 0,
                     'quantity_out' => $reagenOutQuantitySum ?? 0,
@@ -149,15 +151,25 @@ class StockOpnameController extends Controller
             );
         }
 
+        // ✅ PERBAIKAN: Hitung quantity_before untuk setiap record
         $reagens = StockHistory::with('reagen')
             ->where('year', $year)
             ->where('month', $month)
             ->get()
             ->filter(fn($item) => $item->reagen !== null);
 
+        // ✅ Set quantity_before dari data bulan sebelumnya
+        foreach ($reagens as $reagen) {
+            $previousData = StockHistory::where('year', $previousYear)
+                ->where('month', $previousMonth)
+                ->where('noCatalog', $reagen->noCatalog)
+                ->first();
+            
+            $reagen->quantity_before = $previousData ? $previousData->quantity_actual : 0;
+        }
+
         return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
     }
-
     public function generatedSO(Request $request)
     {
         try {
@@ -866,5 +878,70 @@ class StockOpnameController extends Controller
             ->get();
  
         return response()->json($history);
+    }
+
+    /**
+     * ✅ BARU: Finalize Stock Opname - Update status di tabel stock_opnames
+     */
+    public function finalizeStockOpname(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $month = $request->input('month') ?? Carbon::now()->format('m');
+            $year = $request->input('year') ?? Carbon::now()->format('Y');
+            
+            // 1. Ambil semua stock histories untuk bulan ini
+            $reagens = StockHistory::where('year', $year)
+                ->where('month', $month)
+                ->get();
+            
+            // 2. Cek apakah semua sudah di-stock opname
+            $allCompleted = $reagens->every(fn($r) => $r->stock_opname == 1);
+            
+            if (!$allCompleted) {
+                DB::rollback();
+                Alert::warning('Warning', 'Masih ada reagen yang belum di-stock opname. Silakan lengkapi terlebih dahulu.');
+                return redirect()->back();
+            }
+            
+            // 3. Hitung total selisih
+            $totalSelisih = 0;
+            foreach ($reagens as $reagen) {
+                $expectedStock = ($reagen->quantity + $reagen->quantity_in) - $reagen->quantity_out;
+                $actualStock = $reagen->quantity_actual;
+                $selisih = abs($actualStock - $expectedStock);
+                $totalSelisih += $selisih;
+            }
+            
+            // 4. Update status di tabel stock_opnames
+            StockOpname::updateOrCreate(
+                [
+                    'month' => $month,
+                    'year' => $year,
+                    'user_id' => auth()->user()->id
+                ],
+                [
+                    'status' => ($totalSelisih == 0) ? 1 : 0,
+                    'updated_at' => now()
+                ]
+            );
+            
+            DB::commit();
+            
+            if ($totalSelisih == 0) {
+                Alert::success('Success!', 'Stock opname berhasil difinalisasi. Semua stok sesuai.');
+            } else {
+                Alert::info('Info', "Stock opname difinalisasi dengan total selisih: {$totalSelisih} unit.");
+            }
+            
+            return redirect()->back();
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Finalize Stock Opname Error: ' . $e->getMessage());
+            Alert::error('Error!', 'Terjadi kesalahan saat memfinalisasi stock opname.');
+            return redirect()->back();
+        }
     }
 }

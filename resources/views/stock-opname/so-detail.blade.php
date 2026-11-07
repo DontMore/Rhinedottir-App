@@ -1,7 +1,7 @@
 @extends('layout.main')
 @section('title', 'Stock Opname Detail')
-
 @section('container')
+
 <div class="space-y-6">
     <!-- Header & Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -10,19 +10,49 @@
             <p class="text-sm text-gray-500 mt-1">Review and reconcile inventory data for this period.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
+            
+            {{-- ✅ Status Badge --}}
             <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ring-1 ring-inset {{ ($stockOpname->status ?? 0) ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-amber-50 text-amber-700 ring-amber-600/20' }}">
                 <span class="w-1.5 h-1.5 rounded-full mr-2 {{ ($stockOpname->status ?? 0) ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
                 {{ ($stockOpname->status ?? 0) ? 'Opname Complete' : 'Opname Pending' }}
             </span>
-            <form action="{{ route('generatedSO') }}" method="POST" class="m-0">
+
+            {{-- ✅ BARU: Tombol Finalize --}}
+            <form action="{{ route('stock.finalize') }}" method="POST" class="m-0" id="finalizeForm">
                 @csrf
                 <input type="hidden" name="month" value="{{ $month }}">
                 <input type="hidden" name="year" value="{{ $year }}">
-                <button type="submit" id="btn-generate" class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <button type="button" id="btn-finalize" 
+                        class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm {{ ($stockOpname->status ?? 0) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        {{ ($stockOpname->status ?? 0) ? 'disabled' : '' }}
+                        title="{{ ($stockOpname->status ?? 0) ? 'Already finalized' : 'Finalize this stock opname' }}">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Finalize
+                </button>
+            </form>
+
+            {{-- Generate Stock Button --}}
+            <form action="{{ route('stock.generatedSO') }}" method="POST" class="m-0">
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="year" value="{{ $year }}">
+                <button type="button" id="btn-generate" class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
                     Generate Stock
                 </button>
             </form>
+
+            {{-- Back Button --}}
+            <a href="{{ route('stock.index') }}" class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back
+            </a>
         </div>
     </div>
 
@@ -50,6 +80,8 @@
                     @php
                         $quantityNow = $reagen->stock_opname ? $reagen->quantity_actual : (($reagen->quantity_in + $reagen->quantity_before) - $reagen->quantity_out);
                         $isSO = $reagen->stock_opname ?? false;
+                        $expectedStock = ($reagen->quantity_before + $reagen->quantity_in) - $reagen->quantity_out;
+                        $diff = ($reagen->quantity_actual ?? 0) - $expectedStock;
                     @endphp
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $reagen->noCatalog }}</td>
@@ -72,9 +104,12 @@
                                     data-catalog="{{ $reagen->noCatalog }}"
                                     data-name="{{ $reagen->reagen->nameReagen ?? '-' }}"
                                     data-current="{{ $quantityNow }}"
+                                    data-expected="{{ $expectedStock }}"
                                     data-in="{{ $reagen->quantity_in }}"
                                     data-out="{{ $reagen->quantity_out }}">
-                                <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
                                 Edit
                             </button>
                         </td>
@@ -96,18 +131,35 @@
                 <h3 class="text-lg font-semibold text-gray-900">Update Stock Opname</h3>
                 <button type="button" class="text-gray-400 hover:text-gray-500 transition-colors" data-close-modal>
                     <span class="sr-only">Close</span>
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
             </div>
             <div class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div><p class="text-gray-500 text-xs">Catalog No.</p><p id="m-catalog" class="font-medium text-gray-900"></p></div>
-                    <div><p class="text-gray-500 text-xs">Reagent</p><p id="m-name" class="font-medium text-gray-900"></p></div>
+                    <div>
+                        <p class="text-gray-500 text-xs">Catalog No.</p>
+                        <p id="m-catalog" class="font-medium text-gray-900"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-xs">Reagent</p>
+                        <p id="m-name" class="font-medium text-gray-900"></p>
+                    </div>
                 </div>
                 <div class="grid grid-cols-3 gap-4 pt-3 border-t border-gray-100">
-                    <div class="text-center"><p class="text-gray-500 text-xs">In</p><p id="m-in" class="font-semibold text-emerald-600"></p></div>
-                    <div class="text-center"><p class="text-gray-500 text-xs">Out</p><p id="m-out" class="font-semibold text-red-600"></p></div>
-                    <div class="text-center"><p class="text-gray-500 text-xs">Current</p><p id="m-current" class="font-semibold text-gray-900"></p></div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-xs">In</p>
+                        <p id="m-in" class="font-semibold text-emerald-600"></p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-xs">Out</p>
+                        <p id="m-out" class="font-semibold text-red-600"></p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-xs">Expected</p>
+                        <p id="m-current" class="font-semibold text-gray-900"></p>
+                    </div>
                 </div>
                 <form id="updateForm" class="space-y-4">
                     <input type="hidden" id="stock-id" name="stock_id">
@@ -149,23 +201,26 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', function() {
             document.getElementById('m-catalog').textContent = this.dataset.catalog;
             document.getElementById('m-name').textContent = this.dataset.name;
-            document.getElementById('m-in').textContent = this.dataset.in;
-            document.getElementById('m-out').textContent = this.dataset.out;
-            document.getElementById('m-current').textContent = this.dataset.current;
+            document.getElementById('m-in').textContent = '+' + this.dataset.in;
+            document.getElementById('m-out').textContent = '-' + this.dataset.out;
+            document.getElementById('m-current').textContent = this.dataset.expected;
             document.getElementById('stock-id').value = this.dataset.id;
             qtyInput.value = '';
             statusInput.value = '';
             document.getElementById('note').value = '';
-            currentStockValue = parseFloat(this.dataset.current) || 0;
-            
+            currentStockValue = parseFloat(this.dataset.expected) || 0;
+
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-            qtyInput.focus();
+            setTimeout(() => qtyInput.focus(), 100);
         });
     });
 
     // Close Modal
-    const closeModal = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
     closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
     // Auto-calculate Status
@@ -201,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}' 
             },
             body: JSON.stringify({
-                id: document.getElementById('stock-id').value,
+                id: document.getElementById('stock-id').value, 
                 quantity_actual: qtyInput.value,
                 status: statusInput.value,
                 catatan: document.getElementById('note').value,
@@ -236,7 +291,36 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.isConfirmed) form.submit();
         });
     });
+
+    // ✅ FINALIZE STOCK OPNAME
+    document.getElementById('btn-finalize')?.addEventListener('click', function() {
+        if (this.disabled) return;
+        
+        const form = document.getElementById('finalizeForm');
+        Swal.fire({
+            title: 'Finalize Stock Opname?',
+            html: '<p style="font-size: 13px; color: #666;">Pastikan semua reagen sudah di-stock opname. Status akan berubah menjadi <strong>Complete</strong>.</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, finalize!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 });
 </script>
 @endpush
+
 @endsection

@@ -87,19 +87,23 @@ class AuthenticationController extends Controller
                 return back()->with('loginError', 'Akun Anda tidak aktif. Hubungi administrator.');
             }
 
+            // ✅ REGENERATE SESSION SETELAH LOGIN (WAJIB!)
             $request->session()->regenerate();
+            
+            // ✅ REGENERATE CSRF TOKEN BARU
+            $request->session()->regenerateToken();
 
             $role = strtolower(Auth::user()->role);
 
             switch ($role) {
                 case 'admin':
-                    return redirect()->route('dashboard.index');
+                    return redirect()->intended(route('dashboard.index'));
                 case 'analis':
-                    return redirect()->route('logbook.index');
-                case 'pic': // ✅ BARU: Redirect untuk role PIC
-                    return redirect()->route('dashboard.index'); // Ganti route ini jika PIC punya halaman khusus
+                    return redirect()->intended(route('logbook.index'));
+                case 'pic':
+                    return redirect()->intended(route('dashboard.index'));
                 case 'superadmin':
-                    return redirect()->route('superadmin.index');
+                    return redirect()->intended(route('superadmin.index'));
                 default:
                     Auth::logout();
                     $request->session()->invalidate();
@@ -108,7 +112,13 @@ class AuthenticationController extends Controller
             }
         }
 
-        return back()->with('loginError', 'Login failed!');
+        // ✅ TAMBAHKAN INI: Flash message yang lebih informatif
+        return back()
+            ->withInput($request->only('username'))
+            ->withErrors([
+                'username' => 'Username atau password salah.',
+            ])
+            ->with('loginError', 'Username atau password salah.');
     }
 
     /**

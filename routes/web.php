@@ -180,19 +180,25 @@ Route::middleware(['auth'])->prefix('report')->name('report.')->group(function (
 });
 
 
-// route stock opname
-Route::get('/stock-opname', [StockOpnameController::class, 'index'])->middleware('admin')->name('stock.index');
-Route::post('/update-quantities', [StockOpnameController::class, 'updateQuantities'])->name('update.quantities')->middleware('admin');
-Route::get('/generate-pdf-stock', [StockOpnameController::class, 'generateStock'])->name('stock.print')->middleware('admin');
-Route::get('/get-reagen/{id}', [StockOpnameController::class, 'getReagen']);
-Route::post('/stock/update', [StockOpnameController::class, 'update'])->name('stock.update');
-Route::get('/generate-data', [StockOpnameController::class, 'generate'])->name('generateData');
-Route::get('/so-detail', [StockOpnameController::class, 'soDetail'])->name('soDetail');
-Route::post('/generated-so', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
-Route::get('/stock-opname/stock-adjustment', [StockOpnameController::class, 'stockAdjustment'])->middleware('admin')->name('stock.stock-adjustment');
-Route::post('/stock-opname/stock-adjustment/preview', [StockOpnameController::class, 'previewStockAdjustment'])->middleware('admin')->name('stock.stock-adjustment.preview');
-Route::post('/stock-opname/stock-adjustment/process', [StockOpnameController::class, 'processStockAdjustment'])->middleware('admin')->name('stock.stock-adjustment.process');
-Route::get('/api/stock-history-summary', [StockOpnameController::class, 'getStockHistorySummary'])->middleware('admin')->name('stock.history-summary');
+// ==========================================
+// STOCK OPNAME ROUTES (Clean & Consolidated)
+// ==========================================
+Route::middleware(['auth'])->prefix('stock-opname')->name('stock.')->group(function () {
+    // Main Pages
+    Route::get('/', [StockOpnameController::class, 'index'])->name('index');
+    Route::get('/detail', [StockOpnameController::class, 'soDetail'])->name('detail');
+    
+    // Actions
+    Route::post('/generate', [StockOpnameController::class, 'generatedSO'])->name('generatedSO');
+    Route::post('/update', [StockOpnameController::class, 'update'])->name('update');
+    Route::post('/finalize', [StockOpnameController::class, 'finalizeStockOpname'])->name('finalize');
+    
+    // Stock Adjustment
+    Route::get('/stock-adjustment', [StockOpnameController::class, 'stockAdjustment'])->name('stock-adjustment');
+    Route::post('/stock-adjustment/preview', [StockOpnameController::class, 'previewStockAdjustment'])->name('stock-adjustment.preview');
+    Route::post('/stock-adjustment/process', [StockOpnameController::class, 'processStockAdjustment'])->name('stock-adjustment.process');
+    Route::get('/api/stock-history-summary', [StockOpnameController::class, 'getStockHistorySummary'])->name('history-summary');
+});
 
 //route email
 Route::get('kirim-email', 'App\Http\Controllers\MailController@index');
