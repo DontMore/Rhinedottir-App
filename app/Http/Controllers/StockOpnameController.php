@@ -79,26 +79,31 @@ class StockOpnameController extends Controller
         return view('stock-opname.so-list', compact('data'));
     }
 
+    /**
+     * Menampilkan detail stock opname untuk bulan/tahun tertentu
+     * Menampilkan SEMUA reagen aktif (is_active = true)
+     */
     public function soDetail(Request $request)
     {
         $user = auth()->user();
         $month = (int) ($request->input('month') ?? Carbon::now()->format('m'));
         $year = (int) ($request->input('year') ?? Carbon::now()->format('Y'));
-        
+
+        // Ambil noCatalog yang sudah ada di stock_histories bulan ini
         $noCatalog = StockHistory::where('year', $year)
             ->where('month', $month)
             ->pluck('noCatalog')
             ->toArray();
 
-        // Ambil noCatalog DAN guid dari tabel reagens
-        $reagents = DB::table('reagens')
-            ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
-            ->join('users', 'reagens_in.user_id', '=', 'users.id')
-            ->where('users.organization_guid', $user->organization_guid)
-            ->select('reagens.noCatalog', 'reagens.guid as reagen_guid')
+        // ✅ PERBAIKAN: Ambil SEMUA reagen aktif (is_active = true)
+        // Jangan gunakan join dengan reagens_in
+        $reagents = Reagen::where('organization_guid', $user->organization_guid)
+            ->where('is_active', true) // Hanya reagen aktif
+            ->select('noCatalog', 'guid as reagen_guid')
             ->distinct()
             ->get();
 
+        // Cari reagen yang belum ada di stock_histories bulan ini
         $missNoCatalog = $reagents->filter(function ($item) use ($noCatalog) {
             return !in_array($item->noCatalog, $noCatalog);
         });
@@ -106,38 +111,37 @@ class StockOpnameController extends Controller
         $previousMonth = $month == 1 ? 12 : $month - 1;
         $previousYear = $month == 1 ? $year - 1 : $year;
 
+        // Auto-create record untuk reagen yang missing
         foreach ($missNoCatalog as $item) {
-            $noCatalog = $item->noCatalog;
+            $noCatalogItem = $item->noCatalog;
             $reagenGuid = $item->reagen_guid;
-            
-            if (empty($noCatalog)) continue;
 
+            if (empty($noCatalogItem)) continue;
+
+            // Ambil stok bulan sebelumnya
             $previousData = StockHistory::where('year', $previousYear)
                 ->where('month', $previousMonth)
-                ->where('noCatalog', $noCatalog)
+                ->where('noCatalog', $noCatalogItem)
                 ->first();
 
-            $reagenInQuantitySum = DB::table('reagens_in')
-                ->join('users', 'reagens_in.user_id', '=', 'users.id')
-                ->where('users.organization_guid', $user->organization_guid)
-                ->where('reagens_in.noCatalog', $noCatalog)
-                ->whereYear('reagens_in.created_at', $year)
-                ->whereMonth('reagens_in.created_at', $month)
-                ->sum('reagens_in.quantity');
+            // Hitung total stock in bulan ini
+            $reagenInQuantitySum = ReagenIn::where('reagen_guid', $reagenGuid)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->sum('quantity');
 
-            $reagenOutQuantitySum = DB::table('logbook_reagens')
-                ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
-                ->where('users.organization_guid', $user->organization_guid)
-                ->where('logbook_reagens.noCatalog', $noCatalog)
-                ->whereYear('logbook_reagens.created_at', $year)
-                ->whereMonth('logbook_reagens.created_at', $month)
-                ->sum('logbook_reagens.quantity_taken');
+            // Hitung total stock out bulan ini
+            $reagenOutQuantitySum = LogbookReagen::where('reagen_guid', $reagenGuid)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->sum('quantity_taken');
 
+            // Create record baru di stock_histories
             StockHistory::updateOrCreate(
                 [
                     'month' => $month,
                     'year' => $year,
-                    'noCatalog' => $noCatalog,
+                    'noCatalog' => $noCatalogItem,
                 ],
                 [
                     'reagen_guid' => $reagenGuid,
@@ -151,14 +155,14 @@ class StockOpnameController extends Controller
             );
         }
 
-        // ✅ PERBAIKAN: Hitung quantity_before untuk setiap record
+        // Ambil semua stock histories untuk bulan ini
         $reagens = StockHistory::with('reagen')
             ->where('year', $year)
             ->where('month', $month)
             ->get()
             ->filter(fn($item) => $item->reagen !== null);
 
-        // ✅ Set quantity_before dari data bulan sebelumnya
+        // Hitung quantity_before untuk setiap record
         foreach ($reagens as $reagen) {
             $previousData = StockHistory::where('year', $previousYear)
                 ->where('month', $previousMonth)
@@ -170,76 +174,84 @@ class StockOpnameController extends Controller
 
         return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
     }
+
+    /**
+     * Generate/Regenerate stock data untuk stock opname
+     * Menampilkan SEMUA reagen aktif (is_active = true)
+     */
     public function generatedSO(Request $request)
     {
         try {
             DB::beginTransaction();
+            
             $user = auth()->user();
             $month = $request->input('month') ?? Carbon::now()->format('m');
             $year = $request->input('year') ?? Carbon::now()->format('Y');
-
+            
             $previousMonth = $month == 1 ? 12 : $month - 1;
             $previousYear = $month == 1 ? $year - 1 : $year;
 
+            // Ambil existing stock histories dan index by noCatalog
             $existingStockHistories = StockHistory::where('year', $year)
                 ->where('month', $month)
                 ->get()
                 ->keyBy('noCatalog');
 
-            // ✅ PERBAIKAN: Ambil noCatalog DAN guid
-            $reagents = DB::table('reagens')
-                ->join('reagens_in', 'reagens.noCatalog', '=', 'reagens_in.noCatalog')
-                ->join('users', 'reagens_in.user_id', '=', 'users.id')
-                ->where('users.organization_guid', $user->organization_guid)
-                ->select('reagens.noCatalog', 'reagens.guid as reagen_guid')
+            // ✅ PERBAIKAN: Ambil SEMUA reagen aktif (is_active = true)
+            $reagents = Reagen::where('organization_guid', $user->organization_guid)
+                ->where('is_active', true) // Hanya reagen aktif
+                ->select('noCatalog', 'guid as reagen_guid')
                 ->distinct()
                 ->get();
 
             foreach ($reagents as $item) {
-                $noCatalog = $item->noCatalog;
+                $noCatalogItem = $item->noCatalog;
                 $reagenGuid = $item->reagen_guid;
 
-                if (isset($existingStockHistories[$noCatalog]) && $existingStockHistories[$noCatalog]->stock_opname == 1) {
+                // Skip jika sudah di-finalize (stock_opname == 1)
+                if (isset($existingStockHistories[$noCatalogItem]) && 
+                    $existingStockHistories[$noCatalogItem]->stock_opname == 1) {
                     continue;
                 }
 
+                // Ambil stok bulan sebelumnya
                 $previousData = StockHistory::where('year', $previousYear)
                     ->where('month', $previousMonth)
-                    ->where('noCatalog', $noCatalog)
+                    ->where('noCatalog', $noCatalogItem)
                     ->first();
-
+                
                 $quantityBefore = $previousData ? $previousData->quantity_actual : 0;
 
-                $reagenInQuantitySum = DB::table('reagens_in')
-                    ->join('users', 'reagens_in.user_id', '=', 'users.id')
-                    ->where('users.organization_guid', $user->organization_guid)
-                    ->where('reagens_in.noCatalog', $noCatalog)
-                    ->whereYear('reagens_in.created_at', $year)
-                    ->whereMonth('reagens_in.created_at', $month)
-                    ->sum('reagens_in.quantity');
+                // Hitung total stock in bulan ini
+                $reagenInQuantitySum = ReagenIn::where('reagen_guid', $reagenGuid)
+                    ->whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->sum('quantity');
 
-                $reagenOutQuantitySum = DB::table('logbook_reagens')
-                    ->join('users', 'logbook_reagens.user_id', '=', 'users.id')
-                    ->where('users.organization_guid', $user->organization_guid)
-                    ->where('logbook_reagens.noCatalog', $noCatalog)
-                    ->whereYear('logbook_reagens.created_at', $year)
-                    ->whereMonth('logbook_reagens.created_at', $month)
-                    ->sum('logbook_reagens.quantity_taken');
+                // Hitung total stock out bulan ini
+                $reagenOutQuantitySum = LogbookReagen::where('reagen_guid', $reagenGuid)
+                    ->whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->sum('quantity_taken');
 
-                // ✅ Simpan reagen_guid secara eksplisit
+                // Update atau create record di stock_histories
                 StockHistory::updateOrCreate(
                     [
                         'month' => $month,
                         'year' => $year,
-                        'noCatalog' => $noCatalog,
+                        'noCatalog' => $noCatalogItem,
                     ],
                     [
-                        'reagen_guid' => $reagenGuid, // ✅ Kunci relasi
+                        'reagen_guid' => $reagenGuid,
                         'quantity' => $quantityBefore,
                         'quantity_in' => $reagenInQuantitySum ?? 0,
                         'quantity_out' => $reagenOutQuantitySum ?? 0,
-                        'quantity_actual' => isset($existingStockHistories[$noCatalog]) ? $existingStockHistories[$noCatalog]->quantity_actual : 0,
-                        'stock_opname' => isset($existingStockHistories[$noCatalog]) ? $existingStockHistories[$noCatalog]->stock_opname : 0,
+                        'quantity_actual' => isset($existingStockHistories[$noCatalogItem]) 
+                            ? $existingStockHistories[$noCatalogItem]->quantity_actual 
+                            : 0,
+                        'stock_opname' => isset($existingStockHistories[$noCatalogItem]) 
+                            ? $existingStockHistories[$noCatalogItem]->stock_opname 
+                            : 0,
                         'user_id' => $user->guid,
                         'updated_at' => now()
                     ]
@@ -247,9 +259,15 @@ class StockOpnameController extends Controller
             }
 
             DB::commit();
-            $reagens = StockHistory::with('reagen')->where('year', $year)->where('month', $month)->get();
+            
+            $reagens = StockHistory::with('reagen')
+                ->where('year', $year)
+                ->where('month', $month)
+                ->get();
+                
             Alert::success('Success!', 'Stock data has been generated successfully');
             return view('stock-opname.so-detail', compact('reagens', 'month', 'year'));
+            
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Generate Stock Error: ' . $e->getMessage());
@@ -881,66 +899,51 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * ✅ BARU: Finalize Stock Opname - Update status di tabel stock_opnames
+     * ✅ BARU: Finalize Stock Opname
+     * Mengubah status menjadi Complete jika semua item sudah di-opname
      */
     public function finalizeStockOpname(Request $request)
     {
         try {
-            DB::beginTransaction();
-            
-            $month = $request->input('month') ?? Carbon::now()->format('m');
-            $year = $request->input('year') ?? Carbon::now()->format('Y');
-            
-            // 1. Ambil semua stock histories untuk bulan ini
-            $reagens = StockHistory::where('year', $year)
+            $month = $request->input('month');
+            $year = $request->input('year');
+
+            // 1. Cek total item dan item yang sudah selesai (stock_opname == 1)
+            $totalItems = StockHistory::where('year', $year)
                 ->where('month', $month)
-                ->get();
-            
-            // 2. Cek apakah semua sudah di-stock opname
-            $allCompleted = $reagens->every(fn($r) => $r->stock_opname == 1);
-            
-            if (!$allCompleted) {
-                DB::rollback();
-                Alert::warning('Warning', 'Masih ada reagen yang belum di-stock opname. Silakan lengkapi terlebih dahulu.');
-                return redirect()->back();
-            }
-            
-            // 3. Hitung total selisih
-            $totalSelisih = 0;
-            foreach ($reagens as $reagen) {
-                $expectedStock = ($reagen->quantity + $reagen->quantity_in) - $reagen->quantity_out;
-                $actualStock = $reagen->quantity_actual;
-                $selisih = abs($actualStock - $expectedStock);
-                $totalSelisih += $selisih;
-            }
-            
-            // 4. Update status di tabel stock_opnames
-            StockOpname::updateOrCreate(
-                [
-                    'month' => $month,
-                    'year' => $year,
-                    'user_id' => auth()->user()->id
-                ],
-                [
-                    'status' => ($totalSelisih == 0) ? 1 : 0,
-                    'updated_at' => now()
-                ]
-            );
-            
-            DB::commit();
-            
-            if ($totalSelisih == 0) {
-                Alert::success('Success!', 'Stock opname berhasil difinalisasi. Semua stok sesuai.');
+                ->count();
+
+            $completedItems = StockHistory::where('year', $year)
+                ->where('month', $month)
+                ->where('stock_opname', 1)
+                ->count();
+
+            // 2. Jika semua item sudah selesai, update status
+            if ($totalItems > 0 && $totalItems === $completedItems) {
+                
+                // Update atau buat record status di tabel stock_opnames
+                StockOpname::updateOrCreate(
+                    [
+                        'month' => $month,
+                        'year' => $year,
+                        // 'user_id' => auth()->user()->id // Sesuaikan jika perlu filter user
+                    ],
+                    [
+                        'status' => 1, // 1 = Complete
+                        'updated_at' => now()
+                    ]
+                );
+
+                Alert::success('Success!', 'Stock Opname berhasil difinalisasi menjadi Complete.');
             } else {
-                Alert::info('Info', "Stock opname difinalisasi dengan total selisih: {$totalSelisih} unit.");
+                Alert::warning('Belum Lengkap', "Masih ada {$totalItems} item, baru {$completedItems} yang selesai. Silakan lengkapi dulu.");
             }
-            
+
             return redirect()->back();
-            
+
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Finalize Stock Opname Error: ' . $e->getMessage());
-            Alert::error('Error!', 'Terjadi kesalahan saat memfinalisasi stock opname.');
+            Log::error('Finalize Error: ' . $e->getMessage());
+            Alert::error('Error!', 'Terjadi kesalahan saat memfinalisasi.');
             return redirect()->back();
         }
     }
